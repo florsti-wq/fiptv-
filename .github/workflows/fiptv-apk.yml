@@ -1,4 +1,5 @@
 # fIPTV: baut die APK (Fire TV, Android TV, Handy) und veröffentlicht sie als Release.
+# Eigener Sync-Server: Secrets NETLIFY_BACKEND_URL + APP_ANON_KEY (Netlify-Projekt „fipsite“).
 # Download für den Downloader auf dem Fire TV (immer die neueste Version):
 #   https://github.com/florsti-wq/fiptv-/releases/latest/download/fiptv.apk
 name: fIPTV APK bauen
