@@ -12,6 +12,7 @@ on:
       - "docs/**"
       - "web/**"
       - "netlify-*/**"
+      - "netlify.toml"
       - "supabase/**"
       - "screenshots/**"
 

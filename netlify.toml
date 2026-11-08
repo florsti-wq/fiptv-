@@ -1,0 +1,4 @@
+# fIPTV: Sync-Server. Netlify soll den Ordner netlify-auth-site bauen – auch wenn beim Anlegen
+# des Projekts kein „Base directory“ eingetragen wurde.
+[build]
+  base = "netlify-auth-site"
