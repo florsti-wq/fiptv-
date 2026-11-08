@@ -111,6 +111,8 @@ class ArflixApplication : Application(), Configuration.Provider, ImageLoaderFact
                     .putLong("last_crash_time", System.currentTimeMillis())
                     .putString("last_crash_version", "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
                     .putBoolean("has_pending_crash_report", true)
+                    // fIPTV: Absturzgrund für die Anzeige in der Profilauswahl (keine Berichte an Dritte)
+                    .putString("fiptv_last_crash_stack", throwable.stackTraceToString().take(1800))
                     .commit()
             } catch (_: Throwable) {
             } finally {

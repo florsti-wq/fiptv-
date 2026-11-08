@@ -351,6 +351,24 @@ internal fun ProfileSelectionContent(
                     modifier = Modifier.fillMaxWidth()
                 )
 
+                // fIPTV: Absturz der letzten 15 Minuten anzeigen, damit er sich ohne Entwicklerwerkzeuge melden lässt
+                val fiptvCrash = remember {
+                    val prefs = context.getSharedPreferences("arvio_crash_store", android.content.Context.MODE_PRIVATE)
+                    val at = prefs.getLong("last_crash_time", 0L)
+                    if (at > 0L && System.currentTimeMillis() - at < 15 * 60_000L) {
+                        "Letzter Absturz (" + (prefs.getString("last_crash_version", "") ?: "") + "):\n" +
+                            (prefs.getString("fiptv_last_crash_stack", null) ?: prefs.getString("last_crash_msg", "") ?: "")
+                    } else null
+                }
+                if (fiptvCrash != null) {
+                    Text(
+                        text = fiptvCrash,
+                        fontSize = 9.sp,
+                        color = Color(0xFFFF8A80),
+                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                    )
+                }
+
                 Spacer(modifier = Modifier.height(if (isTouchDevice) 32.dp else 24.dp))
 
                 // Profile avatars row
