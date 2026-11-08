@@ -80,6 +80,32 @@ jobs:
             echo "keyPassword=$FIPTV_KEYSTORE_PASSWORD"
           } > keystore.properties
 
+      # ARVIO lädt beim Bauen eine große Bibliothek von GitHub-Releases nach. Die zwischenspeichern und
+      # bei Zeitüberschreitungen (HTTP 504) mehrfach versuchen, statt den ganzen Build scheitern zu lassen.
+      - name: Zusatzbibliothek zwischenspeichern
+        uses: actions/cache@v4
+        with:
+          path: app/libs/sherpa-onnx-*.aar
+          key: sherpa-onnx-${{ hashFiles('app/build.gradle.kts') }}
+          restore-keys: sherpa-onnx-
+
+      - name: Zusatzbibliothek laden (mit Wiederholung)
+        run: |
+          ver=$(grep -oP 'sherpaOnnxVersion = "\K[^"]+' app/build.gradle.kts)
+          sha=$(grep -oP 'sherpaOnnxSha256 = "\K[^"]+' app/build.gradle.kts)
+          f="app/libs/sherpa-onnx-$ver.aar"
+          mkdir -p app/libs
+          if [ -f "$f" ] && echo "$sha  $f" | sha256sum --check --status; then echo "aus dem Zwischenspeicher"; exit 0; fi
+          for i in 1 2 3 4 5 6; do
+            if curl -fsSL --retry 3 --retry-delay 10 -o "$f.part" "https://github.com/k2-fsa/sherpa-onnx/releases/download/v$ver/sherpa-onnx-$ver.aar" \
+               && echo "$sha  $f.part" | sha256sum --check --status; then
+              mv "$f.part" "$f"; echo "geladen"; exit 0
+            fi
+            echo "Versuch $i fehlgeschlagen, warte …"; sleep $((i*20))
+          done
+          echo "::error::Zusatzbibliothek sherpa-onnx konnte nicht geladen werden (GitHub-Downloads gestört?)"
+          exit 1
+
       - name: APK bauen
         run: ./gradlew :app:assembleSideloadRelease --no-daemon --stacktrace -PfiptvBuild=${{ github.run_number }}
 
