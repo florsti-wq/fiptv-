@@ -46,6 +46,13 @@
 
     <queries>
         <package android:name="com.discord" />
+        <!-- fIPTV: „Läuft bei …“ – Streaming-Apps erkennen und öffnen -->
+        <package android:name="com.netflix.ninja" />
+        <package android:name="com.netflix.mediaclient" />
+        <package android:name="com.amazon.avod" />
+        <package android:name="com.amazon.amazonvideo.livingroom" />
+        <package android:name="com.amazon.avod.thirdpartyclient" />
+        <package android:name="com.disney.disneyplus" />
         <intent>
             <action android:name="android.intent.action.VIEW" />
             <data android:scheme="discord" />

@@ -80,6 +80,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Check
@@ -503,7 +504,16 @@ fun DetailsScreen(
         hasCollectionButton -> 6
         else -> 5
     }
-    val maxActionButtonIndex = 4 + (if (hasCollectionButton) 1 else 0) + (if (hasPersonalLists) 1 else 0)
+    // fIPTV: „Auf Netflix / Prime Video / Disney+ ansehen“, wenn TMDB den Titel dort führt und die App installiert ist
+    val fiptvContext = androidx.compose.ui.platform.LocalContext.current
+    val streamingTarget = remember(uiState.streamingServices) {
+        com.arflix.tv.fiptv.StreamingApps.find(fiptvContext, uiState.streamingServices.map { it.name })
+    }
+    val baseMaxActionButtonIndex = 4 + (if (hasCollectionButton) 1 else 0) + (if (hasPersonalLists) 1 else 0)
+    val streamingButtonIndex = if (streamingTarget != null) baseMaxActionButtonIndex + 1 else -1
+    val maxActionButtonIndex = baseMaxActionButtonIndex + (if (streamingTarget != null) 1 else 0)
+    val currentStreamingButtonIndex = rememberUpdatedState(streamingButtonIndex)
+    val currentStreamingTarget = rememberUpdatedState(streamingTarget)
     val currentListButtonIndex = rememberUpdatedState(listButtonIndex)
     val currentEpisodeIndex = rememberUpdatedState(episodeIndex)
     val currentSelectedEpisodeIdentity = rememberUpdatedState(selectedEpisodeIdentity)
@@ -534,6 +544,11 @@ fun DetailsScreen(
             val selectedEp = selectedEpisodeIn(state, currentSelectedEpisodeIdentity.value)
             // While a post-idle sync runs the play target may still be the stale one.
             if (idx in 0..1 && !viewModel.canStartPlayback(state.idleSyncRevision)) Unit
+            else if (idx >= 0 && idx == currentStreamingButtonIndex.value) {
+                currentStreamingTarget.value?.let { target ->
+                    com.arflix.tv.fiptv.StreamingApps.open(fiptvContext, target, state.item?.title)
+                }
+            }
             else if (idx == currentListButtonIndex.value) viewModel.openListPicker() else when (idx) {
                 0 -> { // Play
                     val season = if (mediaType == MediaType.TV) {
@@ -1023,6 +1038,8 @@ fun DetailsScreen(
                         collectionName = uiState.collectionName,
                         hasCollectionAction = uiState.collectionId != null,
                         listButtonIndex = listButtonIndex,
+                        streamingButtonIndex = streamingButtonIndex,
+                        streamingLabel = streamingTarget?.app?.label,
                         collectionIndex = collectionIndex,
                         focusedSection = focusedSection,
                         buttonIndex = buttonIndex,
@@ -1283,6 +1300,8 @@ private fun DetailsContent(
     collectionName: String? = null,
     hasCollectionAction: Boolean = collectionItems.isNotEmpty(),
     listButtonIndex: Int = -1,
+    streamingButtonIndex: Int = -1,
+    streamingLabel: String? = null,
     collectionIndex: Int = 0,
     focusedSection: FocusSection,
     buttonIndex: Int,
@@ -1716,6 +1735,16 @@ private fun DetailsContent(
                                     .weight(1f)
                                     .height(54.dp),
                                 onClick = { onButtonClick(listButtonIndex) }
+                            )
+                        }
+                        if (streamingButtonIndex >= 0) {
+                            MobileIconActionButton(
+                                icon = Icons.AutoMirrored.Filled.OpenInNew,
+                                contentDescription = "Auf ${streamingLabel ?: ""} ansehen",
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(54.dp),
+                                onClick = { onButtonClick(streamingButtonIndex) }
                             )
                         }
                     }
@@ -2512,6 +2541,16 @@ private fun DetailsContent(
                                 text = stringResource(R.string.list_add_to),
                                 isFocused = focusSectionForUi == FocusSection.BUTTONS && buttonIndex == listButtonIndex,
                                 isIconOnly = true
+                            )
+                        }
+                    }
+
+                    if (streamingButtonIndex >= 0) {
+                        Box(modifier = Modifier.clickable { onButtonClick(streamingButtonIndex) }) {
+                            PremiumActionButton(
+                                icon = Icons.AutoMirrored.Filled.OpenInNew,
+                                text = "Auf ${streamingLabel ?: ""} ansehen",
+                                isFocused = focusSectionForUi == FocusSection.BUTTONS && buttonIndex == streamingButtonIndex
                             )
                         }
                     }
