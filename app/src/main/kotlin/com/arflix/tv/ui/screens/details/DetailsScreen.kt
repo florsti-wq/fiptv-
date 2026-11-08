@@ -545,9 +545,9 @@ fun DetailsScreen(
             // While a post-idle sync runs the play target may still be the stale one.
             if (idx in 0..1 && !viewModel.canStartPlayback(state.idleSyncRevision)) Unit
             else if (idx >= 0 && idx == currentStreamingButtonIndex.value) {
-                currentStreamingTarget.value?.let { target ->
-                    com.arflix.tv.fiptv.StreamingApps.open(fiptvContext, target, state.item?.title)
-                }
+                val target = currentStreamingTarget.value
+                if (target != null) com.arflix.tv.fiptv.StreamingApps.open(fiptvContext, target, state.item?.title)
+                Unit
             }
             else if (idx == currentListButtonIndex.value) viewModel.openListPicker() else when (idx) {
                 0 -> { // Play
