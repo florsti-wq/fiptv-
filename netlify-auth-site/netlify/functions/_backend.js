@@ -74,7 +74,8 @@ function parseBody(event) {
 }
 
 function appAnonKey() {
-  return process.env.APP_ANON_KEY || "";
+  // fIPTV: Leerzeichen/Zeilenumbrüche/Anführungszeichen vom Einfügen ignorieren
+  return String(process.env.APP_ANON_KEY || "").trim().replace(/^["']+|["']+$/g, "");
 }
 
 function getHeader(headers = {}, name = "") {
