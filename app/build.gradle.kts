@@ -635,8 +635,12 @@ val validateReleaseCloudSecrets = tasks.register("validateReleaseCloudSecrets") 
     }
 }
 
+// fIPTV: Familien-Builds (mit -PfiptvBuild) brauchen Telegram, Trakt und ARVIO-Cloud nicht zwingend –
+// fehlende Zugangsdaten schalten die jeweilige Funktion nur ab, statt den Build abzubrechen.
+val isFiptvBuild = providers.gradleProperty("fiptvBuild").isPresent
+
 tasks.configureEach {
-    if (name in setOf(
+    if (!isFiptvBuild && name in setOf(
             "prePlayReleaseBuild",
             "preSideloadReleaseBuild",
             "prePlayStagingBuild",
