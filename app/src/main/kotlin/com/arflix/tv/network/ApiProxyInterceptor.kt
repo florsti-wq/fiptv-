@@ -14,7 +14,7 @@ import okhttp3.Response
 class ApiProxyInterceptor : Interceptor {
 
     override fun intercept(chain: Interceptor.Chain): Response {
-        val originalRequest = chain.request()
+        val originalRequest = fiptvTmdbBearer(chain.request())
         val originalUrl = originalRequest.url
 
         if (!hasProxyConfig()) {
@@ -60,6 +60,22 @@ class ApiProxyInterceptor : Interceptor {
                 chain.proceed(originalRequest)
             }
         }
+    }
+
+    /**
+     * fIPTV: TMDB bietet zwei Schlüsselarten – den kurzen „API-Schlüssel“ (v3, als ?api_key=)
+     * und das lange „API-Lesezugriffstoken“ (v4, beginnt mit eyJ, nur als Bearer-Header gültig).
+     * ARVIO hängt den Schlüssel immer als api_key an; ist es ein Token, wird er hier umgesetzt.
+     */
+    private fun fiptvTmdbBearer(request: Request): Request {
+        if (request.url.host != "api.themoviedb.org") return request
+        val key = request.url.queryParameter("api_key")?.trim().orEmpty()
+        if (!key.startsWith("eyJ")) return request
+        val url = request.url.newBuilder().removeAllQueryParameters("api_key").build()
+        return request.newBuilder()
+            .url(url)
+            .header("Authorization", "Bearer $key")
+            .build()
     }
 
     private fun rewriteForSimklProxy(originalRequest: Request): Request? {

@@ -54,10 +54,13 @@ jobs:
           cp secrets.defaults.properties secrets.properties
           for k in TMDB_API_KEY SUPABASE_URL SUPABASE_ANON_KEY APP_ANON_KEY NETLIFY_BACKEND_URL GOOGLE_WEB_CLIENT_ID TRAKT_CLIENT_ID TRAKT_CLIENT_SECRET YOUTUBE_CLIENT_ID YOUTUBE_CLIENT_SECRET; do
             v="${!k}"
+            # Leerzeichen, Zeilenumbrüche und Anführungszeichen vom Kopieren entfernen
+            v="$(printf '%s' "$v" | tr -d '\r\n' | sed -e 's/^[[:space:]"'"'"']*//' -e 's/[[:space:]"'"'"']*$//')"
             if [ -n "$v" ]; then
               sed -i "/^$k=/d" secrets.properties
               printf '%s=%s\n' "$k" "$v" >> secrets.properties
-              echo "✓ $k gesetzt"
+              kind=""; case "$v" in eyJ*) kind=", Token-Format";; esac
+              echo "✓ $k gesetzt (${#v} Zeichen$kind)"
             else
               echo "– $k nicht gesetzt (Funktion bleibt aus)"
             fi
