@@ -52,6 +52,19 @@ jobs:
           YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
         run: |
           cp secrets.defaults.properties secrets.properties
+          # Unabhängig von ARVIO: dessen Server-Adressen und öffentliche Schlüssel aus den
+          # Vorgaben entfernen. Ohne eigene Secrets ist der Sync dann einfach aus.
+          for k in SUPABASE_URL SUPABASE_ANON_KEY APP_ANON_KEY NETLIFY_BACKEND_URL DISCORD_CLIENT_ID SIMKL_V2_CLIENT_ID; do
+            sed -i "/^$k=/d" secrets.properties
+          done
+          {
+            echo "SUPABASE_URL=https://supabase.invalid"
+            echo "SUPABASE_ANON_KEY="
+            echo "APP_ANON_KEY="
+            echo "NETLIFY_BACKEND_URL="
+            echo "DISCORD_CLIENT_ID="
+            echo "SIMKL_V2_CLIENT_ID="
+          } >> secrets.properties
           for k in TMDB_API_KEY SUPABASE_URL SUPABASE_ANON_KEY APP_ANON_KEY NETLIFY_BACKEND_URL GOOGLE_WEB_CLIENT_ID TRAKT_CLIENT_ID TRAKT_CLIENT_SECRET YOUTUBE_CLIENT_ID YOUTUBE_CLIENT_SECRET; do
             v="${!k}"
             # Leerzeichen, Zeilenumbrüche und Anführungszeichen vom Kopieren entfernen

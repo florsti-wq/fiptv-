@@ -1,5 +1,7 @@
+# fIPTV: eigener Sync-Server. Nur die Funktionen werden gebraucht – statt der ARVIO-Webseite
+# wird lediglich die kleine Startseite dieses Ordners veröffentlicht.
 [build]
-  command = "npm --prefix ../web ci --include=dev && node scripts/build-partner-pilot.mjs --site"
+  command = "rm -rf public-build && mkdir -p public-build && cp -r index.html delete-account.html assets _headers _redirects public-build/"
   publish = "public-build"
 
 [build.environment]
@@ -8,11 +10,6 @@
 [functions."retention-cleanup"]
   schedule = "@daily"
 
-[functions."trial-email-worker"]
-  schedule = "*/30 * * * *"
-
-[functions."discord-premium-reconcile"]
-  schedule = "*/15 * * * *"
 
 [[redirects]]
   from = "/delete"

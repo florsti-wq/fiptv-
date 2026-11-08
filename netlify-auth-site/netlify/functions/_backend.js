@@ -26,8 +26,11 @@ function getPool() {
   if (!connectionString) {
     throw new Error("NETLIFY_DB_URL is not configured");
   }
+  // fIPTV: Supabase-Postgres verlangt TLS mit eigener Zertifikatskette – dafür die Prüfung lockern.
+  const needsTls = /supabase\.(co|com)/i.test(connectionString) || process.env.FIPTV_DB_SSL === "1";
   pool = new Pool({
-    connectionString,
+    connectionString: needsTls ? connectionString.replace(/[?&]sslmode=[^&]*/i, "") : connectionString,
+    ...(needsTls ? { ssl: { rejectUnauthorized: false } } : {}),
     max: Number(process.env.DB_POOL_MAX || 4),
     idleTimeoutMillis: 10_000,
     connectionTimeoutMillis: 8_000
