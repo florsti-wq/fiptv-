@@ -17,7 +17,7 @@ exports.handler = async (event) => {
     ),
     authSecretConfigured: !!process.env.ARVIO_AUTH_SECRET,
     // fIPTV: nur Länge, nie den Wert – zum Prüfen, ob der App-Schlüssel ankommt
-    appKeyLength: String(process.env.APP_ANON_KEY || "").length,
+    appKeyLength: require("./_backend").appAnonKeyLength(),
     databaseConfigured: !!(process.env.NETLIFY_DB_URL || process.env.NETLIFY_DATABASE_URL || process.env.DATABASE_URL),
     proxies: {
       tmdb: true,

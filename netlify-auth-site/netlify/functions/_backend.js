@@ -75,7 +75,12 @@ function parseBody(event) {
 
 function appAnonKey() {
   // fIPTV: Leerzeichen/Zeilenumbrüche/Anführungszeichen vom Einfügen ignorieren
-  return String(process.env.APP_ANON_KEY || "").trim().replace(/^["']+|["']+$/g, "");
+  // und eine versehentlich mitkopierte Zeile „APP_ANON_KEY = …“ auf den Wert kürzen
+  return String(process.env.APP_ANON_KEY || "")
+    .trim()
+    .replace(/^APP_ANON_KEY\s*[=:]\s*/i, "")
+    .trim()
+    .replace(/^["']+|["']+$/g, "");
 }
 
 function getHeader(headers = {}, name = "") {
@@ -2792,7 +2797,12 @@ async function handleRetentionCleanup(event) {
   });
 }
 
+function appAnonKeyLength() {
+  return appAnonKey().length;
+}
+
 module.exports = {
+  appAnonKeyLength,
   getPool,
   json,
   options,
