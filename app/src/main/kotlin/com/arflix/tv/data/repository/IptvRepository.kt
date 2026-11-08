@@ -6443,6 +6443,17 @@ class IptvRepository @Inject constructor(
         xtreamProvidersForSeriesImport(config).map { it.creds }
 
     /**
+     * fIPTV: Xtream-Zugänge der aktiven Playlists für den eigenen VOD-Bereich
+     * (Filme und Serien des Anbieters zum Durchstöbern).
+     */
+    suspend fun fiptvXtreamAccounts(): List<com.arflix.tv.fiptv.vod.XtreamAccount> {
+        val config = observeConfig().first()
+        return (xtreamProvidersForVodImport(config) + xtreamProvidersForSeriesImport(config))
+            .distinctBy { it.creds }
+            .map { com.arflix.tv.fiptv.vod.XtreamAccount(it.sourceId, it.name, it.creds.baseUrl, it.creds.username, it.creds.password) }
+    }
+
+    /**
      * Stamps the provider a source came from onto it.
      *
      * The source menu already renders `behaviorHints.provider` as a second line

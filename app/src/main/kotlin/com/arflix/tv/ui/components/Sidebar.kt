@@ -29,6 +29,7 @@ import androidx.compose.material.icons.outlined.LiveTv
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.VideoLibrary
+import androidx.compose.material.icons.outlined.Newspaper
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -63,8 +64,10 @@ enum class SidebarItem(val icon: ImageVector, @StringRes val labelRes: Int) {
     HOME(Icons.Outlined.Home, R.string.home),
     WATCHLIST(Icons.Outlined.Bookmark, R.string.nav_library),
     TV(Icons.Outlined.LiveTv, R.string.tv_shows),
+    // fIPTV: Filme und Serien des IPTV-Anbieters (getrennt von TMDB/Addons)
+    VOD(Icons.Outlined.VideoLibrary, R.string.fiptv_nav_vod),
     // fIPTV: Mediatheken der öffentlich-rechtlichen Sender
-    MEDIATHEK(Icons.Outlined.VideoLibrary, R.string.fiptv_nav_mediathek),
+    MEDIATHEK(Icons.Outlined.Newspaper, R.string.fiptv_nav_mediathek),
     SETTINGS(Icons.Outlined.Settings, R.string.settings)
 }
 

@@ -1430,7 +1430,7 @@ fun SettingsScreen(
                                             SidebarItem.HOME -> onNavigateToHome()
                                             SidebarItem.TV -> onNavigateToTv()
                                             SidebarItem.WATCHLIST -> onNavigateToWatchlist()
-                                            SidebarItem.MEDIATHEK -> com.arflix.tv.navigation.FiptvNav.open(com.arflix.tv.navigation.FiptvNav.MEDIATHEK); SidebarItem.SETTINGS -> { /* Already here */ }
+                                            SidebarItem.VOD -> com.arflix.tv.navigation.FiptvNav.open(com.arflix.tv.navigation.FiptvNav.VOD); SidebarItem.MEDIATHEK -> com.arflix.tv.navigation.FiptvNav.open(com.arflix.tv.navigation.FiptvNav.MEDIATHEK); SidebarItem.SETTINGS -> { /* Already here */ }
                                             null -> Unit
                                         }
                                     }

@@ -247,7 +247,7 @@ fun AppNavigation(
     // fIPTV: zusätzliche Bereiche (Mediathek …) aus allen Bildschirmen erreichbar machen
     SideEffect {
         FiptvNav.navigator = { route ->
-            if (!(isKidsProfile && route == FiptvNav.MEDIATHEK)) navigateTopLevel(route)
+            if (!(isKidsProfile && (route == FiptvNav.MEDIATHEK || route == FiptvNav.VOD))) navigateTopLevel(route)
         }
     }
 
@@ -292,6 +292,42 @@ fun AppNavigation(
                     }
                 }
             )
+        }
+
+        // fIPTV: Filme und Serien des IPTV-Anbieters
+        composable(FiptvNav.VOD) {
+            NavigationRailScreen(navigationRailInset, bottomInset = navigationRailBottomInset) {
+                com.arflix.tv.fiptv.vod.VodScreen(
+                    onPlayMovie = { movie, url ->
+                        navController.navigate(
+                            Screen.Player.createRoute(
+                                mediaType = MediaType.MOVIE,
+                                mediaId = movie.tmdbId ?: 0,
+                                streamUrl = url,
+                                isLiveStream = false
+                            )
+                        )
+                    },
+                    onPlayEpisode = { series, episode, url ->
+                        val tmdb = series.tmdbId
+                        navController.navigate(
+                            if (tmdb != null) Screen.Player.createRoute(
+                                mediaType = MediaType.TV,
+                                mediaId = tmdb,
+                                seasonNumber = episode.season,
+                                episodeNumber = episode.episode,
+                                streamUrl = url,
+                                isLiveStream = false
+                            ) else Screen.Player.createRoute(
+                                mediaType = MediaType.MOVIE,
+                                mediaId = 0,
+                                streamUrl = url,
+                                isLiveStream = false
+                            )
+                        )
+                    }
+                )
+            }
         }
 
         // fIPTV: Mediatheken
