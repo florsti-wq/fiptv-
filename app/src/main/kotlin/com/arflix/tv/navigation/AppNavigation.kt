@@ -244,6 +244,13 @@ fun AppNavigation(
         }
     }
 
+    // fIPTV: zusätzliche Bereiche (Mediathek …) aus allen Bildschirmen erreichbar machen
+    SideEffect {
+        FiptvNav.navigator = { route ->
+            if (!(isKidsProfile && route == FiptvNav.MEDIATHEK)) navigateTopLevel(route)
+        }
+    }
+
     val navigateHome: () -> Unit = {
         // Pop back to the EXISTING Home entry rather than replacing it.
         //
@@ -285,6 +292,27 @@ fun AppNavigation(
                     }
                 }
             )
+        }
+
+        // fIPTV: Mediatheken
+        composable(FiptvNav.MEDIATHEK) {
+            NavigationRailScreen(navigationRailInset, bottomInset = navigationRailBottomInset) {
+                com.arflix.tv.fiptv.mediathek.MediathekScreen(
+                    onPlay = { item ->
+                        val url = item.bestVideo
+                        if (url != null) {
+                            navController.navigate(
+                                Screen.Player.createRoute(
+                                    mediaType = MediaType.MOVIE,
+                                    mediaId = 0,
+                                    streamUrl = url,
+                                    isLiveStream = false
+                                )
+                            )
+                        }
+                    }
+                )
+            }
         }
 
         // Home screen

@@ -891,7 +891,7 @@ fun DetailsScreen(
                                         SidebarItem.HOME -> onNavigateToHome()
                                         SidebarItem.WATCHLIST -> onNavigateToWatchlist()
                                         SidebarItem.TV -> onNavigateToTv()
-                                        SidebarItem.SETTINGS -> onNavigateToSettings()
+                                        SidebarItem.MEDIATHEK -> com.arflix.tv.navigation.FiptvNav.open(com.arflix.tv.navigation.FiptvNav.MEDIATHEK); SidebarItem.SETTINGS -> onNavigateToSettings()
                                         null -> Unit
                                     }
                                 }
