@@ -68,15 +68,22 @@ android {
     flavorDimensions += "distribution"
 
     defaultConfig {
-        applicationId = "com.arvio.tv"
+        // fIPTV: eigene App-ID, damit die Kopie neben dem Original-ARVIO installiert werden kann
+        applicationId = "com.fiptv.tv"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         // Fire TV devices can be as low as Android 7.1 (API 25) or lower depending on model/OS.
         minSdk = 23
         targetSdk = 36
-        versionCode = 322
-        versionName = "2.3.1"
-        buildConfigField("String", "GITHUB_OWNER", "\"ProdigyV21\"")
-        buildConfigField("String", "GITHUB_REPO", "\"ARVIO\"")
+        // fIPTV: ARVIO-Version + laufende Build-Nummer aus GitHub Actions (-PfiptvBuild=N),
+        // damit jede neue APK sich über die alte installiert und das Selbst-Update sie erkennt.
+        val upstreamVersionCode = 322
+        val upstreamVersionName = "2.3.1"
+        val fiptvBuild = (providers.gradleProperty("fiptvBuild").orNull?.toIntOrNull() ?: 0).coerceIn(0, 999)
+        versionCode = upstreamVersionCode * 1000 + fiptvBuild
+        versionName = "$upstreamVersionName.$fiptvBuild"
+        // Selbst-Update holt neue Versionen aus den Releases des fIPTV-Forks, nicht von ARVIO
+        buildConfigField("String", "GITHUB_OWNER", "\"florsti-wq\"")
+        buildConfigField("String", "GITHUB_REPO", "\"fiptv-\"")
         buildConfigField("Boolean", "FEATURE_PLUGINS_ENABLED", "false")
         buildConfigField("Boolean", "PARTNER_MANAGEMENT_ENABLED", (providers.gradleProperty("partnerManagement").orNull == "true").toString())
         // Use the same resolution for generated values and release validation.
@@ -200,10 +207,11 @@ android {
             isJniDebuggable = false
             renderscriptOptimLevel = 3
 
-            // Build config fields for release
-            buildConfigField("Boolean", "ENABLE_CRASH_REPORTING", "true")
+            // fIPTV: keine Absturz-/Nutzungsberichte an das Firebase-Projekt von ARVIO
+            buildConfigField("Boolean", "ENABLE_CRASH_REPORTING", "false")
             configure<CrashlyticsExtension> {
-                nativeSymbolUploadEnabled = true
+                nativeSymbolUploadEnabled = false
+                mappingFileUploadEnabled = false
             }
         }
 
@@ -223,7 +231,7 @@ android {
             applicationIdSuffix = ".beta"
             versionNameSuffix = "-diagnostics"
             matchingFallbacks += "debug"
-            buildConfigField("Boolean", "ENABLE_CRASH_REPORTING", "true")
+            buildConfigField("Boolean", "ENABLE_CRASH_REPORTING", "false")
         }
 
         // Beta build: release-grade optimizations in a separate package so it
@@ -241,7 +249,7 @@ android {
             isDebuggable = false
             isJniDebuggable = false
 
-            buildConfigField("Boolean", "ENABLE_CRASH_REPORTING", "true")
+            buildConfigField("Boolean", "ENABLE_CRASH_REPORTING", "false")
         }
     }
 

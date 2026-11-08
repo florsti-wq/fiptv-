@@ -1,0 +1,112 @@
+# fIPTV: baut die APK (Fire TV, Android TV, Handy) und veröffentlicht sie als Release.
+# Download für den Downloader auf dem Fire TV (immer die neueste Version):
+#   https://github.com/florsti-wq/fiptv-/releases/latest/download/fiptv.apk
+name: fIPTV APK bauen
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - "web/**"
+      - "netlify-*/**"
+      - "supabase/**"
+      - "screenshots/**"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fiptv-apk
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    name: APK bauen und veröffentlichen
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Code holen
+        uses: actions/checkout@v5
+
+      - name: Java 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Zugangsdaten eintragen (aus den Repository-Secrets)
+        env:
+          TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          APP_ANON_KEY: ${{ secrets.APP_ANON_KEY }}
+          NETLIFY_BACKEND_URL: ${{ secrets.NETLIFY_BACKEND_URL }}
+          GOOGLE_WEB_CLIENT_ID: ${{ secrets.GOOGLE_WEB_CLIENT_ID }}
+          TRAKT_CLIENT_ID: ${{ secrets.TRAKT_CLIENT_ID }}
+          TRAKT_CLIENT_SECRET: ${{ secrets.TRAKT_CLIENT_SECRET }}
+          YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
+          YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+        run: |
+          cp secrets.defaults.properties secrets.properties
+          for k in TMDB_API_KEY SUPABASE_URL SUPABASE_ANON_KEY APP_ANON_KEY NETLIFY_BACKEND_URL GOOGLE_WEB_CLIENT_ID TRAKT_CLIENT_ID TRAKT_CLIENT_SECRET YOUTUBE_CLIENT_ID YOUTUBE_CLIENT_SECRET; do
+            v="${!k}"
+            if [ -n "$v" ]; then
+              sed -i "/^$k=/d" secrets.properties
+              printf '%s=%s\n' "$k" "$v" >> secrets.properties
+              echo "✓ $k gesetzt"
+            else
+              echo "– $k nicht gesetzt (Funktion bleibt aus)"
+            fi
+          done
+
+      - name: Signaturschlüssel
+        env:
+          FIPTV_KEYSTORE_B64: ${{ secrets.FIPTV_KEYSTORE_B64 }}
+          FIPTV_KEYSTORE_PASSWORD: ${{ secrets.FIPTV_KEYSTORE_PASSWORD }}
+        run: |
+          if [ -z "$FIPTV_KEYSTORE_B64" ] || [ -z "$FIPTV_KEYSTORE_PASSWORD" ]; then
+            echo "::error::Secrets FIPTV_KEYSTORE_B64 und FIPTV_KEYSTORE_PASSWORD fehlen. Ohne festen Schlüssel ließe sich keine neue Version über die alte installieren."
+            exit 1
+          fi
+          echo "$FIPTV_KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/fiptv.keystore"
+          {
+            echo "storeFile=$RUNNER_TEMP/fiptv.keystore"
+            echo "storePassword=$FIPTV_KEYSTORE_PASSWORD"
+            echo "keyAlias=fiptv"
+            echo "keyPassword=$FIPTV_KEYSTORE_PASSWORD"
+          } > keystore.properties
+
+      - name: APK bauen
+        run: ./gradlew :app:assembleSideloadRelease --no-daemon --stacktrace -PfiptvBuild=${{ github.run_number }}
+
+      - name: APK einsammeln
+        id: apk
+        run: |
+          apk=$(find app/build/outputs/apk/sideload/release -name '*.apk' | head -n1)
+          test -n "$apk" || { echo "::error::Keine APK gefunden"; exit 1; }
+          cp "$apk" fiptv.apk
+          upstream=$(grep -oP 'upstreamVersionName = "\K[^"]+' app/build.gradle.kts)
+          echo "version=$upstream.${{ github.run_number }}" >> "$GITHUB_OUTPUT"
+          ls -lh fiptv.apk
+
+      - name: Als Artefakt ablegen
+        uses: actions/upload-artifact@v4
+        with:
+          name: fiptv-${{ steps.apk.outputs.version }}
+          path: fiptv.apk
+          retention-days: 14
+
+      - name: Release veröffentlichen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="v${{ steps.apk.outputs.version }}"
+          notes="fIPTV ${{ steps.apk.outputs.version }} (Basis ARVIO, Build ${{ github.run_number }}).
+          Commit: ${{ github.sha }}
+
+          Fire TV: im Downloader https://github.com/${{ github.repository }}/releases/latest/download/fiptv.apk öffnen."
+          gh release create "$tag" fiptv.apk --title "fIPTV $tag" --notes "$notes" --target "${{ github.sha }}" --latest
