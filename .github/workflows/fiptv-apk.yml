@@ -60,12 +60,13 @@ jobs:
             sed -i "/^$k=/d" secrets.properties
           done
           {
+            # Platzhalter statt leer: leere Werte erzeugen ungültigen Java-Code in BuildConfig
             echo "SUPABASE_URL=https://supabase.invalid"
-            echo "SUPABASE_ANON_KEY="
-            echo "APP_ANON_KEY="
-            echo "NETLIFY_BACKEND_URL="
-            echo "DISCORD_CLIENT_ID="
-            echo "SIMKL_V2_CLIENT_ID="
+            echo "SUPABASE_ANON_KEY=your-supabase-anon-key"
+            echo "APP_ANON_KEY=your-app-anon-key"
+            echo "NETLIFY_BACKEND_URL=your-netlify-backend-url"
+            echo "DISCORD_CLIENT_ID=your-discord-client-id"
+            echo "SIMKL_V2_CLIENT_ID=your-simkl-client-id"
           } >> secrets.properties
           for k in TMDB_API_KEY SUPABASE_URL SUPABASE_ANON_KEY APP_ANON_KEY NETLIFY_BACKEND_URL GOOGLE_WEB_CLIENT_ID TRAKT_CLIENT_ID TRAKT_CLIENT_SECRET YOUTUBE_CLIENT_ID YOUTUBE_CLIENT_SECRET; do
             v="${!k}"
