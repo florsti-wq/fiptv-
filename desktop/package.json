@@ -22,12 +22,40 @@
     "appId": "com.fiptv.desktop",
     "productName": "fIPTV",
     "copyright": "fIPTV – auf Basis von ARVIO (Apache 2.0)",
-    "directories": { "output": "dist", "buildResources": "build" },
-    "files": ["main.js", "preload.js", "setup.html", "build/icon.png", "package.json"],
-    "extraResources": [{ "from": "server", "to": "server", "filter": ["**/*"] }],
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "setup.html",
+      "build/icon.png",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "server",
+        "to": "server",
+        "filter": [
+          "**/*",
+          "**/.*",
+          "**/.*/**",
+          "**/node_modules/**",
+          "!**/*.map"
+        ]
+      }
+    ],
     "asar": true,
     "win": {
-      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
       "icon": "build/icon.ico",
       "artifactName": "fIPTV-Setup.${ext}"
     },
@@ -41,6 +69,11 @@
       "language": "1031",
       "deleteAppDataOnUninstall": false
     },
-    "publish": [{ "provider": "generic", "url": "https://github.com/florsti-wq/fiptv-/releases/download/desktop-latest" }]
+    "publish": [
+      {
+        "provider": "generic",
+        "url": "https://github.com/florsti-wq/fiptv-/releases/download/desktop-latest"
+      }
+    ]
   }
 }

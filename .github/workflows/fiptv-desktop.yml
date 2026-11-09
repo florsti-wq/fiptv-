@@ -90,6 +90,7 @@ jobs:
         working-directory: desktop/dist
         run: |
           ls -la
+          ls -la win-unpacked/resources/server | head -30
           test -f win-unpacked/resources/server/server.js
           test -d win-unpacked/resources/server/node_modules/next
           test -d win-unpacked/resources/server/.next/static
