@@ -67,6 +67,7 @@ const loadPlayer = () => import("@/components/player/PlayerOverlay");
 const SearchScreen = memo(dynamic(() => import("@/components/search/SearchScreen").then((m) => m.SearchScreen), { ssr: false, loading: () => <ScreenLoading /> }));
 const WatchlistScreen = memo(dynamic(() => import("@/components/watchlist/WatchlistScreen").then((m) => m.WatchlistScreen), { ssr: false, loading: () => <ScreenLoading /> }));
 const LiveTvScreen = memo(dynamic(() => import("@/components/livetv/LiveTvScreen").then((m) => m.LiveTvScreen), { ssr: false, loading: () => <ScreenLoading /> }));
+const ProviderVodScreen = memo(dynamic(() => import("@/components/vod/ProviderVodScreen").then((m) => m.ProviderVodScreen), { ssr: false, loading: () => <ScreenLoading /> }));
 const AddonsScreen = memo(dynamic(() => import("@/components/addons/AddonsScreen").then((m) => m.AddonsScreen), { ssr: false, loading: () => <ScreenLoading /> }));
 const SettingsScreen = memo(dynamic(() => import("@/components/settings/SettingsScreen").then((m) => m.SettingsScreen), { ssr: false, loading: () => <ScreenLoading /> }));
 const DetailsDrawer = memo(dynamic(() => loadDetails().then((m) => m.DetailsDrawer), { ssr: false, loading: () => <ScreenLoading /> }));
@@ -136,7 +137,7 @@ export function AppShell() {
   const kidsProfile = Boolean(kidsLevelOf(activeProfile));
   // A kids profile never stays on Live TV, however it got there (a saved section, a link).
   useEffect(() => {
-    if (kidsProfile && section === "tv") setSection("home");
+    if (kidsProfile && (section === "tv" || section === "vod")) setSection("home");
   }, [kidsProfile, section, setSection]);
   const [mounted, setMounted] = useState(false);
   const [collectionOpen, setCollectionOpen] = useState(false);
@@ -231,6 +232,7 @@ export function AppShell() {
             {section === "search" && <ScreenBoundary screen="search"><SearchScreen /></ScreenBoundary>}
             {section === "watchlist" && <ScreenBoundary screen="library"><WatchlistScreen /></ScreenBoundary>}
             {section === "tv" && !kidsProfile && <ScreenBoundary screen="tv"><LiveTvScreen /></ScreenBoundary>}
+            {section === "vod" && !kidsProfile && <ScreenBoundary screen="vod"><ProviderVodScreen /></ScreenBoundary>}
             {section === "addons" && <ScreenBoundary screen="addons"><AddonsScreen /></ScreenBoundary>}
             {section === "settings" && <ScreenBoundary screen="settings"><SettingsScreen /></ScreenBoundary>}
           </>

@@ -1,6 +1,6 @@
 export type MediaType = "movie" | "tv";
 
-export type NavSection = "home" | "tv" | "search" | "watchlist" | "addons" | "settings";
+export type NavSection = "home" | "tv" | "vod" | "search" | "watchlist" | "addons" | "settings";
 
 export interface MediaItem {
   id: number;

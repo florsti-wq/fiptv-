@@ -75,7 +75,7 @@ function imdbOf(entry: { imdb?: string; imdb_id?: string }): string {
   return /^tt\d+$/.test(raw) ? raw : "";
 }
 
-function xtreamProviders(playlists: IptvPlaylistEntry[], kind: "movies" | "series") {
+export function xtreamProviders(playlists: IptvPlaylistEntry[], kind: "movies" | "series") {
   const providers: Array<{ info: XtreamInfo; name: string }> = [];
   const seen = new Set<string>();
   for (const playlist of playlists) {

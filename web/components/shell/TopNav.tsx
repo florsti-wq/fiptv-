@@ -2,7 +2,7 @@
 import { useTranslation } from "@/lib/i18n";
 
 
-import { BadgeCheck, Bookmark, Home, Search, Settings, Tv } from "lucide-react";
+import { BadgeCheck, Bookmark, Clapperboard, Home, Search, Settings, Tv } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useAppPick } from "@/lib/store";
 import { kidsLevelOf } from "@/lib/kids";
@@ -18,7 +18,9 @@ const nav = [
   { id: "home", label: "Home", icon: Home },
   { id: "search", label: "Search", icon: Search },
   { id: "watchlist", label: "Library", icon: Bookmark },
-  { id: "tv", label: "TV", icon: Tv }
+  { id: "tv", label: "TV", icon: Tv },
+  // fIPTV: Filme und Serien des IPTV-Anbieters
+  { id: "vod", label: "VOD", icon: Clapperboard }
 ] satisfies Array<{ id: NavSection; label: string; icon: typeof Home }>;
 
 export function TopNav() {
@@ -39,7 +41,7 @@ export function TopNav() {
   const [scrolled, setScrolled] = useState(false);
   const barRef = useRef<HTMLElement>(null);
   // Live TV carries no age ratings: a kids profile loses the tab (Android KidsNavigation).
-  const visibleNav = kidsLevelOf(activeProfile) ? nav.filter((item) => item.id !== "tv") : nav;
+  const visibleNav = kidsLevelOf(activeProfile) ? nav.filter((item) => item.id !== "tv" && item.id !== "vod") : nav;
   const entitlement = useEntitlement();
   const [now, setNow] = useState(Date.now);
   const trialLabel = trialRemainingLabel(entitlement, now);
