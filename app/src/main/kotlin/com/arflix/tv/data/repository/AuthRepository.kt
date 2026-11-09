@@ -683,9 +683,10 @@ class AuthRepository @Inject constructor(
         defaultError: String
     ): CloudAccountSession {
         return withContext(Dispatchers.IO) {
+            // fIPTV: Leerzeichen am Anfang/Ende (z. B. aus der Zwischenablage) nicht als Teil des Passworts werten
             val payload = JSONObject()
                 .put("email", email)
-                .put("password", password)
+                .put("password", password.trim())
                 .toString()
 
             val request = Request.Builder()
