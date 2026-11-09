@@ -1,4 +1,4 @@
-# fIPTV Web – Heim-PC-Version
+# fIPTV Web - Heim-PC-Version
 # Laedt fIPTV Web von GitHub, baut es einmal und startet es auf diesem PC.
 # Sender und Streams laufen dann ueber deinen eigenen Internetanschluss (wie beim Fire TV).
 # Aufruf: fIPTV-Web.bat            -> starten (beim ersten Mal: herunterladen + bauen)
