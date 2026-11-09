@@ -26,6 +26,7 @@ export async function GET(request: NextRequest) {
     !request.headers.has("range") &&
     isLikelyPlaylistTarget(target);
   if (!ALLOW_MEDIA_PROXY && !playlistOnlyRequest && isLikelyMediaRequest(target, request)) {
+    if (HOME_LOG) console.error(`[proxy] Medien-Proxy aus: ${scrubTarget(target)}`);
     return NextResponse.json(
       { error: "Media proxy disabled to protect hosting bandwidth. Use direct playback or an external player." },
       { status: 403 }
@@ -35,12 +36,16 @@ export async function GET(request: NextRequest) {
   const forwardedHeaders = decodeHeaders(input.searchParams.get("headers")) ?? {};
   const range = request.headers.get("range");
   if (range) forwardedHeaders.range = range;
+  const started = Date.now();
   const response = await fetchWithTimeout(target, {
     headers: forwardedHeaders,
     cache: "no-store",
     redirect: "follow",
     signal: request.signal
   });
+  if (HOME_LOG) {
+    console.log(`[proxy] ${response.status} ${Date.now() - started}ms ${range ? `range=${range} ` : ""}${scrubTarget(target)} type=${response.headers.get("content-type") ?? "-"} len=${response.headers.get("content-length") ?? "-"}${response.status >= 400 ? ` ${response.headers.get("x-fiptv-error") ?? ""}` : ""}`);
+  }
 
   const contentType = response.headers.get("content-type") ?? "application/octet-stream";
   if (response.ok && shouldRewritePlaylist(target, contentType)) {
@@ -293,7 +298,17 @@ async function fetchWithTimeout(target: URL, init: RequestInit) {
   }
 }
 
+// fIPTV Heim-PC/Windows-App: Proxy-Anfragen ins Protokoll schreiben (ohne Zugangsdaten).
+const HOME_LOG = process.env.FIPTV_HOME_PROXY === "true" && !process.env.NETLIFY;
+function scrubTarget(target: URL) {
+  const copy = new URL(target);
+  for (const key of ["username", "password", "token"]) if (copy.searchParams.has(key)) copy.searchParams.set(key, "***");
+  copy.pathname = copy.pathname.replace(/^\/(movie|series|live|timeshift)\/[^/]+\/[^/]+\//i, "/$1/***/***/");
+  return `${copy.host}${copy.pathname}${copy.search}`.slice(0, 300);
+}
+
 function proxyFailure(error: unknown) {
+  if (HOME_LOG) console.error(`[proxy] Fehler: ${error instanceof Error ? `${error.name}: ${error.message}` : String(error)}`);
   if (error instanceof Error && ["AbortError", "TimeoutError"].includes(error.name)) {
     return NextResponse.json({ error: "Proxy target timed out" }, { status: 504, headers: { "cache-control": "no-store" } });
   }

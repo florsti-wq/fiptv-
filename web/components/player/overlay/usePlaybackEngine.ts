@@ -55,6 +55,7 @@ export function usePlaybackEngine({ autoSourceHopsRef, currentStreamRef, failure
       lastSavedRef.current = 0;
       const remuxFailed = (message: string) => {
         if (cancelled || recovering) return;
+        console.warn(`[fiptv] Umwandlung fehlgeschlagen: ${message} (${String(stream.url ?? "").replace(/\/(movie|series|live)\/[^/]+\/[^/]+\//, "/$1/***/***/").replace(/(username|password)=[^&]+/g, "$1=***").slice(0, 200)})`);
         recovering = true;
         failureDiagnosticRef.current = { failure_kind: playbackFailureKind({ message }), phase: video.currentTime > 0 ? "playback" : "startup" };
         if (video.currentTime > 0) resumeAtRef.current = video.currentTime;
