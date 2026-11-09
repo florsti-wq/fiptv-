@@ -97,8 +97,9 @@ jobs:
           ls -la
           ls -la win-unpacked/resources
           test -f win-unpacked/resources/server.tgz
-          tar -tzf win-unpacked/resources/server.tgz | grep -q "node_modules/next/package.json"
-          tar -tzf win-unpacked/resources/server.tgz | grep -q "^./.next/static/" 
+          tar -tzf win-unpacked/resources/server.tgz > ../server-files.txt
+          grep -q "node_modules/next/package.json" ../server-files.txt
+          grep -q "^./.next/static/" ../server-files.txt
 
       - name: Freigabe „desktop-latest“ aktualisieren
         env:
