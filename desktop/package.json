@@ -35,15 +35,8 @@
     ],
     "extraResources": [
       {
-        "from": "server",
-        "to": "server",
-        "filter": [
-          "**/*",
-          "**/.*",
-          "**/.*/**",
-          "**/node_modules/**",
-          "!**/*.map"
-        ]
+        "from": "server.tgz",
+        "to": "server.tgz"
       }
     ],
     "asar": true,

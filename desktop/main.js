@@ -34,8 +34,35 @@ function writeConfig(config) {
   fs.writeFileSync(configPath(), JSON.stringify(config, null, 2));
 }
 
+// Der Server liegt gepackt in resources/server.tgz (electron-builder übernimmt keine
+// node_modules) und wird pro Version einmal nach %APPDATA%\fIPTV\server entpackt.
 function serverDir() {
-  return app.isPackaged ? path.join(process.resourcesPath, "server") : path.join(__dirname, "server");
+  if (!app.isPackaged) return path.join(__dirname, "server");
+  return path.join(app.getPath("userData"), "server", app.getVersion());
+}
+
+function ensureServerFiles() {
+  if (!app.isPackaged) return Promise.resolve();
+  const target = serverDir();
+  if (fs.existsSync(path.join(target, "server.js"))) return Promise.resolve();
+  const base = path.dirname(target);
+  const temp = `${target}.tmp`;
+  fs.rmSync(temp, { recursive: true, force: true });
+  fs.mkdirSync(temp, { recursive: true });
+  const tar = path.join(process.env.SystemRoot || "C:\\Windows", "System32", "tar.exe");
+  return new Promise((resolve, reject) => {
+    const child = spawn(tar, ["-xzf", path.join(process.resourcesPath, "server.tgz"), "-C", temp], { windowsHide: true });
+    child.on("error", reject);
+    child.on("exit", (code) => {
+      if (code !== 0) { reject(new Error(`tar ${code}`)); return; }
+      fs.renameSync(temp, target);
+      // Alte Versionen aufräumen
+      for (const name of fs.readdirSync(base)) {
+        if (name !== app.getVersion()) fs.rmSync(path.join(base, name), { recursive: true, force: true });
+      }
+      resolve();
+    });
+  });
 }
 
 function startServer(config) {
@@ -132,6 +159,10 @@ async function launch() {
   const config = readConfig();
   if (!config.tmdbKey) { showSetup(win); return; }
   win.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(LOADING_HTML)}`);
+  try { await ensureServerFiles(); } catch (error) {
+    showSetup(win, "fIPTV konnte nicht eingerichtet werden: " + (error?.message || error));
+    return;
+  }
   startServer(config);
   try {
     await waitForServer();

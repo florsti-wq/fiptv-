@@ -76,6 +76,11 @@ jobs:
           curl -fsS -o /dev/null http://127.0.0.1:38917/ || { cat ../server-test.log; exit 1; }
           taskkill //F //IM node.exe > /dev/null 2>&1 || true
 
+      - name: Server packen
+        run: |
+          tar -czf desktop/server.tgz -C desktop/server .
+          ls -la desktop/server.tgz
+
       - name: Electron – Abhängigkeiten
         working-directory: desktop
         run: npm install --no-audit --no-fund
@@ -90,10 +95,10 @@ jobs:
         working-directory: desktop/dist
         run: |
           ls -la
-          ls -la win-unpacked/resources/server | head -30
-          test -f win-unpacked/resources/server/server.js
-          test -d win-unpacked/resources/server/node_modules/next
-          test -d win-unpacked/resources/server/.next/static
+          ls -la win-unpacked/resources
+          test -f win-unpacked/resources/server.tgz
+          tar -tzf win-unpacked/resources/server.tgz | grep -q "node_modules/next/package.json"
+          tar -tzf win-unpacked/resources/server.tgz | grep -q "^./.next/static/" 
 
       - name: Freigabe „desktop-latest“ aktualisieren
         env:
