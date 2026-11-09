@@ -13,7 +13,10 @@ const ALLOWED_HEADERS = new Set(["accept", "accept-language", "authorization", "
 
 export function allowsMediaProxy() {
   // A browser build flag must never turn the hosted metadata route into a CDN.
-  return !process.env.NETLIFY && process.env.NODE_ENV !== "production" && process.env.ALLOW_NETLIFY_MEDIA_PROXY === "true";
+  if (process.env.NETLIFY) return false;
+  // fIPTV: Heim-PC-Version (fiptv-pc/) leitet Sender über den eigenen PC weiter.
+  if (process.env.FIPTV_HOME_PROXY === "true") return true;
+  return process.env.NODE_ENV !== "production" && process.env.ALLOW_NETLIFY_MEDIA_PROXY === "true";
 }
 
 export function isMediaProxyTarget(target: URL) {
@@ -169,5 +172,5 @@ export function withinProxyBudget(key: string, now = Date.now()) {
     if (requests.size >= 4000) requests.delete(requests.keys().next().value!);
     requests.set(key, { start: now, count: 1 }); return true;
   }
-  return ++previous.count <= 180;
+  return ++previous.count <= (process.env.FIPTV_HOME_PROXY === "true" ? 1200 : 180);
 }
