@@ -1944,6 +1944,13 @@ fun LiveTvScreen(
 
     var categoryDrawerOpen by rememberSaveable { mutableStateOf(true) }
     var sportsSelected by rememberSaveable(currentProfile?.id) { mutableStateOf(false) }
+    // fIPTV: aus dem Sport-Bereich („Live im TV“) direkt den Sports-Hub öffnen
+    LaunchedEffect(Unit) {
+        if (com.arflix.tv.navigation.FiptvNav.consumeSportsHub()) {
+            sportsSelected = true
+            if (isTouchDevice) currentMode = LiveTvStartup.LiveTvMode.Guide
+        }
+    }
     LaunchedEffect(sportsAddonInstallations, state.isConfigured) {
         if (!state.isConfigured && sportsAddonInstallations.isNotEmpty()) {
             sportsSelected = true
@@ -4284,7 +4291,7 @@ fun LiveTvScreen(
                                                 SidebarItem.HOME -> onNavigateToHome()
                                                 SidebarItem.WATCHLIST -> onNavigateToWatchlist()
                                                 SidebarItem.TV -> Unit
-                                                SidebarItem.VOD -> com.arflix.tv.navigation.FiptvNav.open(com.arflix.tv.navigation.FiptvNav.VOD); SidebarItem.MEDIATHEK -> com.arflix.tv.navigation.FiptvNav.open(com.arflix.tv.navigation.FiptvNav.MEDIATHEK); SidebarItem.YOUTUBE -> com.arflix.tv.navigation.FiptvNav.open(com.arflix.tv.navigation.FiptvNav.YOUTUBE); SidebarItem.SETTINGS -> onNavigateToSettings()
+                                                SidebarItem.VOD -> com.arflix.tv.navigation.FiptvNav.open(com.arflix.tv.navigation.FiptvNav.VOD); SidebarItem.MEDIATHEK -> com.arflix.tv.navigation.FiptvNav.open(com.arflix.tv.navigation.FiptvNav.MEDIATHEK); SidebarItem.YOUTUBE -> com.arflix.tv.navigation.FiptvNav.open(com.arflix.tv.navigation.FiptvNav.YOUTUBE); SidebarItem.SPORT -> com.arflix.tv.navigation.FiptvNav.open(com.arflix.tv.navigation.FiptvNav.SPORT); SidebarItem.SETTINGS -> onNavigateToSettings()
                                                 null -> Unit
                                             }
                                         }

@@ -3062,7 +3062,7 @@ internal fun HomeInputLayer(
                                     SidebarItem.HOME -> Unit
                                     SidebarItem.WATCHLIST -> onNavigateToWatchlist()
                                     SidebarItem.TV -> onNavigateToTv(null, null)
-                                    SidebarItem.VOD -> com.arflix.tv.navigation.FiptvNav.open(com.arflix.tv.navigation.FiptvNav.VOD); SidebarItem.MEDIATHEK -> com.arflix.tv.navigation.FiptvNav.open(com.arflix.tv.navigation.FiptvNav.MEDIATHEK); SidebarItem.YOUTUBE -> com.arflix.tv.navigation.FiptvNav.open(com.arflix.tv.navigation.FiptvNav.YOUTUBE); SidebarItem.SETTINGS -> onNavigateToSettings()
+                                    SidebarItem.VOD -> com.arflix.tv.navigation.FiptvNav.open(com.arflix.tv.navigation.FiptvNav.VOD); SidebarItem.MEDIATHEK -> com.arflix.tv.navigation.FiptvNav.open(com.arflix.tv.navigation.FiptvNav.MEDIATHEK); SidebarItem.YOUTUBE -> com.arflix.tv.navigation.FiptvNav.open(com.arflix.tv.navigation.FiptvNav.YOUTUBE); SidebarItem.SPORT -> com.arflix.tv.navigation.FiptvNav.open(com.arflix.tv.navigation.FiptvNav.SPORT); SidebarItem.SETTINGS -> onNavigateToSettings()
                                     null -> Unit
                                 }
                             }

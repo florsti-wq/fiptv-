@@ -272,7 +272,7 @@ fun AppNavigation(
     // fIPTV: zusätzliche Bereiche (Mediathek …) aus allen Bildschirmen erreichbar machen
     SideEffect {
         FiptvNav.navigator = { route ->
-            if (!(isKidsProfile && (route == FiptvNav.MEDIATHEK || route == FiptvNav.VOD || route == FiptvNav.YOUTUBE))) navigateTopLevel(route)
+            if (!(isKidsProfile && (route == FiptvNav.MEDIATHEK || route == FiptvNav.VOD || route == FiptvNav.YOUTUBE || route == FiptvNav.SPORT))) navigateTopLevel(route)
         }
     }
 
@@ -324,6 +324,18 @@ fun AppNavigation(
             NavigationRailScreen(navigationRailInset, bottomInset = navigationRailBottomInset) {
                 com.arflix.tv.fiptv.vod.VodScreen(
                     onPlay = { entry, start -> navController.navigate(fiptvPlayerRoute(entry, start)) }
+                )
+            }
+        }
+
+        // fIPTV: Sport (Bundesliga, Champions League)
+        composable(FiptvNav.SPORT) {
+            NavigationRailScreen(navigationRailInset, bottomInset = navigationRailBottomInset) {
+                com.arflix.tv.fiptv.sport.SportScreen(
+                    onOpenTvSports = {
+                        FiptvNav.openSportsHub = true
+                        navigateTopLevel(Screen.Tv.createRoute())
+                    }
                 )
             }
         }
