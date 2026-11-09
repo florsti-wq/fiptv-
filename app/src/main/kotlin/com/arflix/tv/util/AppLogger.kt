@@ -97,6 +97,7 @@ object AppLogger {
         val safeMessage = "${safeTag(tag)}[$severity]: ${sanitize(message)}"
             .take(MAX_DIAGNOSTIC_LENGTH)
         crashContextProvider?.log(safeMessage)
+        FiptvDiagnostics.add(safeMessage)
     }
 
     // ============================================
@@ -143,7 +144,8 @@ object AppLogger {
 
         breadcrumb(
             tag = "exception",
-            message = throwable::class.java.simpleName,
+            message = "${throwable::class.java.simpleName}: ${throwable.message.orEmpty().take(160)} @ " +
+                throwable.stackTrace.take(3).joinToString(" < ") { "${it.className.substringAfterLast('.')}.${it.methodName}:${it.lineNumber}" },
             severity = "error"
         )
         context.forEach { (key, value) ->

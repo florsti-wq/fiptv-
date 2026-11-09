@@ -368,6 +368,19 @@ internal fun ProfileSelectionContent(
                         modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
                     )
                 }
+                // fIPTV: ohne Profile (z. B. nach fehlgeschlagener Anmeldung) das lokale Protokoll zeigen
+                if (uiState.profiles.isEmpty() && !uiState.isLoading) {
+                    val fiptvLog = remember(uiState.isCloudConnected) { com.arflix.tv.util.FiptvDiagnostics.read(context) }
+                    if (fiptvLog.isNotBlank()) {
+                        Text(
+                            text = "Protokoll:\n$fiptvLog",
+                            fontSize = 8.sp,
+                            lineHeight = 10.sp,
+                            color = Color(0xFF9AA1B1),
+                            modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                        )
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(if (isTouchDevice) 32.dp else 24.dp))
 
