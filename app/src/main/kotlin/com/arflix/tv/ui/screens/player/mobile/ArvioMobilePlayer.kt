@@ -1090,7 +1090,7 @@ fun ArvioMobilePlayer(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(BackgroundDark)
+                    .background(com.arflix.tv.ui.theme.FiptvBackground.DEFAULT)
                     .zIndex(30f)
             ) {
                 // Top-left Close ('X') button so users can exit the player

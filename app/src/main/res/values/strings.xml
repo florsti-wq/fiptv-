@@ -2112,4 +2112,15 @@
     <string name="live_ai_subs_needs_key">Add a Google Gemini API key first</string>
     <string name="live_ai_subs_auto_title">Auto-translate when a channel starts</string>
     <string name="live_ai_subs_auto_desc">Every channel starts with AI subtitles on, without picking them in the subtitle menu</string>
+    <!-- fIPTV: Hintergrundfarbe pro Profil -->
+    <string name="fiptv_bg_title">Background colour</string>
+    <string name="fiptv_bg_desc">Background colour of the app for this profile</string>
+    <string name="fiptv_bg_default">Standard</string>
+    <string name="fiptv_bg_midnight">Midnight blue</string>
+    <string name="fiptv_bg_petrol">Petrol</string>
+    <string name="fiptv_bg_forest">Forest green</string>
+    <string name="fiptv_bg_violet">Dark violet</string>
+    <string name="fiptv_bg_bordeaux">Bordeaux</string>
+    <string name="fiptv_bg_brown">Chocolate</string>
+    <string name="fiptv_bg_graphite">Graphite</string>
 </resources>

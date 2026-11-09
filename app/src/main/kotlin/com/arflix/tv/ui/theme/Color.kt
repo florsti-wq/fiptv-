@@ -2,6 +2,10 @@ package com.arflix.tv.ui.theme
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.lerp
 
 /**
  * ARVIO Color Palette
@@ -65,22 +69,32 @@ val PinkGlow = Color(0x33FFFFFF)
 // BACKGROUND COLORS (App Background)
 // ============================================
 // Keep the normal background distinct from the optional pure-black OLED mode.
-val BackgroundDark = Color(0xFF08090A)        // #08090A
-val BackgroundCard = Color(0xFF0D0D0D)        // Slightly elevated
-val BackgroundElevated = Color(0xFF1A1A1A)    // Elevated surfaces
-val BackgroundOverlay = BackgroundDark.copy(alpha = 0.90f)
-val BackgroundGlass = BackgroundDark.copy(alpha = 0.60f)
+// fIPTV: Hintergrundfarbe pro Profil wählbar. Die Werte unten lesen diesen Zustand,
+// dadurch zeichnet Compose alle Bildschirme neu, sobald sich die Farbe ändert.
+object FiptvBackground {
+    val DEFAULT = Color(0xFF08090A)
+    var color by mutableStateOf(DEFAULT)
+    val isCustom: Boolean get() = color != DEFAULT
+}
+
+val BackgroundDark: Color get() = FiptvBackground.color        // Standard #08090A
+val BackgroundCard: Color                                      // Slightly elevated
+    get() = if (FiptvBackground.isCustom) lerp(FiptvBackground.color, Color.White, 0.035f) else Color(0xFF0D0D0D)
+val BackgroundElevated: Color                                  // Elevated surfaces
+    get() = if (FiptvBackground.isCustom) lerp(FiptvBackground.color, Color.White, 0.09f) else Color(0xFF1A1A1A)
+val BackgroundOverlay: Color get() = BackgroundDark.copy(alpha = 0.90f)
+val BackgroundGlass: Color get() = BackgroundDark.copy(alpha = 0.60f)
 
 // Gradient backgrounds
-val BackgroundGradientStart = BackgroundDark
-val BackgroundGradientCenter = BackgroundDark
-val BackgroundGradientMiddle = BackgroundDark
-val BackgroundGradientEnd = BackgroundDark
+val BackgroundGradientStart: Color get() = BackgroundDark
+val BackgroundGradientCenter: Color get() = BackgroundDark
+val BackgroundGradientMiddle: Color get() = BackgroundDark
+val BackgroundGradientEnd: Color get() = BackgroundDark
 
 // ============================================
 // SURFACE COLORS
 // ============================================
-val SurfaceDark = BackgroundDark
+val SurfaceDark: Color get() = BackgroundDark
 val SurfaceVariant = Color(0xFF0D0D0D)
 val SurfaceGlass = Color(0x4D000000)
 

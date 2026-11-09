@@ -44,7 +44,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-private val Bg = Color(0xFF07080B)
+private val Bg: Color get() = com.arflix.tv.ui.theme.BackgroundDark
 private val Panel = Color(0xFF14161C)
 private val Muted = Color(0xFFA0A6B4)
 private val Accent = Color(0xFF4F7CFF)

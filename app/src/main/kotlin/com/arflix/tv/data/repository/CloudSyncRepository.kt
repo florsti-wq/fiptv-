@@ -337,7 +337,9 @@ class CloudSyncRepository @Inject constructor(
         val streamProvidersCustomOrder: String = "",
         val streamIntegrationsMacroOrder: String = "",
         val streamMacroEnabledMap: Map<String, Boolean> = emptyMap(),
-        val streamProviderEnabledMap: Map<String, Boolean> = emptyMap()
+        val streamProviderEnabledMap: Map<String, Boolean> = emptyMap(),
+        // fIPTV: Hintergrundfarbe (null von älteren Ständen: lokale Wahl behalten)
+        val fiptvBackground: String? = null
     )
 
     // ── DataStore key helpers ──
@@ -713,6 +715,7 @@ class CloudSyncRepository @Inject constructor(
                         netflixHomeStyle = prefs[netflixHomeStyleKeyFor(profile.id)] ?: true,
                         watchlistOnHome = prefs[watchlistOnHomeKeyFor(profile.id)] ?: false,
                         clockFormat = prefs[clockFormatKeyFor(profile.id)] ?: "24h",
+                        fiptvBackground = prefs[profileManager.profileStringKeyFor(profile.id, com.arflix.tv.fiptv.FiptvBackgrounds.PREF_NAME)],
                         guideRowCount = prefs[guideRowCountKeyFor(profile.id)]?.toIntOrNull()
                             ?.takeIf { it in 6..10 } ?: 0,
                         showBudget = prefs[showBudgetKeyFor(profile.id)] ?: true,
@@ -1681,6 +1684,9 @@ class CloudSyncRepository @Inject constructor(
                         prefs[trailerInCardsKeyFor(profileId)] = state.trailerInCards
                         state.watchlistOnHome?.let { prefs[watchlistOnHomeKeyFor(profileId)] = it }
                         prefs[clockFormatKeyFor(profileId)] = state.clockFormat
+                        state.fiptvBackground?.let {
+                            prefs[profileManager.profileStringKeyFor(profileId, com.arflix.tv.fiptv.FiptvBackgrounds.PREF_NAME)] = it
+                        }
                         // Older clients omit this field; keep the local preference in that case.
                         state.guideRowCount?.let { count ->
                             prefs[guideRowCountKeyFor(profileId)] =

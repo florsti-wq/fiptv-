@@ -378,6 +378,20 @@ class MainActivity : ComponentActivity() {
             val activeProfileId by remember {
                 profileRepository.get().activeProfileId
             }.collectAsStateWithLifecycle(initialValue = null)
+            // fIPTV: Hintergrundfarbe des aktiven Profils übernehmen
+            val fiptvBackgroundId by remember(activeProfileId) {
+                this@MainActivity.settingsDataStore.data.map { prefs ->
+                    activeProfileId?.let { id ->
+                        prefs[androidx.datastore.preferences.core.stringPreferencesKey(
+                            "profile_${id}_${com.arflix.tv.fiptv.FiptvBackgrounds.PREF_NAME}"
+                        )]
+                    }
+                }
+            }.collectAsStateWithLifecycle(initialValue = null)
+            LaunchedEffect(fiptvBackgroundId) {
+                com.arflix.tv.ui.theme.FiptvBackground.color =
+                    com.arflix.tv.fiptv.FiptvBackgrounds.byId(fiptvBackgroundId).color
+            }
             val initialAppLanguage = remember {
                 getSharedPreferences("app_locale", Context.MODE_PRIVATE)
                     .getString("locale_tag", null)?.takeIf { it.isNotBlank() }

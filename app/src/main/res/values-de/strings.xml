@@ -1937,4 +1937,15 @@
     <string name="live_ai_subs_needs_key">Füge zuerst einen Google-Gemini-API-Schlüssel hinzu</string>
     <string name="live_ai_subs_auto_title">Automatisch übersetzen, wenn ein Sender startet</string>
     <string name="live_ai_subs_auto_desc">Jeder Sender startet mit KI-Untertiteln, ohne sie im Untertitelmenü auszuwählen</string>
+    <!-- fIPTV: Hintergrundfarbe pro Profil -->
+    <string name="fiptv_bg_title">Hintergrundfarbe</string>
+    <string name="fiptv_bg_desc">Hintergrundfarbe der App für dieses Profil</string>
+    <string name="fiptv_bg_default">Standard</string>
+    <string name="fiptv_bg_midnight">Mitternachtsblau</string>
+    <string name="fiptv_bg_petrol">Petrol</string>
+    <string name="fiptv_bg_forest">Waldgrün</string>
+    <string name="fiptv_bg_violet">Dunkelviolett</string>
+    <string name="fiptv_bg_bordeaux">Bordeaux</string>
+    <string name="fiptv_bg_brown">Schokobraun</string>
+    <string name="fiptv_bg_graphite">Graphit</string>
 </resources>

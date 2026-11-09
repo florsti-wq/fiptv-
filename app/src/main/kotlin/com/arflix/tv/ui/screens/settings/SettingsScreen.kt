@@ -341,7 +341,7 @@ internal fun tvGeneralRowsForSection(section: String): List<Int> {
             listOf(39, 9, 45)
         "ai_subtitles" -> listOf(28, 29, 30, 31, 32, 33) + LIVE_AI_SUBS_ROWS
         "playback" -> listOf(10, 11, 12, 43, 44, 13, 14, 34, 37, 16, 15, 40, 27, 53, 54)
-        "appearance" -> listOf(17, 49, 50, 18, 20, 21, 24, 23, 22, 41, 46, 36, 47)
+        "appearance" -> listOf(17, 49, 50, 18, 20, 60, 21, 24, 23, 22, 41, 46, 36, 47)
         "profiles" -> listOf(19)
         "network" -> listOf(25, 26, 35)
         else -> emptyList()
@@ -1472,6 +1472,7 @@ fun SettingsScreen(
                                                  36 -> viewModel.setSmoothScrolling(!uiState.smoothScrolling)
                                                 23 -> viewModel.setSpoilerBlurEnabled(!uiState.spoilerBlurEnabled)
                                                 24 -> viewModel.cycleAccentColor()
+                                                60 -> viewModel.cycleFiptvBackground()
                                                 25 -> openDnsProviderPicker()
                                                 26 -> viewModel.setShowLoadingStats(!uiState.showLoadingStats)
                                                 35 -> showCustomUserAgentDialog = true
@@ -2145,6 +2146,8 @@ fun SettingsScreen(
                             onSpoilerBlurToggle = { viewModel.setSpoilerBlurEnabled(it) },
                             accentColor = uiState.accentColor,
                             onAccentColorClick = { viewModel.cycleAccentColor() },
+                            fiptvBackground = uiState.fiptvBackground,
+                            onFiptvBackgroundClick = { viewModel.cycleFiptvBackground() },
                             showLoadingStats = uiState.showLoadingStats,
                             onShowLoadingStatsToggle = { viewModel.setShowLoadingStats(it) },
                             onVolumeBoostClick = { viewModel.cycleVolumeBoost() },
@@ -5599,6 +5602,14 @@ private fun MobileSettingsSubPage(
                         onClick = { viewModel.setOledBlackBackground(!uiState.oledBlackBackground) }
                     )
                     MobileSettingsRow(
+                        icon = Icons.Default.Palette,
+                        title = stringResource(R.string.fiptv_bg_title),
+                        subtitle = stringResource(R.string.fiptv_bg_desc),
+                        value = stringResource(com.arflix.tv.fiptv.FiptvBackgrounds.byId(uiState.fiptvBackground).label),
+                        isFocused = false,
+                        onClick = { viewModel.cycleFiptvBackground() }
+                    )
+                    MobileSettingsRow(
                         icon = Icons.Default.Schedule,
                         title = stringResource(R.string.clock_format),
                         value = uiState.clockFormat,
@@ -6800,6 +6811,8 @@ private fun TvGeneralSettingsRows(
     onSmoothScrollingToggle: (Boolean) -> Unit = {},
     onSpoilerBlurToggle: (Boolean) -> Unit = {},
     onAccentColorClick: () -> Unit = {},
+    fiptvBackground: String = "default",
+    onFiptvBackgroundClick: () -> Unit = {},
     showLoadingStats: Boolean = true,
     onShowLoadingStatsToggle: (Boolean) -> Unit = {},
     onVolumeBoostClick: () -> Unit = {},
@@ -6962,6 +6975,7 @@ private fun TvGeneralSettingsRows(
                 36 -> SettingsToggleRow(stringResource(R.string.smooth_scrolling), stringResource(R.string.smooth_scrolling_desc), smoothScrolling, focusedIndex == localIndex, onSmoothScrollingToggle, Modifier.settingsFocusSlot(localIndex))
                 23 -> SettingsToggleRow(stringResource(R.string.spoiler_blur), stringResource(R.string.spoiler_blur_desc), spoilerBlurEnabled, focusedIndex == localIndex, onSpoilerBlurToggle, Modifier.settingsFocusSlot(localIndex))
                 24 -> SettingsRow(Icons.Default.Palette, stringResource(R.string.accent_color), stringResource(R.string.accent_color_desc), accentColor, focusedIndex == localIndex, onAccentColorClick, Modifier.settingsFocusSlot(localIndex))
+                60 -> SettingsRow(Icons.Default.Palette, stringResource(R.string.fiptv_bg_title), stringResource(R.string.fiptv_bg_desc), stringResource(com.arflix.tv.fiptv.FiptvBackgrounds.byId(fiptvBackground).label), focusedIndex == localIndex, onFiptvBackgroundClick, Modifier.settingsFocusSlot(localIndex))
                 25 -> SettingsRow(Icons.Default.Language, stringResource(R.string.dns_provider), stringResource(R.string.dns_desc), dnsProvider, focusedIndex == localIndex, onDnsProviderClick, Modifier.settingsFocusSlot(localIndex))
                 26 -> SettingsToggleRow(stringResource(R.string.show_loading_stats), stringResource(R.string.show_loading_stats_desc), showLoadingStats, focusedIndex == localIndex, onShowLoadingStatsToggle, Modifier.settingsFocusSlot(localIndex))
                 27 -> SettingsRow(

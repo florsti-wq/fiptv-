@@ -418,6 +418,8 @@ data class SettingsUiState(
     val spoilerBlurEnabled: Boolean = false,
     // Accent color — user-selectable theme colour for focus rings, buttons, and selected items
     val accentColor: String = "White",
+    // fIPTV: Hintergrundfarbe dieses Profils (Id aus FiptvBackgrounds)
+    val fiptvBackground: String = "default",
     val qualityFilterPresetLabel: String = "OFF",
     // Toast
     val toastMessage: SettingsMessage? = null,
@@ -557,6 +559,7 @@ class SettingsViewModel @Inject constructor(
     private fun iptvFavoritesOnHomeKey() =
         profileManager.profileBooleanKey(com.arflix.tv.util.IPTV_FAVORITES_ON_HOME)
     private fun clockFormatKey() = profileManager.profileStringKey("clock_format")
+    private fun fiptvBackgroundKey() = profileManager.profileStringKey(com.arflix.tv.fiptv.FiptvBackgrounds.PREF_NAME)
     private fun smoothScrollingKey() = profileManager.profileBooleanKey("smooth_scrolling")
     private fun spoilerBlurKey() = profileManager.profileBooleanKey("spoiler_blur")
     // Stored as a string because ProfileManager has no int helper and we only persist
@@ -862,6 +865,7 @@ class SettingsViewModel @Inject constructor(
             val animeStructuringStyle = AnimeStructuringStyle.fromId(prefs[animeStructuringStyleKey()])
             val iptvFavoritesOnHome = prefs[iptvFavoritesOnHomeKey()] ?: true
             val clockFormat = prefs[clockFormatKey()] ?: "24h"
+            val fiptvBackground = com.arflix.tv.fiptv.FiptvBackgrounds.byId(prefs[fiptvBackgroundKey()]).id
             // One-time migration: read old "focus_border_color" key if new "accent_color" is absent
             val OLD_FOCUS_BORDER_COLOR_KEY = stringPreferencesKey("focus_border_color")
             val legacyColor = prefs[OLD_FOCUS_BORDER_COLOR_KEY]
@@ -1032,6 +1036,7 @@ class SettingsViewModel @Inject constructor(
                 oledBlackBackground = oledBlackBackground,
                 clockFormat = clockFormat,
                 accentColor = accentColor,
+                fiptvBackground = fiptvBackground,
                 qualityFilters = qualityFilters,
                 qualityFilterPresetLabel = detectQualityFilterPreset(qualityFilters).label,
                 subtitleAiEnabled = subtitleAiEnabled,
@@ -2156,6 +2161,17 @@ class SettingsViewModel @Inject constructor(
         if (!canManage("appearance")) return
         val next = if (_uiState.value.clockFormat == "24h") "12h" else "24h"
         preferenceWriter.save(clockFormatKey(), next, { it.clockFormat }, { state, value -> state.copy(clockFormat = value) })
+    }
+
+    /** fIPTV: nächste Hintergrundfarbe für das aktive Profil wählen. */
+    fun cycleFiptvBackground() {
+        if (!canManage("appearance")) return
+        val next = com.arflix.tv.fiptv.FiptvBackgrounds.next(_uiState.value.fiptvBackground).id
+        viewModelScope.launch {
+            context.settingsDataStore.edit { it[fiptvBackgroundKey()] = next }
+            _uiState.value = _uiState.value.copy(fiptvBackground = next)
+            syncLocalStateToCloud(silent = true)
+        }
     }
 
     /**
