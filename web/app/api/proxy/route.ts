@@ -44,7 +44,9 @@ export async function GET(request: NextRequest) {
     signal: request.signal
   });
   if (HOME_LOG) {
-    console.log(`[proxy] ${response.status} ${Date.now() - started}ms ${range ? `range=${range} ` : ""}${scrubTarget(target)} type=${response.headers.get("content-type") ?? "-"} len=${response.headers.get("content-length") ?? "-"} cr=${response.headers.get("content-range") ?? "-"}${response.status >= 400 ? ` ${response.headers.get("x-fiptv-error") ?? ""}` : ""}`);
+    const finalUrl = response.headers.get("x-arvio-final-url");
+    const redirected = finalUrl && !finalUrl.startsWith(target.origin) ? ` -> ${new URL(finalUrl).host}` : "";
+    console.log(`[proxy]${redirected} ${response.status} ${Date.now() - started}ms ${range ? `range=${range} ` : ""}${scrubTarget(target)} type=${response.headers.get("content-type") ?? "-"} len=${response.headers.get("content-length") ?? "-"} cr=${response.headers.get("content-range") ?? "-"}${response.status >= 400 ? ` ${response.headers.get("x-fiptv-error") ?? ""}` : ""}`);
   }
 
   const contentType = response.headers.get("content-type") ?? "application/octet-stream";

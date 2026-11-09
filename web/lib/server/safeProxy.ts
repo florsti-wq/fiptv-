@@ -95,7 +95,11 @@ export async function safeProxyFetch(target: URL, init: RequestInit, options: { 
       if (current.protocol === 'https:' && next.protocol !== 'https:') throw new Error("Insecure proxy redirect");
       if (current.origin !== next.origin) {
         // A target may redirect, but it may not forward another server's credentials.
-        headers = new Headers({ accept: headers.get("accept") ?? "*/*" });
+        // Range und User-Agent sind keine Zugangsdaten: ohne Range liefert der Zielserver
+        // (z. B. IPTV-Streamserver) immer ab Byte 0 und Spulen/MKV-Umwandlung scheitern.
+        const keep = new Headers({ accept: headers.get("accept") ?? "*/*" });
+        for (const key of ["range", "user-agent"]) { const value = headers.get(key); if (value) keep.set(key, value); }
+        headers = keep;
       }
       if (response.status === 303 || ((response.status === 301 || response.status === 302) && init.method === 'POST')) init = { ...init, method: 'GET', body: undefined };
       current = next;
