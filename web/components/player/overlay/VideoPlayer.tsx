@@ -733,7 +733,7 @@ export function VideoPlayer({
     // native video player (webkitEnterFullscreen). Subtitles are native
     // <track>s, so they show there too — in the iOS system caption style.
     // Vision Pro (and other no-hover Apple WebKit): fullscreen the <video> so
-    // the system player takes over; elsewhere the container, keeping ARVIO's
+    // the system player takes over; elsewhere the container, keeping fIPTV's
     // controls and styled subtitles (lib/fullscreen.ts, workstream D).
     const request = prefersVideoElementFullscreen() && !isFullscreenActive(videoRef.current)
       ? requestVideoFullscreen(videoRef.current)

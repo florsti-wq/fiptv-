@@ -11,7 +11,7 @@ import "./app-foundations.css";
 // provider lives inside what crashed.
 export default function GlobalError({ error }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
-    console.error("[ARVIO] root layout crashed", error);
+    console.error("[fIPTV] root layout crashed", error);
   }, [error]);
   const reload = () => {
     for (const screen of Object.keys(SCREEN_CACHE_KEYS)) clearScreenCaches(screen);

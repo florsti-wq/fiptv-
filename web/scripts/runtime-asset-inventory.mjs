@@ -24,6 +24,6 @@ function walk(directory) {
 }
 walk(publicRoot);
 entries.sort((a, b) => a.path.localeCompare(b.path));
-writeFileSync(join(output, 'public-assets.json'), JSON.stringify({ schemaVersion: 1, sourceProject: 'https://github.com/ProdigyV21/ARVIO', purpose: 'Exact distributed-file inventory, not proof of original authorship or a legal determination. No feature assets are removed.', files: entries }, null, 2) + '\n');
+writeFileSync(join(output, 'public-assets.json'), JSON.stringify({ schemaVersion: 1, sourceProject: 'https://github.com/ProdigyV21/fIPTV', purpose: 'Exact distributed-file inventory, not proof of original authorship or a legal determination. No feature assets are removed.', files: entries }, null, 2) + '\n');
 copyFileSync(join(webRoot, 'distribution-sources/runtime/ASSET-NOTICES.md'), join(output, 'ASSET-NOTICES.md'));
 console.log(`Inventoried ${entries.length} public assets with SHA256 and explicit provenance limits.`);

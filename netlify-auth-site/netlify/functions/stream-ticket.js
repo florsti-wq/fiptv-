@@ -63,6 +63,12 @@ exports.handler = async (event) => {
   const email = normalizeEmail(identity.email);
   if (!email) return json(400, { error: "no_email_on_account" });
   try {
+    // fIPTV: kein Abo – jedes Konto dieses Servers (Familie) darf den eigenen Weiterleiter nutzen
+    if (process.env.FIPTV_TICKETS_FOR_ALL !== "false") {
+      const accountTag = privacyHash("stream-ticket", email).slice(0, 10);
+      if (secret) return json(200, signTicket(secret, accountTag));
+      return json(200, await signTicketV2(streamKeysStore(event), accountTag, TICKET_TTL_SECONDS));
+    }
     const store = entitlementsStore(event);
     const record = await readEntitlement(store, sha256(email));
     let state = evaluateEntitlement(record);

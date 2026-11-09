@@ -151,7 +151,7 @@ export class AuthClient {
 
   async supabase<T>(path: string, init: RequestInit = {}) {
     if (this.isNetlifySession) {
-      throw new Error("This ARVIO Cloud session must use the ARVIO backend sync API.");
+      throw new Error("This fIPTV Cloud session must use the fIPTV backend sync API.");
     }
     const token = await this.accessToken();
     return jsonRequest<T>(`${config.supabaseUrl}${path}`, {

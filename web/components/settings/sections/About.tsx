@@ -7,7 +7,7 @@ export function AboutSection() {
   const translateUi = useTranslation();
   return (
     <>
-      <SectionHeader title="About ARVIO" description="ARVIO is a media hub for sources you configure. Catalog entries do not grant viewing rights. Connect only services and media you are authorized to use." />
+      <SectionHeader title="About fIPTV" description="fIPTV is a media hub for sources you configure. Catalog entries do not grant viewing rights. Connect only services and media you are authorized to use." />
       <Group title="Credits">
         <Row label="TMDB" hint="This product uses the TMDB API but is not endorsed or certified by TMDB.">
           <a href="https://www.themoviedb.org" target="_blank" rel="noopener noreferrer" aria-label="TMDB">

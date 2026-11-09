@@ -16,7 +16,7 @@ export function AppearanceSection() {
   const { settings, updateSettings: set } = useAppPick("settings", "updateSettings");
   return (
     <>
-      <SectionHeader title="Home and appearance" description="How ARVIO looks, and what shows on Home." />
+      <SectionHeader title="Home and appearance" description="How fIPTV looks, and what shows on Home." />
       <Group title="Look">
         <Row id="accent" label="Accent color" scope="all">
           <Swatches label="Accent color" value={ACCENTS[settings.accentColor] ? settings.accentColor : "arctic"} onChange={(v) => set({ accentColor: v })}
@@ -65,7 +65,7 @@ export function AndroidTvSection() {
   const { settings, updateSettings: set } = useAppPick("settings", "updateSettings");
   return (
     <>
-      <SectionHeader title="Android and TV" description="These only change the ARVIO app on Android phones, tablets and TVs. Set them here and the app uses them the next time it opens." />
+      <SectionHeader title="Android and TV" description="These only change the fIPTV app on Android phones, tablets and TVs. Set them here and the app uses them the next time it opens." />
       <Group title="Picture and sound">
         <Row id="frame-rate" label="Frame rate matching" hint="Switch the TV's refresh rate to match the video for smoother motion." scope="android">
           <Select label="Frame rate matching" value={settings.frameRateMatchingMode} onChange={(v) => set({ frameRateMatchingMode: v })}
@@ -151,7 +151,7 @@ export function BrowserSection() {
       <Group title="Player">
         <Row id="default-player" label="Preferred player for manual sources" hint="Autoplay always plays in this browser. Choose external players manually from Sources." scope="web">
           <Select label="Preferred player" value={settings.defaultPlayer} onChange={(v) => set({ defaultPlayer: v })}
-            options={[["browser", "ARVIO player (browser)"], ["vlc", "VLC"], ["infuse", "Infuse"]]} />
+            options={[["browser", "fIPTV player (browser)"], ["vlc", "VLC"], ["infuse", "Infuse"]]} />
         </Row>
         <Row id="smooth-scrolling" label="Smooth scrolling" scope="web">
           <Toggle label="Smooth scrolling" value={settings.smoothScrolling} onChange={(v) => set({ smoothScrolling: v })} />
@@ -170,7 +170,7 @@ export function BrowserSection() {
           {checkStatus === "not_installed" && <Status tone="warn">{translateUi("Not detected — run the setup script")}</Status>}
         </Row>
         {!mac && (
-          <Row id="vlc-protocol" label="Open VLC directly" hint="When on, ARVIO launches streams via vlc:// instead of saving .m3u playlist files." scope="browser">
+          <Row id="vlc-protocol" label="Open VLC directly" hint="When on, fIPTV launches streams via vlc:// instead of saving .m3u playlist files." scope="browser">
             <Toggle label="Open VLC directly" value={vlcReady} onChange={(next) => { setVlcProtocolReady(next); setVlcReady(next); }} />
           </Row>
         )}
@@ -187,7 +187,7 @@ export function BrowserSection() {
       </Group>
 
       <Group title="Reset">
-        <Row id="reset-web" label="Reset ARVIO Web in this browser" hint="Clears settings saved in this browser and reloads. Your account and other devices are not affected." scope="browser">
+        <Row id="reset-web" label="Reset fIPTV Web in this browser" hint="Clears settings saved in this browser and reloads. Your account and other devices are not affected." scope="browser">
           {confirmReset ? (
             <>
               <button type="button" className="st-btn is-danger" onClick={() => { localStorage.removeItem(settingsKey); window.location.reload(); }}><Trash2 size={16} /> {translateUi("Yes, reset")}</button>

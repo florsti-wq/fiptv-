@@ -82,7 +82,7 @@ export function useStoreCore(initialView?: AppView) {
   const [simklConnected, setSimklConnected] = useState(() => simklClient.isConnected);
   const [deviceCode, setDeviceCode] = useState<TraktDeviceCode | null>(null);
   const [simklDeviceCode, setSimklDeviceCode] = useState<SimklPinCode | null>(null);
-  const [busy, setBusy] = useState("Loading ARVIO");
+  const [busy, setBusy] = useState("Loading fIPTV");
   const busyRef = useRef(busy);
   busyRef.current = busy;
   const [toast, setToast] = useState<string | null>(null);

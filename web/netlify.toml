@@ -1,6 +1,9 @@
+# fIPTV Web – eigene Netlify-Seite mit Basisverzeichnis „web“.
+# Nur neu bauen, wenn sich die Webapp (oder die Android-Texte für die Übersetzungen) geändert hat.
 [build]
   command = "npm run build"
   publish = ".next"
+  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- . ../app/src/main/res"
 
 [build.environment]
   NODE_VERSION = "22"
@@ -8,6 +11,11 @@
   # Playback bytes stay on the provider/client, never on Netlify Functions.
   ALLOW_NETLIFY_MEDIA_PROXY = "false"
   NEXT_PUBLIC_ALLOW_NETLIFY_MEDIA_PROXY = "false"
+  # fIPTV: eigener Sync-Server statt ARVIO Cloud, kein Abo, kein Telegram
+  NEXT_PUBLIC_NETLIFY_BACKEND_URL = "https://fipsite.netlify.app/.netlify/functions"
+  NETLIFY_BACKEND_URL = "https://fipsite.netlify.app/.netlify/functions"
+  NEXT_PUBLIC_PAYWALL_ENABLED = "false"
+  NEXT_PUBLIC_TELEGRAM_ENABLED = "false"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"

@@ -357,7 +357,7 @@ export class TraktClient {
     );
   }
 
-  /** Public metadata: an ARVIO-only watchlist does not need a linked Trakt account. */
+  /** Public metadata: an fIPTV-only watchlist does not need a linked Trakt account. */
   async calendarSeason(tmdbId: number, season: number, traktId?: number | null) {
     if (!config.traktClientId) return [];
     let id = traktId;

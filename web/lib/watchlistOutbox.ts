@@ -7,7 +7,7 @@ import { mergeWatchlistChanges, watchlistChangesStorageKey, watchlistKey, type W
 type Edit = { id: string; profileId: string; items: MediaItem[]; changes: WatchlistChanges };
 const key = (userId: string) => `arvio.web.watchlistOutbox.v1:${userId}`;
 const running = new Map<string, Promise<void>>();
-// Without an ARVIO account (self-hosted builds, guests) the outbox is the
+// Without an fIPTV account (self-hosted builds, guests) the outbox is the
 // watchlist itself: edits stay under this device-local bucket and are never
 // flushed, so a tracker-less watchlist survives reloads like on Android.
 export const LOCAL_WATCHLIST_USER = 'local-device';

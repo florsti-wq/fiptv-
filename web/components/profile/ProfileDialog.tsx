@@ -45,7 +45,7 @@ export function ProfileDialog({ mode, initial, avatarImages = {}, error: externa
   mode: "add" | "edit";
   initial?: Profile;
   avatarImages?: Record<string, string>;
-  /** An error from the last save (e.g. ARVIO Cloud could not be reached). */
+  /** An error from the last save (e.g. fIPTV Cloud could not be reached). */
   error?: string | null;
   onConfirm: (result: ProfileDialogResult) => Promise<void>;
   onDelete?: () => Promise<void>;

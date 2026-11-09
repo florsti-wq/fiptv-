@@ -15,6 +15,9 @@ on:
       - "netlify-*/**"
       - "netlify.toml"
       - "supabase/**"
+      - "resolver-worker/**"
+      - ".github/workflows/fiptv-resolver.yml"
+      - ".github/workflows/fiptv-web-check.yml"
       - "screenshots/**"
 
 permissions:

@@ -57,11 +57,11 @@ export type FullscreenResult = "entered" | "exited" | "needs-metadata" | "unsupp
  * click/tap handler itself: every browser demands transient user activation.
  *
  * iPhone note: in Apple's native fullscreen player only NATIVE text tracks are
- * drawn. ARVIO's subtitles already are native <track> elements (see
+ * drawn. fIPTV's subtitles already are native <track> elements (see
  * playerSubtitles.ts), so they carry over, including AI-translated cue text
  * (cues are edited in place). What does NOT carry over is our styling: iOS
  * draws captions with the system caption style (Settings > Accessibility >
- * Subtitles & Captioning), not the size/colour/position chosen in ARVIO, and
+ * Subtitles & Captioning), not the size/colour/position chosen in fIPTV, and
  * the viewer can switch tracks off from the native CC menu.
  */
 export async function toggleFullscreen(container: HTMLElement | null, video: HTMLVideoElement | null, doc: Document | undefined = typeof document === "undefined" ? undefined : document): Promise<FullscreenResult> {
@@ -262,7 +262,7 @@ export function bindMediaSession(details: MediaSessionDetails, handlers: MediaSe
       session.metadata = new scope.MediaMetadata({
         title: details.title,
         artist: details.subtitle ?? "",
-        album: details.album ?? "ARVIO",
+        album: details.album ?? "fIPTV",
         artwork: mediaSessionArtwork(details)
       });
     }

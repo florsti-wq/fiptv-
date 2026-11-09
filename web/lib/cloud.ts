@@ -1760,11 +1760,11 @@ export async function saveCloudProfiles(
 
 /** Add imported profiles without asserting a stale copy of the account's list. */
 export async function addCloudProfiles(auth: AuthClient, additions: Profile[]): Promise<Profile[]> {
-  if (!auth.session) throw new Error("Sign in to your ARVIO account first");
+  if (!auth.session) throw new Error("Sign in to your fIPTV account first");
   let profiles: Profile[] = [];
   await mutateCloudPayload(auth, (root) => {
     if (root.profiles != null && !Array.isArray(root.profiles)) {
-      throw new Error("Could not read your ARVIO profiles");
+      throw new Error("Could not read your fIPTV profiles");
     }
     profiles = [...arrayValue<Profile>(root.profiles)];
     const ids = new Set(profiles.map(profile => profile.id));

@@ -1,6 +1,6 @@
 "use client";
 // Building blocks for the Settings screen. Every row says where its value
-// applies (all ARVIO apps, the Android/TV app, ARVIO Web, or this browser
+// applies (all fIPTV apps, the Android/TV app, fIPTV Web, or this browser
 // only), so settings changed here are never a guess about what syncs.
 
 import { Check, ChevronDown, Cloud, Eye, EyeOff, Globe, Monitor, Tv, type LucideIcon } from "lucide-react";
@@ -11,9 +11,9 @@ import { useTranslation } from "@/lib/i18n";
 export type SettingScope = "all" | "android" | "web" | "browser";
 
 const SCOPES: Record<SettingScope, { label: string; title: string; icon: LucideIcon }> = {
-  all: { label: "All devices", title: "Saved to your ARVIO account and used by the Android/TV app and ARVIO Web.", icon: Cloud },
-  android: { label: "Android & TV", title: "Saved to your ARVIO account. Only the Android and TV app uses it.", icon: Tv },
-  web: { label: "ARVIO Web", title: "Saved to your ARVIO account for ARVIO Web in any browser. The Android app keeps its own value.", icon: Globe },
+  all: { label: "All devices", title: "Saved to your fIPTV account and used by the Android/TV app and fIPTV Web.", icon: Cloud },
+  android: { label: "Android & TV", title: "Saved to your fIPTV account. Only the Android and TV app uses it.", icon: Tv },
+  web: { label: "fIPTV Web", title: "Saved to your fIPTV account for fIPTV Web in any browser. The Android app keeps its own value.", icon: Globe },
   browser: { label: "This browser", title: "Kept in this browser only. Not synced.", icon: Monitor },
 };
 

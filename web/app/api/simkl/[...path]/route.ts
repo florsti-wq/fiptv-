@@ -29,7 +29,7 @@ async function handler(request: NextRequest, context: { params: Promise<{ path: 
   const netlifyBackendUrl = (
     process.env.NEXT_PUBLIC_NETLIFY_BACKEND_URL ??
     process.env.NETLIFY_BACKEND_URL ??
-    "https://auth.arvio.tv/.netlify/functions"
+    "https://fipsite.netlify.app/.netlify/functions"
   ).replace(/\/+$/, "");
   const appAnonKey = envValue(process.env.NEXT_PUBLIC_ARVIO_APP_ANON_KEY, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "");
   const isV2 = path[0] === "oauth2" || path[0] === "lists" || request.headers.get("x-user-token")?.startsWith("simkl_at_");
@@ -44,7 +44,7 @@ async function handler(request: NextRequest, context: { params: Promise<{ path: 
 
   // AUTH V2 tokens are never accepted from or returned to browser JavaScript.
   if (path[0] === "oauth2" || request.headers.get("x-user-token")?.startsWith("simkl_at_")) {
-    return NextResponse.json({ error: "session_required", message: "Reload ARVIO to use the secure SIMKL connection." }, { status: 409, headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json({ error: "session_required", message: "Reload fIPTV to use the secure SIMKL connection." }, { status: 409, headers: { "Cache-Control": "no-store" } });
   }
 
   if (!isAllowedSimklRequest(normalizedPath, method)) {

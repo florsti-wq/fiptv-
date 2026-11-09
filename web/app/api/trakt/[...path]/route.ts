@@ -9,7 +9,7 @@ async function handler(request: NextRequest, context: { params: Promise<{ path: 
   const netlifyBackendUrl = (
     process.env.NEXT_PUBLIC_NETLIFY_BACKEND_URL ??
     process.env.NETLIFY_BACKEND_URL ??
-    "https://auth.arvio.tv/.netlify/functions"
+    "https://fipsite.netlify.app/.netlify/functions"
   ).replace(/\/+$/, "");
   const appAnonKey = envValue(process.env.APP_ANON_KEY, envValue(process.env.NEXT_PUBLIC_ARVIO_APP_ANON_KEY, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ""));
   const traktClientId = process.env.TRAKT_CLIENT_ID || process.env.NEXT_PUBLIC_TRAKT_CLIENT_ID || "";

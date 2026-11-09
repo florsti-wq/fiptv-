@@ -42,10 +42,10 @@ export function AccountSection() {
   return (
     <>
       <SectionHeader
-        title={config.selfHosted ? "Local account" : "ARVIO account"}
+        title={config.selfHosted ? "Local account" : "fIPTV account"}
         description={config.selfHosted
-          ? "This copy of ARVIO Web keeps profiles and settings in this browser."
-          : "Your ARVIO account keeps profiles, settings, addons and progress in sync between ARVIO Web and the Android and TV app."}
+          ? "This copy of fIPTV Web keeps profiles and settings in this browser."
+          : "Your fIPTV account keeps profiles, settings, addons and progress in sync between fIPTV Web and the Android and TV app."}
       />
       <Group>
         {auth ? (
@@ -53,12 +53,12 @@ export function AccountSection() {
             <span className="st-account-avatar"><UserCircle size={26} /></span>
             <div className="st-account-text">
               <strong>{auth.email}</strong>
-              <span>{translateUi("Signed in to ARVIO Cloud")}{activeProfile ? ` · ${translateUi("Profile")}: ${activeProfile.name}` : ""}</span>
+              <span>{translateUi("Signed in to fIPTV Cloud")}{activeProfile ? ` · ${translateUi("Profile")}: ${activeProfile.name}` : ""}</span>
             </div>
             <button type="button" className="st-btn" onClick={signOut}><LogOut size={16} /> {translateUi("Sign out")}</button>
           </div>
         ) : config.selfHosted ? (
-          <Empty>{translateUi("Profiles and settings are saved in this browser. ARVIO Cloud is not connected.")}</Empty>
+          <Empty>{translateUi("Profiles and settings are saved in this browser. fIPTV Cloud is not connected.")}</Empty>
         ) : (
           <div className="st-account">
             <span className="st-account-avatar"><User size={24} /></span>
@@ -93,11 +93,11 @@ export function AccountSection() {
       )}
 
       {!ready && !config.selfHosted && (
-        <Group><Empty>{translateUi("ARVIO Cloud backend env is missing. Add backend values in web/.env.local.")}</Empty></Group>
+        <Group><Empty>{translateUi("fIPTV Cloud backend env is missing. Add backend values in web/.env.local.")}</Empty></Group>
       )}
 
       <Group title="This version">
-        <Row label="ARVIO Web" hint="Updates itself when a new version is released.">
+        <Row label="fIPTV Web" hint="Updates itself when a new version is released.">
           <span className="st-row-hint">{stamp ? translateUi("Built {value0}", { value0: stamp }) : translateUi("unknown")}</span>
         </Row>
       </Group>
@@ -110,7 +110,7 @@ export function PremiumSection() {
   const { auth } = useAppPick("auth");
   return (
     <>
-      <SectionHeader title="ARVIO Web Premium" description="Hosted ARVIO Web on iPhone, iPad, Mac and PC. The Android and TV app stays free." />
+      <SectionHeader title="fIPTV Web Premium" description="Hosted fIPTV Web on iPhone, iPad, Mac and PC. The Android and TV app stays free." />
       {auth ? <PremiumAccount /> : <Group><Empty>{translateUi("Sign in to see or start your membership.")}</Empty></Group>}
     </>
   );
@@ -324,7 +324,7 @@ export function ServicesSection() {
       </Group>
 
       {routingOptions.length > 0 && (
-        <Group title="Tracking behavior" description="Choose which connected service fills each part of ARVIO.">
+        <Group title="Tracking behavior" description="Choose which connected service fills each part of fIPTV.">
           <Row id="watchlist-source" label="Watchlist source" scope="all">
             <Select label="Watchlist source" value={trackingPreferences.watchlistReadMode} options={routingOptions} onChange={(watchlistReadMode) => void updateTrackingPreferences({ watchlistReadMode })} />
           </Row>

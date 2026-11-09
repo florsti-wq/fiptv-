@@ -9,8 +9,8 @@ import "./source-setup.css";
 import "./app-foundations.css";
 
 export const metadata: Metadata = {
-  title: "ARVIO",
-  description: "ARVIO media hub for web, iPad, desktop, and TV browsers",
+  title: "fIPTV",
+  description: "fIPTV media hub for web, iPad, desktop, and TV browsers",
   robots: {
     index: false,
     follow: false,
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
   },
   appleWebApp: {
     capable: true,
-    title: "ARVIO",
+    title: "fIPTV",
     statusBarStyle: "black-translucent"
   }
 };

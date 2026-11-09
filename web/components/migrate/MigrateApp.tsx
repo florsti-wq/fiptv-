@@ -21,7 +21,7 @@ import type { InstalledAddon, Profile } from "@/lib/types";
 const LANGUAGE_KEY = "arvio.web.setupLanguage";
 
 /**
- * The ARVIO auth portal returns here with the session in the URL hash (same
+ * The fIPTV auth portal returns here with the session in the URL hash (same
  * format the app reads in lib/store.tsx). Store it and clean the address.
  */
 function consumePortalSignIn(): boolean {
@@ -52,9 +52,9 @@ function signInWithPortal() {
 }
 
 /**
- * Free setup page for ARVIO accounts, outside the web app's subscription: sign
+ * Free setup page for fIPTV accounts, outside the web app's subscription: sign
  * in, install addons, and bring a Nuvio account over. Everything is written to
- * the ARVIO cloud account, which the Android and TV apps sync for free.
+ * the fIPTV cloud account, which the Android and TV apps sync for free.
  */
 export function MigrateApp() {
   // English by default; the choice is remembered on this device.
@@ -124,7 +124,7 @@ function SetupTools({ language, onLanguageChange, showLanguagePicker }: {
     if (!authClient.session) return;
     setSignedIn(true);
     setEmail(authClient.session.email);
-    void loadAccount().catch(() => setError("Could not read your ARVIO account"));
+    void loadAccount().catch(() => setError("Could not read your fIPTV account"));
   }, [loadAccount]);
 
   const run = async (work: () => Promise<void>) => {
@@ -169,7 +169,7 @@ function SetupTools({ language, onLanguageChange, showLanguagePicker }: {
     setAddons(next);
   });
 
-  /** Keeps a copy of what Nuvio returned, for people without an ARVIO account. */
+  /** Keeps a copy of what Nuvio returned, for people without an fIPTV account. */
   const downloadSnapshot = () => {
     if (!snapshot) return;
     const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type: "application/json" });
@@ -193,7 +193,7 @@ function SetupTools({ language, onLanguageChange, showLanguagePicker }: {
     setResults(null);
   });
 
-  // The Nuvio step runs before the ARVIO sign-in, so the first plan is drawn up
+  // The Nuvio step runs before the fIPTV sign-in, so the first plan is drawn up
   // against an empty profile list and proposes creating everything. Redo it the
   // moment real profiles arrive — without touching a choice already made by hand.
   useEffect(() => {
@@ -211,7 +211,7 @@ function SetupTools({ language, onLanguageChange, showLanguagePicker }: {
 
   const runImport = () => run(async () => {
     if (!snapshot) return;
-    if (!accountReady) throw new Error("Load your ARVIO account successfully before importing");
+    if (!accountReady) throw new Error("Load your fIPTV account successfully before importing");
     const outcome = await applyNuvioImport({
       auth: authClient, profiles, snapshot, choices,
       baseSettings: defaultSettings, onProgress: setProgress
@@ -227,11 +227,11 @@ function SetupTools({ language, onLanguageChange, showLanguagePicker }: {
       <div className="setup__inner">
       <div className="setup__brand">
         <img src="/arvio-icon-192.png" alt="" width={40} height={40} />
-        <span>ARVIO</span>
+        <span>fIPTV</span>
       </div>
       <header className="setup__header">
         <div className="setup__header-row">
-          <h1>{translateUi("ARVIO setup")}</h1>
+          <h1>{translateUi("fIPTV setup")}</h1>
           {showLanguagePicker && <label className="setup__language">
             <span>{translateUi("App Language")}</span>
             <select value={language} onChange={event => onLanguageChange(event.target.value)}>
@@ -239,15 +239,15 @@ function SetupTools({ language, onLanguageChange, showLanguagePicker }: {
             </select>
           </label>}
         </div>
-        <p>{translateUi("Install addons and bring your Nuvio setup over. Everything is saved to your ARVIO account, so the free Android and TV apps pick it up on their next sync. No web subscription needed.")}</p>
+        <p>{translateUi("Install addons and bring your Nuvio setup over. Everything is saved to your fIPTV account, so the free Android and TV apps pick it up on their next sync. No web subscription needed.")}</p>
       </header>
 
-      {/* Nuvio comes first: reading a Nuvio account needs no ARVIO account, so
+      {/* Nuvio comes first: reading a Nuvio account needs no fIPTV account, so
           someone who has not signed up yet can still pull their setup out. */}
       <section className="setup__card">
         <h2>{translateUi("Move from Nuvio")}</h2>
         {!snapshot && <>
-          <p className="setup__muted">{translateUi("Sign in with your Nuvio account to read its profiles, addons and collections. Nothing in Nuvio is changed, and you do not need an ARVIO account for this step.")}</p>
+          <p className="setup__muted">{translateUi("Sign in with your Nuvio account to read its profiles, addons and collections. Nothing in Nuvio is changed, and you do not need an fIPTV account for this step.")}</p>
           <label><span>{translateUi("Nuvio email")}</span>
             <input type="email" value={nuvioEmail} onChange={event => setNuvioEmail(event.target.value)} autoComplete="off" /></label>
           <label><span>{translateUi("Nuvio password")}</span>
@@ -284,7 +284,7 @@ function SetupTools({ language, onLanguageChange, showLanguagePicker }: {
 
         {snapshot && !results && <>
           <p>{translateUi("Found {value0} profiles in {value1}.", { value0: snapshot.profiles.length, value1: snapshot.email })}</p>
-          <p className="setup__muted">{translateUi("Addons are shared by every profile in ARVIO: the addons of every imported profile end up on all of them. Collections stay with the profile you copy them into.")}</p>
+          <p className="setup__muted">{translateUi("Addons are shared by every profile in fIPTV: the addons of every imported profile end up on all of them. Collections stay with the profile you copy them into.")}</p>
           <ul className="setup__list">
             {snapshot.profiles.map(profile => {
               const choice = choices.find(entry => entry.nuvioProfileId === profile.profileId);
@@ -301,7 +301,7 @@ function SetupTools({ language, onLanguageChange, showLanguagePicker }: {
                 </span>
                 <select value={value} onChange={event => setTarget(profile.profileId, event.target.value)}
                   aria-label={translateUi("Copy {value0} into", { value0: profile.name })}>
-                  <option value="__create">{translateUi("Create a new ARVIO profile")}</option>
+                  <option value="__create">{translateUi("Create a new fIPTV profile")}</option>
                   {profiles.map(target => <option key={target.id} value={target.id}>{target.name}</option>)}
                   <option value="__skip">{translateUi("Skip")}</option>
                 </select>
@@ -310,13 +310,13 @@ function SetupTools({ language, onLanguageChange, showLanguagePicker }: {
           </ul>
           <div className="setup__row">
             <button type="button" className="setup__primary" disabled={busy || !signedIn || !accountReady || !planned.length} onClick={runImport}>
-              <ArrowRightLeft size={18} aria-hidden="true" /> {translateUi("Copy {value0} profiles into ARVIO", { value0: planned.length })}
+              <ArrowRightLeft size={18} aria-hidden="true" /> {translateUi("Copy {value0} profiles into fIPTV", { value0: planned.length })}
             </button>
             <button type="button" className="setup__ghost" onClick={downloadSnapshot}>
               <Download size={18} aria-hidden="true" /> {translateUi("Download a copy")}
             </button>
           </div>
-          {!signedIn && <p className="setup__muted">{translateUi("Sign in to ARVIO below to copy this into an account, or download it and keep it for later.")}</p>}
+          {!signedIn && <p className="setup__muted">{translateUi("Sign in to fIPTV below to copy this into an account, or download it and keep it for later.")}</p>}
         </>}
 
         {results && <div className="setup__results">
@@ -334,16 +334,16 @@ function SetupTools({ language, onLanguageChange, showLanguagePicker }: {
                       {result.addonsFailed > 0 && ` · ${translateUi("{value0} could not be reached", { value0: result.addonsFailed })}`}</em></span>}
             </li>)}
           </ul>
-          <p className="setup__muted">{translateUi("Open ARVIO on your TV or phone and sign in with this account to see them.")}</p>
+          <p className="setup__muted">{translateUi("Open fIPTV on your TV or phone and sign in with this account to see them.")}</p>
         </div>}
       </section>
 
       {!signedIn && <section className="setup__card">
-        <h2>{translateUi("Sign in to ARVIO")}</h2>
-        <p className="setup__muted">{translateUi("Needed to save addons, or to copy a Nuvio account into ARVIO.")}</p>
-        {/* The same ARVIO sign-in page the apps use (email, Discord, password reset). */}
+        <h2>{translateUi("Sign in to fIPTV")}</h2>
+        <p className="setup__muted">{translateUi("Needed to save addons, or to copy a Nuvio account into fIPTV.")}</p>
+        {/* The same fIPTV sign-in page the apps use (email, Discord, password reset). */}
         <button type="button" className="setup__primary" disabled={busy} onClick={signInWithPortal}>
-          <LogIn size={18} aria-hidden="true" /> {translateUi("Sign In with ARVIO Cloud")}
+          <LogIn size={18} aria-hidden="true" /> {translateUi("Sign In with fIPTV Cloud")}
         </button>
       </section>}
 
@@ -354,7 +354,7 @@ function SetupTools({ language, onLanguageChange, showLanguagePicker }: {
             <button type="button" className="setup__ghost" disabled={busy} onClick={signOut}><LogOut size={16} aria-hidden="true" /> {translateUi("Sign out / switch account")}</button>
           </div>
           <h2>{translateUi("Profile")}</h2>
-          {!accountReady && <p className="setup__muted">{accountLoading ? translateUi("Loading your ARVIO account...") : translateUi("Your ARVIO account could not be loaded. Retry before importing.")}</p>}
+          {!accountReady && <p className="setup__muted">{accountLoading ? translateUi("Loading your fIPTV account...") : translateUi("Your fIPTV account could not be loaded. Retry before importing.")}</p>}
           {!accountReady && <button type="button" className="setup__ghost" disabled={busy || accountLoading} onClick={() => run(() => loadAccount())}>
             <RefreshCw size={18} aria-hidden="true" /> {translateUi("Retry loading account")}
           </button>}

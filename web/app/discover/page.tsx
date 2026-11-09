@@ -22,7 +22,7 @@ const STATIC_FALLBACK_PACKS: CatalogPack[] = [
   {
     id: "cinema-essentials",
     name: "Cinema Essentials",
-    author: "ARVIO Team",
+    author: "fIPTV Team",
     version: "1.0.0",
     description: "All the trending movies, popular lists, and upcoming releases you need for a perfect movie night.",
     url: "/packs/cinema-essentials.json",
@@ -31,7 +31,7 @@ const STATIC_FALLBACK_PACKS: CatalogPack[] = [
   {
     id: "tv-binge",
     name: "TV Show Binge Pack",
-    author: "ARVIO Team",
+    author: "fIPTV Team",
     version: "1.0.0",
     description: "Never miss an episode. Popular, trending, and latest airing series in one convenient bundle.",
     url: "/packs/tv-binge.json",
@@ -63,7 +63,7 @@ const STATIC_FALLBACK_PACKS: CatalogPack[] = [
   }
 ];
 
-/** The ARVIO app's catalog-pack link (Android app link; the web app has no pack import yet). */
+/** The fIPTV app's catalog-pack link (Android app link; the web app has no pack import yet). */
 function packInstallLink(absolutePackUrl: string) {
   return `arvio://install-pack?url=${encodeURIComponent(absolutePackUrl)}`;
 }
@@ -223,8 +223,8 @@ function DiscoverContent() {
       <header className="discover-header">
         <div className="header-top">
           <div className="logo-section">
-            <img src="/arvio-logo.svg" alt="ARVIO Logo" className="logo" />
-            <img src="/arvio-wordmark.svg" alt="ARVIO" className="wordmark-logo" />
+            <img src="/arvio-logo.svg" alt="fIPTV Logo" className="logo" />
+            <img src="/arvio-wordmark.svg" alt="fIPTV" className="wordmark-logo" />
           </div>
           <button
             ref={modalTrigger}
@@ -242,7 +242,7 @@ function DiscoverContent() {
 
         <h1 className="hero-title">{translateUi("Catalog packs")}</h1>
         <p className="hero-subtitle">
-          {translateUi("Community-curated sets of Home rows. Add a pack in the ARVIO app to get several rows at once.")}
+          {translateUi("Community-curated sets of Home rows. Add a pack in the fIPTV app to get several rows at once.")}
         </p>
       </header>
 
@@ -280,9 +280,9 @@ function DiscoverContent() {
                 {android && origin && <a
                   href={getDeepLink(pack.url)}
                   className="install-button"
-                  title={translateUi("Open this pack in the ARVIO app")}
+                  title={translateUi("Open this pack in the fIPTV app")}
                 >
-                  <Download size={16} /> {translateUi("Open in ARVIO app")}
+                  <Download size={16} /> {translateUi("Open in fIPTV app")}
                 </a>}
                 <button
                   type="button"
@@ -413,7 +413,7 @@ function DiscoverContent() {
           <div className="faq-item">
             <h3>{translateUi("How do I install a pack?")}</h3>
             <p>
-              {translateUi("On Android, Open in ARVIO app adds the pack in the app. On other devices, copy the pack link and paste it in the ARVIO Android or TV app under Settings → Catalogs → Import Catalog Pack. Rows you add there sync to ARVIO Web.")}
+              {translateUi("On Android, Open in fIPTV app adds the pack in the app. On other devices, copy the pack link and paste it in the fIPTV Android or TV app under Settings → Catalogs → Import Catalog Pack. Rows you add there sync to fIPTV Web.")}
             </p>
           </div>
           <div className="faq-item">
@@ -449,7 +449,7 @@ function DiscoverContent() {
       </section>
 
       <footer className="discover-footer">
-        <p>ARVIO &copy; {new Date().getFullYear()}</p>
+        <p>fIPTV &copy; {new Date().getFullYear()}</p>
       </footer>
 
       <style jsx>{`

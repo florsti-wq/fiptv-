@@ -1,7 +1,7 @@
 "use client";
 // Live TV layout editor: which categories show and in what order, which
 // channel sits where inside a category, and the favourites — per playlist,
-// synced to the Live TV page on every ARVIO app.
+// synced to the Live TV page on every fIPTV app.
 
 import { Check, Eye, EyeOff, ListOrdered, Lock, Pencil, RotateCcw, Search, Star, X } from "lucide-react";
 import { useDeferredValue, useMemo, useRef, useState, type ReactNode } from "react";
@@ -159,7 +159,7 @@ function CategoriesView({ groups, groupOrder, hiddenGroups, lockedGroups, favori
           <button type="button" className="st-btn" title={translateUi("Reset order")} aria-label={translateUi("Reset order")}
             onClick={() => updateSettings({ groupOrder: groupOrder.filter((key) => !key.startsWith(`${playlistId}|`)) })}><RotateCcw size={16} /></button>
         </div>
-        {hasLocked && <p className="st-hint">{translateUi("Locked categories stay hidden on ARVIO Web. Lock and unlock them on your TV, where the PIN is asked.")}</p>}
+        {hasLocked && <p className="st-hint">{translateUi("Locked categories stay hidden on fIPTV Web. Lock and unlock them on your TV, where the PIN is asked.")}</p>}
         <SortableList
           items={shown}
           label={translateUi("Categories")}
@@ -225,7 +225,7 @@ function CategoriesView({ groups, groupOrder, hiddenGroups, lockedGroups, favori
           }}
         />
       </div>
-      <Preview title={translateUi("Live TV page")} note={translateUi("Favourite categories are also pinned to the top on ARVIO Web.")}>
+      <Preview title={translateUi("Live TV page")} note={translateUi("Favourite categories are also pinned to the top on fIPTV Web.")}>
         <li className="is-fixed"><Star size={13} /><span>{translateUi("Favorites")}</span></li>
         <li className="is-fixed"><span>{translateUi("Recently Watched")}</span></li>
         <li className="is-fixed"><span>{translateUi("All Channels")}</span></li>

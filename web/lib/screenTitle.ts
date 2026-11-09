@@ -9,8 +9,8 @@ const SECTION_LABELS: Record<NavSection, string> = {
   settings: "Settings"
 };
 
-/** The document title for a screen: "Home · ARVIO", or the open title's name. */
+/** The document title for a screen: "Home · fIPTV", or the open title's name. */
 export function screenTitle(section: NavSection, selectedTitle: string | null | undefined, translate: (text: string) => string = (text) => text) {
   const name = selectedTitle?.trim() || translate(SECTION_LABELS[section] ?? "Home");
-  return `${name} · ARVIO`;
+  return `${name} · fIPTV`;
 }

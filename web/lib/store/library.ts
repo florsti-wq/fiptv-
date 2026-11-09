@@ -41,7 +41,7 @@ export function useLibraryActions(store: StoreCore & Pick<ReturnType<typeof useW
   const toggleWatchlist = useCallback(async (item: MediaItem) => {
     const userId = authClient.session?.userId;
     const inWatchlist = watchlist.some((entry) => entry.mediaType === item.mediaType && entry.id === item.id);
-    // Like Android (WatchlistRepository), the watchlist lives in ARVIO Cloud
+    // Like Android (WatchlistRepository), the watchlist lives in fIPTV Cloud
     // (watchlistByProfile via the outbox below) and on this device; Trakt,
     // Simkl and MDBList are optional mirrors written when connected.
     const mutationKey = JSON.stringify([userId, activeProfileId, item.mediaType, item.id]);
@@ -77,7 +77,7 @@ export function useLibraryActions(store: StoreCore & Pick<ReturnType<typeof useW
           if (isCurrentAction()) setToast('Watchlist updated. Cloud sync will retry when you reconnect.');
         });
       } else if (!userId && !authClient.session) {
-        // No ARVIO account: the device-local outbox bucket is the watchlist.
+        // No fIPTV account: the device-local outbox bucket is the watchlist.
         queueWatchlistChange(authClient, slim, inWatchlist, activeProfileId, cloudChange);
       }
     } catch (err) {

@@ -21,11 +21,11 @@ import type { StoreCore } from "./core";
 
 export const MAX_PROFILES = 5;
 
-/** Saved on this device, but ARVIO Cloud did not take it (the other devices won't see it yet). */
+/** Saved on this device, but fIPTV Cloud did not take it (the other devices won't see it yet). */
 export class ProfileCloudSaveError extends Error {
   readonly profile: Profile;
   constructor(profile: Profile, cause?: unknown) {
-    super("Saved on this device, but ARVIO Cloud could not be reached. Try again to sync it to your other devices.");
+    super("Saved on this device, but fIPTV Cloud could not be reached. Try again to sync it to your other devices.");
     this.name = "ProfileCloudSaveError";
     this.profile = profile;
     this.cause = cause;

@@ -30,19 +30,19 @@ export default function JoinPartner() {
     catch (caught) { setError(caught instanceof Error ? caught.message : "Sign-in failed"); }
     finally { setBusy(false); }
   }
-  return <main className="partner-app partner-auth"><a href="/" className="partner-wordmark"><img src="/arvio-icon-192.png" alt="" /><img className="partner-logo-wordmark" src="/arvio-wordmark.svg" alt="ARVIO" /> <span>Invitation</span></a><section className="partner-auth-form">
-    {accepted ? <><Check size={30} className="partner-accent" /><h1>You are connected</h1><p>Your compatible ARVIO devices will receive your managed configuration after signing in. Your personal lists and history remain yours.</p><a className="partner-primary partner-secondary" href="/">Open ARVIO</a></> : <>
-      <ShieldCheck size={30} className="partner-accent" /><h1>{details ? `Join ${details.name}` : "Your ARVIO invitation"}</h1>
+  return <main className="partner-app partner-auth"><a href="/" className="partner-wordmark"><img src="/arvio-icon-192.png" alt="" /><img className="partner-logo-wordmark" src="/arvio-wordmark.svg" alt="fIPTV" /> <span>Invitation</span></a><section className="partner-auth-form">
+    {accepted ? <><Check size={30} className="partner-accent" /><h1>You are connected</h1><p>Your compatible fIPTV devices will receive your managed configuration after signing in. Your personal lists and history remain yours.</p><a className="partner-primary partner-secondary" href="/">Open fIPTV</a></> : <>
+      <ShieldCheck size={30} className="partner-accent" /><h1>{details ? `Join ${details.name}` : "Your fIPTV invitation"}</h1>
       {error && <div role="alert" className="partner-message error">{error}</div>}
-      {!token ? <p>This invitation link is incomplete. Open the full link from your invitation email.</p> : !signedIn ? <><p>Sign in with the ARVIO account matching the invitation email.</p><form onSubmit={login}><label>Email<input name="email" type="email" autoComplete="username" required /></label><label>Password<input name="password" type="password" autoComplete="current-password" required /></label><button disabled={busy} className="partner-primary">Sign in</button><a href="https://auth.arvio.tv" target="_blank" rel="noreferrer">Create an account or reset your password</a></form></> : details ? <>
+      {!token ? <p>This invitation link is incomplete. Open the full link from your invitation email.</p> : !signedIn ? <><p>Sign in with the fIPTV account matching the invitation email.</p><form onSubmit={login}><label>Email<input name="email" type="email" autoComplete="username" required /></label><label>Password<input name="password" type="password" autoComplete="current-password" required /></label><button disabled={busy} className="partner-primary">Sign in</button><a href="https://auth.arvio.tv" target="_blank" rel="noreferrer">Create an account or reset your password</a></form></> : details ? <>
         <p>Signed in as <strong>{partnerAuth.session?.email}</strong></p>
         {details.packageName && <p>Package: <strong>{details.packageName}</strong></p>}
         <p>The administrator can assign connections, configure your home screen and suspend managed access. They cannot read your personal watch history or your Trakt/Simkl credentials.</p>
         <h2>Your permissions</h2><ul>{Object.entries(permissionLabels).map(([key, label]) => <li key={key}>{label}: {details.permissions[key as keyof PartnerPermissions] ? "Allowed" : "Managed by administrator"}</li>)}</ul>
-        <p>You can leave through your managed-account settings. This removes managed access, not your ARVIO account or personal history.</p>
+        <p>You can leave through your managed-account settings. This removes managed access, not your fIPTV account or personal history.</p>
         <button className="partner-primary" disabled={busy} onClick={async () => { setBusy(true); setError(""); try { await partnerRequest("accept-invitation", { token, consent: true }); setAccepted(true); window.history.replaceState(null, "", "/partner/join"); } catch (caught) { setError(caught instanceof Error ? caught.message : "Could not accept invitation"); } finally { setBusy(false); } }}>Accept managed access</button>
       </> : busy ? <p role="status">Checking invitation...</p> : null}
       {signedIn && <button className="partner-text" onClick={() => { partnerAuth.signOut(); setSignedIn(false); setDetails(null); setError(""); }}>Use another account</button>}
     </>}
-  </section><a href="/" className="partner-back"><ArrowLeft size={16} />Back to ARVIO</a></main>;
+  </section><a href="/" className="partner-back"><ArrowLeft size={16} />Back to fIPTV</a></main>;
 }

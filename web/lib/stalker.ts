@@ -32,7 +32,7 @@ async function session(url:string,mac:string){
 }
 /**
  * Channels of one portal. Ids are Android's `stalker:<portalId>:<channel>` so
- * favourites, recents and channel order match the TV; the id older ARVIO Web
+ * favourites, recents and channel order match the TV; the id older fIPTV Web
  * builds used (`stalker:<encoded url>:<channel>`) stays as a sync alias.
  */
 export async function loadStalkerChannels(url:string,mac:string,portalId='stalker1'):Promise<IptvChannel[]> {

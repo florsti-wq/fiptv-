@@ -189,7 +189,7 @@ export function AppShell() {
     return (
       <main className="app-boot">
         <img src="/arvio-logo.svg" alt="" className="app-boot-logo" />
-        <img src="/arvio-wordmark.svg" alt="ARVIO" className="app-boot-wordmark" />
+        <img src="/arvio-wordmark.svg" alt="fIPTV" className="app-boot-wordmark" />
       </main>
     );
   }

@@ -1,5 +1,5 @@
 // Track languages as the Android/TV app stores them. Subtitle and audio
-// preferences sync through ARVIO Cloud as these display names ("English",
+// preferences sync through fIPTV Cloud as these display names ("English",
 // "Portuguese (Brazil)"), so the web writes the same values and reads codes,
 // names or labels through `languageCode`, a port of Android's
 // util/LanguageCodes.kt normalizeLanguageCode.

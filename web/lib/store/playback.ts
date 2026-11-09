@@ -32,7 +32,7 @@ export function usePlaybackActions(store: StoreCore & Pick<ReturnType<typeof use
       setToast(TELEGRAM_DISABLED_MESSAGE);
       return;
     }
-    // Explore mode: hosted ARVIO Web asks for Premium here (and resumes after
+    // Explore mode: hosted fIPTV Web asks for Premium here (and resumes after
     // payment). Self-hosted builds never register a gate. A source headed for
     // VLC/Infuse is not resumed automatically: iOS opens an app only from
     // inside the original tap, so the member presses Play again.
@@ -58,13 +58,13 @@ export function usePlaybackActions(store: StoreCore & Pick<ReturnType<typeof use
     }
     // Default external player (VLC / Infuse): hand the source straight to it,
     // resolving the debrid CDN URL first (external players can't follow the
-    // torrentio redirect chain). A pending record lets ARVIO scrobble to Trakt
+    // torrentio redirect chain). A pending record lets fIPTV scrobble to Trakt
     // + save progress when the user returns. forceBrowser overrides (e.g. the
     // in-player source panel, which is already in the browser player).
     const preferredPlayer = settingsRef.current.defaultPlayer;
     if (stream.addonId !== "arvio_youtube" && !stream.autoSelect && !options.forceBrowser && !options.forceRemux && !options.forceTranscode && (preferredPlayer === "vlc" || preferredPlayer === "infuse")) {
       const externalItem = selected;
-      const externalTitle = selected?.title ?? stream.source ?? "ARVIO stream";
+      const externalTitle = selected?.title ?? stream.source ?? "fIPTV stream";
       const preferredSub = settingsRef.current.defaultSubtitle;
       // The deep link MUST fire synchronously in the Play click — custom-scheme
       // navigation (vlc-x-callback://) is blocked after an await. Use the

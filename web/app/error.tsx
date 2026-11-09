@@ -10,7 +10,7 @@ import { clearScreenCaches, loadStored, SCREEN_CACHE_KEYS } from "@/lib/storage"
 // providers themselves, the profile gate, a crashing boundary).
 export default function AppError({ error }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
-    console.error("[ARVIO] app crashed", error);
+    console.error("[fIPTV] app crashed", error);
   }, [error]);
   const language = loadStored<{ language?: string } | null>("arvio.web.settings", null)?.language || "en";
   const reload = () => {

@@ -1,7 +1,7 @@
 // Fullscreen on the <video> element itself.
 //
 // The player normally fullscreens its CONTAINER (lib/playerPlatform.ts) so
-// ARVIO's own controls, styled subtitles and panels stay visible. On Apple
+// fIPTV's own controls, styled subtitles and panels stay visible. On Apple
 // Vision Pro (and other no-hover, touch-first WebKit devices) fullscreening the
 // <video> hands playback to the system player — on visionOS that is the
 // docked/immersive cinema view — which is what people expect there.

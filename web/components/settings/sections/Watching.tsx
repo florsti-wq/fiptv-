@@ -57,7 +57,7 @@ export function PlaybackSection() {
   };
   return (
     <>
-      <SectionHeader title="Playback" description="How ARVIO picks and starts a source." />
+      <SectionHeader title="Playback" description="How fIPTV picks and starts a source." />
       <Group title="Auto-play">
         <Row id="autoplay-next" label="Auto-play next episode" scope="all">
           <Toggle label="Auto-play next episode" value={settings.autoPlayNext} onChange={(v) => set({ autoPlayNext: v })} />
@@ -313,7 +313,7 @@ export function AiSubtitlesSection({ openSection }: { openSection: (id: string) 
   const info = PROVIDERS[provider];
   return (
     <>
-      <SectionHeader title="AI subtitles" description="When a film has English subtitles but none in your language, ARVIO can translate them as you watch. It uses your own free API key, so there's nothing to pay." />
+      <SectionHeader title="AI subtitles" description="When a film has English subtitles but none in your language, fIPTV can translate them as you watch. It uses your own free API key, so there's nothing to pay." />
       <Group>
         <Row id="ai-enabled" label="AI subtitle translation" hint="Translate subtitles in real time using Groq or Gemini." scope="all">
           <Toggle label="AI subtitle translation" value={settings.aiSubtitlesEnabled} onChange={(v) => set({ aiSubtitlesEnabled: v, ...(settings.aiSubtitleModel === "off" ? { aiSubtitleModel: "groq" } : {}) })} />
@@ -325,7 +325,7 @@ export function AiSubtitlesSection({ openSection }: { openSection: (id: string) 
         </Row>
       </Group>
 
-      <Group title="Provider and key" description="Both providers have a free tier. Create a key, paste it here, and it's used on ARVIO Web and your Android and TV app.">
+      <Group title="Provider and key" description="Both providers have a free tier. Create a key, paste it here, and it's used on fIPTV Web and your Android and TV app.">
         <div className="st-choice" role="radiogroup" aria-label={translateUi("AI provider")}>
           {(Object.keys(PROVIDERS) as Array<keyof typeof PROVIDERS>).map((id) => (
             <button key={id} type="button" role="radio" aria-checked={provider === id} className={provider === id ? "is-active" : ""}
@@ -336,7 +336,7 @@ export function AiSubtitlesSection({ openSection }: { openSection: (id: string) 
           ))}
         </div>
         <Row id="ai-key" label={`${info.name} API key`} stack scope="all"
-          hint={<>{translateUi("Free from")} <a className="st-link" href={info.keyUrl} target="_blank" rel="noreferrer">{info.keyUrl.replace("https://", "")} <ExternalLink size={12} /></a>. {translateUi("The key is stored in your ARVIO account so your TV can use it too.")}</>}>
+          hint={<>{translateUi("Free from")} <a className="st-link" href={info.keyUrl} target="_blank" rel="noreferrer">{info.keyUrl.replace("https://", "")} <ExternalLink size={12} /></a>. {translateUi("The key is stored in your fIPTV account so your TV can use it too.")}</>}>
           <SecretInput label={`${info.name} API key`} value={settings.aiApiKey} placeholder="Paste your key" onChange={(v) => { set({ aiApiKey: v }); checkRun.current++; setCheck(null); }} />
           <button type="button" className="st-btn" disabled={!settings.aiApiKey || check === "busy"} onClick={async () => {
             const run = ++checkRun.current;
@@ -351,7 +351,7 @@ export function AiSubtitlesSection({ openSection }: { openSection: (id: string) 
           {check === "limit" && <Status tone="warn">{translateUi("Key works, but the rate limit is reached right now")}</Status>}
           {check === "error" && <Status tone="warn">{translateUi("Couldn't reach {value0}. Try again.", { value0: info.name })}</Status>}
         </Row>
-        <p className="st-note">{translateUi("Clearing the key here stops ARVIO Web using it. A TV that already has the key keeps it until you remove it on the TV.")}</p>
+        <p className="st-note">{translateUi("Clearing the key here stops fIPTV Web using it. A TV that already has the key keeps it until you remove it on the TV.")}</p>
       </Group>
 
       <Group title="When to translate">

@@ -12,7 +12,7 @@ const require = createRequire(path.join(app, 'package.json'));
 const { chromium } = require('@playwright/test');
 const core = path.dirname(require.resolve('mediabunny'));
 const mime = { '.mjs': 'text/javascript', '.js': 'text/javascript', '.json': 'application/json' };
-const html = `<!doctype html><meta charset="utf-8"><title>ARVIO rebuilt codec test</title>
+const html = `<!doctype html><meta charset="utf-8"><title>fIPTV rebuilt codec test</title>
 <script type="importmap">{"imports":{"mediabunny":"/facade.mjs"}}</script>`;
 const facade = `export * from '/core/mediabunny.mjs';
 export const encoders=[]; export const decoders=[];

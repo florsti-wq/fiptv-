@@ -423,7 +423,7 @@ export function useRefreshData(store: StoreCore) {
       } catch (error) {
         if (isCurrent()) {
           setAddonsReady(true);
-          if (!background) setToast(error instanceof Error ? error.message : "Failed to load ARVIO");
+          if (!background) setToast(error instanceof Error ? error.message : "Failed to load fIPTV");
         }
       } finally {
         if (isCurrent() && !background) setBusy("");

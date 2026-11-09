@@ -304,7 +304,7 @@ export function WatchlistScreen() {
             {libraryError ? <><p>{translateUi("Library unavailable")}</p><button onClick={refresh}>{translateUi("Retry")}</button></>
               : searchQuery ? <><p>{translateUi("No titles found")}</p><button onClick={() => setSearch("")}>{translateUi("Clear search")}</button></>
               : sourceValue === "saved" && section === "watchlists" ? <><p>{translateUi("Your watchlist is empty")}</p>
-                <span>{translateUi("Add movies and series with the bookmark on any title. Your watchlist syncs with the ARVIO Android app.")}</span>
+                <span>{translateUi("Add movies and series with the bookmark on any title. Your watchlist syncs with the fIPTV Android app.")}</span>
                 <div className="watchlist-empty-actions"><button onClick={browse}><Compass size={18} aria-hidden />{translateUi("Browse")}</button></div></>
               : <><p>{translateUi("No titles found")}</p><span>{translateUi("Choose another source or add titles to your watchlist.")}</span>
                 <div className="watchlist-empty-actions"><button onClick={browse}><Compass size={18} aria-hidden />{translateUi("Browse")}</button></div></>}</div>

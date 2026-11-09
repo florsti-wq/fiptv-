@@ -505,7 +505,7 @@ export function LiveTvScreen() {
         <section className="livetv-empty">
           <Tv size={44} />
           <h3>{translateUi("Add your IPTV playlist")}</h3>
-          <p>{translateUi("Paste an M3U link or Xtream login. Playlists sync through ARVIO Cloud")}{auth ? "" : translateUi(" when you sign in")}.</p>
+          <p>{translateUi("Paste an M3U link or Xtream login. Playlists sync through fIPTV Cloud")}{auth ? "" : translateUi(" when you sign in")}.</p>
           <button type="button" className="primary" onClick={() => openEditor("new")}><Plus size={18} /> {translateUi("Add playlist")}</button>
         </section>
       )}

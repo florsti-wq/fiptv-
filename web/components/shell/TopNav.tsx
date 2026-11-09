@@ -24,7 +24,7 @@ const nav = [
 export function TopNav() {
   const translateUi = useTranslation();
   const { view, section, setSection, switchProfile, activeProfile, avatarImages, settings, closeDetails, selected } = useAppPick("view", "section", "setSection", "switchProfile", "activeProfile", "avatarImages", "settings", "closeDetails", "selected");
-  // Per-screen tab titles ("Home · ARVIO"), so history, tabs and screen
+  // Per-screen tab titles ("Home · fIPTV"), so history, tabs and screen
   // readers say where the user is.
   useEffect(() => {
     document.title = screenTitle(section, selected?.title, translateUi);
@@ -94,7 +94,7 @@ export function TopNav() {
           </button>
           <span className="profile-name-text">{activeProfile?.name ?? ""}</span>
         </div>
-        <nav aria-label={translateUi("ARVIO navigation")}>
+        <nav aria-label={translateUi("fIPTV navigation")}>
           {visibleNav.map((item) => {
             const Icon = item.icon;
             const current = !selected && section === item.id;
@@ -147,7 +147,7 @@ export function TopNav() {
       <header className={`mobile-header ${scrolled ? "is-scrolled" : ""}`}>
         <div className="mobile-brand">
           <img src="/arvio-logo.svg" alt="" className="mobile-brand-logo" />
-          <img src="/arvio-wordmark.svg" alt="ARVIO" className="mobile-wordmark" />
+          <img src="/arvio-wordmark.svg" alt="fIPTV" className="mobile-wordmark" />
         </div>
         <div className="mobile-header-actions">
           {trialActive && (

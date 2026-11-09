@@ -46,7 +46,7 @@ export function useManagedConfiguration(accountId: string | undefined, profileId
       lastAttempt = now; inFlight = true;
       try {
         const delivery = await partnerRequest<ManagedDelivery>("delivery", { device: {
-          key: deviceKey, name: "ARVIO Web", platform: "web", appliedRevision: applied?.delivery.revision || 0
+          key: deviceKey, name: "fIPTV Web", platform: "web", appliedRevision: applied?.delivery.revision || 0
         } }, authClient);
         if (disposed || authClient.session?.userId !== accountId) return;
         let next: ManagedResources | null = null;

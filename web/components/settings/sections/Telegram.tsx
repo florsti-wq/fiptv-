@@ -68,7 +68,7 @@ export function TelegramSection() {
   }, [authState]);
 
   const header = (
-    <SectionHeader title="Telegram" description="Stream video files from your Telegram chats and channels as sources. In ARVIO Web everything runs in your browser; nothing is sent to ARVIO servers." />
+    <SectionHeader title="Telegram" description="Stream video files from your Telegram chats and channels as sources. In fIPTV Web everything runs in your browser; nothing is sent to fIPTV servers." />
   );
   const tvOption = (
     <Group title="On your Android and TV app" description="Telegram sign-in is separate on each device. This option syncs.">

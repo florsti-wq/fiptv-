@@ -300,12 +300,12 @@ export async function getStreamsProgressive(
     });
     const browserPromise = getBrowserStreamsProgressive(addons, item, season, episode, (all, batch) => { browserLatest = all; publish(batch); }, undefined, undefined, subtitleTask)
       .catch((error) => {
-        console.warn("ARVIO browser addon lookup failed.", error);
+        console.warn("fIPTV browser addon lookup failed.", error);
         return [] as StreamSource[];
       });
     const resolverPromise = getResolverStreamsProgressive(addons, item, season, episode, (all, batch) => { resolverLatest = all; publish(batch); })
       .catch((error) => {
-        console.warn("ARVIO resolver unavailable, using browser addon lookup.", error);
+        console.warn("fIPTV resolver unavailable, using browser addon lookup.", error);
         return [] as StreamSource[];
       });
     const [browserResolved, resolved] = await Promise.all([browserPromise, resolverPromise]);

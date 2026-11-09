@@ -25,8 +25,8 @@ export function deviceName(userAgent = typeof navigator === "undefined" ? "" : n
 // Literal phrases so the translation tooling can find them.
 function headline(intent: PremiumIntent): string {
   if (intent === "live") return "Watch Live TV on your {device}";
-  if (intent === "download") return "Download with ARVIO Premium";
-  if (intent === "external" || intent === "copy") return "Open streams with ARVIO Premium";
+  if (intent === "download") return "Download with fIPTV Premium";
+  if (intent === "external" || intent === "copy") return "Open streams with fIPTV Premium";
   return "Watch this on your {device}";
 }
 
@@ -144,9 +144,9 @@ export function PremiumOffer({ intent, state, status, account, onClose, onRetry,
       <p>{translateUi("Your payment status has not changed. Please retry before subscribing again.")}</p>
       <button type="button" className="paywall-primary" onClick={onRetry}><RefreshCw size={16} /> {translateUi("Check access again")}</button>
     </div> : <>
-      <p className="premium-offer-eyebrow"><BadgeCheck size={15} /> ARVIO PREMIUM</p>
+      <p className="premium-offer-eyebrow"><BadgeCheck size={15} /> fIPTV PREMIUM</p>
       <h2 id={`${id}-title`}>{translateUi(headline(intent), { device: translateUi(DEVICE_LABELS[device] ?? "device") })}</h2>
-      <p className="premium-offer-lead">{lapsed ? translateUi("Welcome back. Everything you set up is still here.") : translateUi("Everything you set up stays. Premium unlocks playback, Live TV and downloads in ARVIO Web on every browser you sign in to.")}</p>
+      <p className="premium-offer-lead">{lapsed ? translateUi("Welcome back. Everything you set up is still here.") : translateUi("Everything you set up stays. Premium unlocks playback, Live TV and downloads in fIPTV Web on every browser you sign in to.")}</p>
       {tv && <PayOnPhone email={auth?.email} />}
       <PremiumPlans action={(plan) => plan === "yearly"
         ? <MembershipCheckout className="paywall-primary" entry={`explore_${intent}_yearly`} href={yearly} onEntitled={onEntitled} showEmailHint>

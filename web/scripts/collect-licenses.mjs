@@ -48,10 +48,10 @@ walk(dependencyRoot);
 packages.sort((a, b) => a.path.localeCompare(b.path));
 writeFileSync(join(output, "packages.json"), JSON.stringify(packages, null, 2) + "\n");
 writeFileSync(join(output, "README.txt"),
-  "ARVIO Web third-party notices\n\n" +
+  "fIPTV Web third-party notices\n\n" +
   "files/ preserves installed dependency copyright/license/notice files, including vendored and nested dependencies.\n" +
   "packages.json records installed package names, versions, declared licenses and upstream source repositories/homepages. Build-only dependencies may also be included.\n" +
-  "This collection is a packaging aid, not a declaration that all dependencies share ARVIO's license.\n" +
+  "This collection is a packaging aid, not a declaration that all dependencies share fIPTV's license.\n" +
   "Review source-availability and other obligations for copyleft/embedded-code dependencies before public redistribution; copying notices alone does not certify compliance.\n" +
-  "ARVIO source and original project license: https://github.com/ProdigyV21/ARVIO\n");
+  "fIPTV source and original project license: https://github.com/ProdigyV21/fIPTV\n");
 console.log(`Collected ${notices} dependency notices and ${packages.length} package metadata records.`);

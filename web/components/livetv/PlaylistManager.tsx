@@ -74,7 +74,7 @@ function draftFor(playlist: IptvPlaylistEntry): Draft {
     : { ...emptyDraft, kind: "m3u", name: playlist.name, url: playlist.m3uUrl, epg: playlist.epgUrl ?? "" };
 }
 
-/** Draft → the playlist entry ARVIO stores (or an error to show under the form). */
+/** Draft → the playlist entry fIPTV stores (or an error to show under the form). */
 export type DraftProblem = "missing-xtream" | "missing-url" | "bad-url";
 export function playlistFromDraft(draft: Pick<Draft, "kind" | "name" | "url" | "epg" | "host" | "username" | "password">, id: string): IptvPlaylistEntry | DraftProblem {
   if (draft.kind === "xtream") {
@@ -251,7 +251,7 @@ export function PlaylistManager({ playlists, hiddenGroups, groupNames, portals, 
           {draft.kind === "xtream" && <>
             {field("host", translateUi("Server address"), translateUi("From your provider, including the port, e.g. http://provider.example:8080"), { type: "url", placeholder: "http://provider.example:8080" })}
             {field("username", translateUi("Username"), "", { autoComplete: "username" })}
-            {field("password", translateUi("Password"), translateUi("ARVIO builds the playlist and guide links from these and syncs them to your other devices."), { type: "password", autoComplete: "current-password" })}
+            {field("password", translateUi("Password"), translateUi("fIPTV builds the playlist and guide links from these and syncs them to your other devices."), { type: "password", autoComplete: "current-password" })}
           </>}
           {draft.kind === "stalker" && <>
             {field("portal", translateUi("Portal address"), translateUi("The portal URL from your provider, e.g. http://portal.example/c/"), { type: "url", placeholder: "http://portal.example/c/" })}

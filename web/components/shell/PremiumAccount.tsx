@@ -35,7 +35,7 @@ function InviteFriends() {
         <input readOnly value={status.link} aria-label={translateUi("Your invite link")} onFocus={(event) => event.currentTarget.select()} />
         <button type="button" className="paywall-trial" onClick={async () => {
           try {
-            if (navigator.share && /iPhone|iPad|Android/i.test(navigator.userAgent)) await navigator.share({ title: "ARVIO", url: status.link });
+            if (navigator.share && /iPhone|iPad|Android/i.test(navigator.userAgent)) await navigator.share({ title: "fIPTV", url: status.link });
             else { await navigator.clipboard.writeText(status.link); setCopied(true); }
           } catch { /* share sheet closed */ }
         }}><Copy size={15} /> {translateUi(copied ? "Copied" : "Share link")}</button>
@@ -65,7 +65,7 @@ export function PremiumAccount() {
     window.dispatchEvent(new Event(ENTITLEMENT_REFRESH_EVENT));
   };
   return <section className="premium-account" aria-labelledby="premium-account-title">
-    <h2 id="premium-account-title"><BadgeCheck size={20} /> {translateUi(" ARVIO Web Premium")}</h2>
+    <h2 id="premium-account-title"><BadgeCheck size={20} /> {translateUi(" fIPTV Web Premium")}</h2>
     <p className="premium-account-status">{paid ? translateUi(state?.plan === "yearly" ? "12-month pass active" : "Membership active") : translateUi("Not a member yet")}</p>
     <p className="premium-account-email">{auth.email}</p>
     {state?.reason === "grace" && state.graceEndsAt && <p>{translateUi("Your renewal hasn't come through yet. Access continues until {date}.", { date: new Date(state.graceEndsAt).toLocaleDateString() })}</p>}

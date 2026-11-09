@@ -123,7 +123,7 @@ export function HomeHero({ controller, fallback, onOpen, onPlay }: {
             {imdbRating && <span className="hero-imdb"><ImdbLogo height={20} /><b>{imdbRating}</b></span>}
             {metaBits.map((bit) => <span key={bit}>{bit}</span>)}
           </div>
-          <p>{heroOverview(item, translateUi("Continue from your ARVIO library."))}</p>
+          <p>{heroOverview(item, translateUi("Continue from your fIPTV library."))}</p>
           <div className="hero-actions">
             <button type="button" className="primary" data-autofocus onClick={() => onPlay(item)}><Play size={20} fill="currentColor" aria-hidden /> {translateUi("Play")}</button>
             <button type="button" className="secondary" onClick={() => onOpen(item)}><Info size={20} aria-hidden /> {translateUi("More Info")}</button>

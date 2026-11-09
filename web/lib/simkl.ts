@@ -609,7 +609,7 @@ export class SimklClient implements SyncClient {
 
   async beginPinAuth(): Promise<SimklPinCode> {
     const profileId = this.profileId;
-    if (!profileId) throw new Error("Select an ARVIO profile first");
+    if (!profileId) throw new Error("Select an fIPTV profile first");
     const generation = ++this.sessionGeneration;
     this.restorePromise = null;
     if (loadStored(this.disconnectKey(profileId), null)) await this.restoreSession();

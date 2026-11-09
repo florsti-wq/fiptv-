@@ -25,7 +25,7 @@ function isStandalone() {
   return window.matchMedia?.("(display-mode: standalone)").matches || (navigator as Navigator & { standalone?: boolean }).standalone === true;
 }
 
-// The first days after paying: three steps that make ARVIO Web work well.
+// The first days after paying: three steps that make fIPTV Web work well.
 function MemberChecklist({ state, account }: { state: EntitlementState; account: string }) {
   const translateUi = useTranslation();
   const { addons, settings, setSection } = useAppPick("addons", "settings", "setSection");
@@ -35,13 +35,13 @@ function MemberChecklist({ state, account }: { state: EntitlementState; account:
   const recent = Number.isFinite(started) && Date.now() - started < CHECKLIST_DAYS * 24 * 60 * 60 * 1000;
   const steps = [
     { id: "source", label: "Connect a source", done: addons.length > 0 || (settings.homeServers?.length ?? 0) > 0 || (settings.iptvPlaylists?.length ?? 0) > 0, action: () => setSection("settings") },
-    ...(isAppleMobileSafari() ? [{ id: "home", label: "Add ARVIO to your Home Screen (Share, then Add to Home Screen)", done: isStandalone(), action: undefined }] : []),
+    ...(isAppleMobileSafari() ? [{ id: "home", label: "Add fIPTV to your Home Screen (Share, then Add to Home Screen)", done: isStandalone(), action: undefined }] : []),
     { id: "subtitles", label: "Pick your subtitle language", done: Boolean(settings.defaultSubtitle && settings.defaultSubtitle !== "Off"), action: () => setSection("settings") }
   ];
   if (hidden || !recent || steps.every((step) => step.done)) return null;
   return <aside className="member-notice" aria-labelledby="member-checklist-title">
     <button type="button" className="member-notice-close" aria-label={translateUi("Close")} onClick={() => { remember(key); setHidden(true); }}><X size={16} /></button>
-    <p id="member-checklist-title" className="member-notice-title"><Sparkles size={15} /> {translateUi("Welcome to ARVIO Premium")}</p>
+    <p id="member-checklist-title" className="member-notice-title"><Sparkles size={15} /> {translateUi("Welcome to fIPTV Premium")}</p>
     <ul className="member-checklist">
       {steps.map((step) => <li key={step.id} data-done={step.done}>
         <span className="member-check" aria-hidden="true">{step.done ? <Check size={13} /> : null}</span>

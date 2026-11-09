@@ -55,7 +55,7 @@ export function LiveTvSection() {
 
   return (
     <>
-      <SectionHeader title="Live TV" description="IPTV playlists, programme guides and portals for this profile. They sync to the Live TV page on every ARVIO app.">
+      <SectionHeader title="Live TV" description="IPTV playlists, programme guides and portals for this profile. They sync to the Live TV page on every fIPTV app.">
         <button type="button" className="st-btn" disabled={isLoadingTv} onClick={() => void refreshIptv({ fresh: true })}>
           <RefreshCw size={16} className={isLoadingTv ? "spin" : undefined} /> {translateUi(isLoadingTv ? "Refreshing..." : "Refresh channels")}
         </button>
@@ -126,7 +126,7 @@ export function LiveTvSection() {
       </Group>
 
       {(settings.iptvPlaylists.length > 0 || stalkerPortalsOf(settings).length > 0) && (
-        <Group title={translateUi("Layout")} description={translateUi("Arrange categories and channels, hide what you don't watch, and order your favourites. The Live TV page on every ARVIO app follows it.")}>
+        <Group title={translateUi("Layout")} description={translateUi("Arrange categories and channels, hide what you don't watch, and order your favourites. The Live TV page on every fIPTV app follows it.")}>
           <SettingAnchor id="iptv-layout">
             <IptvGroupSettings key={groupScope} settings={settings} updateSettings={updateSettings} notify={setToast} channels={groupsLoaded ? iptvSnapshot.allChannels ?? iptvSnapshot.channels : []} />
           </SettingAnchor>
@@ -151,7 +151,7 @@ export function MetadataSection() {
     <>
       <SectionHeader title="Metadata and keys" description="Bring your own TMDB or TVDB key if you have one. Keys stay in this browser and are never uploaded." />
       <Group title="Your API keys">
-        <Row id="tmdb-key" label="TMDB API key" hint="Custom v3 API key for TMDB requests. Leave empty to use ARVIO's." scope="browser" stack>
+        <Row id="tmdb-key" label="TMDB API key" hint="Custom v3 API key for TMDB requests. Leave empty to use fIPTV's." scope="browser" stack>
           <SecretInput label="TMDB API key" value={settings.customTmdbApiKey || ""} placeholder="System Default Key" onChange={(v) => set({ customTmdbApiKey: v })} />
         </Row>
         <Row id="tvdb-key" label="TVDB v4 API key" hint={tvdbActive ? "Active — TVDB enabled for metadata fallback" : "TVDB is disabled until a custom API key is provided"} scope="browser" stack>
@@ -161,7 +161,7 @@ export function MetadataSection() {
           <SecretInput label="TVDB user PIN" value={settings.customTvdbUserPin || ""} placeholder="Optional User PIN" onChange={(v) => set({ customTvdbUserPin: v })} />
         </Row>
       </Group>
-      <Group title="Where details come from" description="ARVIO asks these sources in order and uses the first good match.">
+      <Group title="Where details come from" description="fIPTV asks these sources in order and uses the first good match.">
         <Row label="Anime"><Status tone="off">{chain(settings.metadataAnimeProviders, ["anilist", "tvdb", "tmdb"])}</Status></Row>
         <Row label="TV shows"><Status tone="off">{chain(settings.metadataTvProviders, ["tvdb", "tmdb"])}</Status></Row>
         <Row label="Movies"><Status tone="off">{chain(settings.metadataMovieProviders, ["tmdb"])}</Status></Row>

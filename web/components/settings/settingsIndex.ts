@@ -15,9 +15,9 @@ export interface SettingsIndexEntry {
 }
 
 export const SETTINGS_INDEX: SettingsIndexEntry[] = [
-  { section: "account", label: "ARVIO account", keywords: "sign in sign out log out email cloud sync now" },
+  { section: "account", label: "fIPTV account", keywords: "sign in sign out log out email cloud sync now" },
   { section: "account", label: "Sync with your Android and TV app", keywords: "sync now cloud refresh tv phone" },
-  { section: "premium", label: "ARVIO Web Premium", keywords: "membership subscription pass 12-month yearly ko-fi invite friends referral" },
+  { section: "premium", label: "fIPTV Web Premium", keywords: "membership subscription pass 12-month yearly ko-fi invite friends referral" },
   { section: "profiles", label: "Manage profiles", id: "active-profile", keywords: "profile switch add kids" },
   { section: "profiles", label: "Skip profile selection on launch", id: "skip-profile-selection", scope: "all" },
   { section: "services", label: "Trakt", keywords: "scrobble connect link" , scope: "all" },
@@ -118,6 +118,6 @@ export const SETTINGS_INDEX: SettingsIndexEntry[] = [
   { section: "browser", label: "Smooth scrolling", id: "smooth-scrolling", scope: "web" },
   { section: "browser", label: "Check VLC", id: "vlc-check", keywords: "vlc protocol setup script", scope: "browser" },
   { section: "browser", label: "Downloads", keywords: "download offline", scope: "browser" },
-  { section: "browser", label: "Reset ARVIO Web in this browser", id: "reset-web", keywords: "clear reset", scope: "browser" },
-  { section: "credits", label: "About ARVIO", keywords: "credits tmdb licences copyright version" },
+  { section: "browser", label: "Reset fIPTV Web in this browser", id: "reset-web", keywords: "clear reset", scope: "browser" },
+  { section: "credits", label: "About fIPTV", keywords: "credits tmdb licences copyright version" },
 ];

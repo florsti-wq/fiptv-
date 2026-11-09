@@ -31,7 +31,7 @@ export function ProfileSelectionScreen() {
     if (button) { button.focus({ preventScroll: true }); focused.current = true; }
   }, [lastUsed, dialog]);
   const saveError = (error: unknown) => error instanceof ProfileCloudSaveError
-    ? translateUi("Saved on this device, but ARVIO Cloud could not be reached. Try again to sync it to your other devices.")
+    ? translateUi("Saved on this device, but fIPTV Cloud could not be reached. Try again to sync it to your other devices.")
     : error instanceof Error && error.message === "You can have up to 5 profiles." ? translateUi("You can have up to 5 profiles.")
     : translateUi("Could not save this profile.");
   const [openingProfileId, setOpeningProfileId] = useState<string | null>(null);
@@ -55,7 +55,7 @@ export function ProfileSelectionScreen() {
       <div className="profile-center">
         <div className="profile-brand-lockup">
           <img className="profile-brand-logo" src="/arvio-icon-512.png" alt="" width={56} height={56} />
-          <img className="profile-wordmark" src="/arvio-wordmark.svg" alt="ARVIO" />
+          <img className="profile-wordmark" src="/arvio-wordmark.svg" alt="fIPTV" />
         </div>
         <h1 className="profile-heading">{manageMode ? translateUi("Manage Profiles") : translateUi("Who's watching?")}</h1>
 
@@ -142,7 +142,7 @@ export function ProfileSelectionScreen() {
           onDelete={dialog.mode === "edit" && dialog.profile ? async () => {
             try { await deleteProfile(dialog.profile!.id); setDialog(null); }
             catch (error) {
-              if (error instanceof ProfileCloudSaveError) { setDialog(null); setToast(translateUi("Deleted on this device, but ARVIO Cloud could not be reached. Try again later from another device.")); return; }
+              if (error instanceof ProfileCloudSaveError) { setDialog(null); setToast(translateUi("Deleted on this device, but fIPTV Cloud could not be reached. Try again later from another device.")); return; }
               throw error;
             }
           } : undefined}

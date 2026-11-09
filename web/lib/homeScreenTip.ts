@@ -1,6 +1,6 @@
 import { isIosSafari, isStandaloneDisplay } from "./playerPlatform";
 
-// One-time "Add ARVIO to your Home Screen" tip for iPhone/iPad Safari.
+// One-time "Add fIPTV to your Home Screen" tip for iPhone/iPad Safari.
 //
 // It appears only after the first playback that actually started (so it is
 // never the first thing a new visitor sees) and only in Safari tabs — the

@@ -39,7 +39,7 @@ export class WeTrakrClient implements SyncClient {
     if (profile !== this.profile) { this.profile = profile; this.marker = null; this.cache.clear(); }
   }
   private async call(path: string, method = "GET", body?: unknown, profile = this.profile) {
-    if (!profile) throw new Error("Choose an ARVIO profile first.");
+    if (!profile) throw new Error("Choose an fIPTV profile first.");
     if (Date.now() < this.blockedUntil) throw new Error("WeTrakr is limiting requests. Please try again later.");
     const connection = this.marker?.connection_id;
     const response = await fetch(`/api/wetrakr/${path}`, { method, credentials: "same-origin", cache: "no-store",

@@ -1,7 +1,7 @@
 "use client";
 // Settings. Grouped sections, a search across every setting, and a badge on
-// each row saying where it applies, so ARVIO Web can be used to set up the
-// Android and TV app too (settings sync through ARVIO Cloud).
+// each row saying where it applies, so fIPTV Web can be used to set up the
+// Android and TV app too (settings sync through fIPTV Cloud).
 import "@/app/settings.css";
 
 import {
@@ -44,7 +44,7 @@ import { AboutSection } from "./sections/About";
 import { ScopeBadge } from "./ui";
 
 const SECTIONS = [
-  { id: "account", group: "Account", label: "ARVIO account", icon: Cloud },
+  { id: "account", group: "Account", label: "fIPTV account", icon: Cloud },
   { id: "premium", group: "Account", label: "Premium", icon: Crown },
   { id: "profiles", group: "Account", label: "Profiles", icon: User },
   { id: "services", group: "Account", label: "Connected services", icon: Link2 },
@@ -180,7 +180,7 @@ export function SettingsScreen() {
 
   const active = VISIBLE_SECTIONS.find((s) => s.id === section) ?? VISIBLE_SECTIONS[0];
   const sync = !auth ? { tone: "", text: config.selfHosted ? "Saved in this browser" : "Not signed in — changes stay in this browser" }
-    : settingsSyncState === "saved" ? { tone: "is-saved", text: "Synced with your ARVIO apps" }
+    : settingsSyncState === "saved" ? { tone: "is-saved", text: "Synced with your fIPTV apps" }
     : settingsSyncState === "pending" ? { tone: "is-pending", text: "Saving…" }
     : settingsSyncState === "error" ? { tone: "is-error", text: "Couldn't sync — retrying" }
     : { tone: "", text: "Saved in this browser" };
@@ -228,9 +228,9 @@ export function SettingsScreen() {
         </nav>
         <div className="st-legend-list" aria-label={translateUi("Where settings apply")}>
           <p>{translateUi("Where settings apply")}</p>
-          <div><ScopeBadge scope="all" />{translateUi("Android, TV and ARVIO Web")}</div>
+          <div><ScopeBadge scope="all" />{translateUi("Android, TV and fIPTV Web")}</div>
           <div><ScopeBadge scope="android" />{translateUi("Only the Android and TV app")}</div>
-          <div><ScopeBadge scope="web" />{translateUi("ARVIO Web in any browser")}</div>
+          <div><ScopeBadge scope="web" />{translateUi("fIPTV Web in any browser")}</div>
           <div><ScopeBadge scope="browser" />{translateUi("Not synced")}</div>
         </div>
       </aside>

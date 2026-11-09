@@ -33,8 +33,8 @@ function integer(value: string, minimum: number, maximum: number): number | unde
 export function parsePartnerLink(search: string): PartnerLinkParse {
   const params = new URLSearchParams(search);
   if (!params.has("open")) return { status: "none" };
-  if (search.length > 4096) return { status: "invalid", error: "This ARVIO title link is too long." };
-  const invalid = (error = "This ARVIO title link is invalid."): PartnerLinkParse => ({ status: "invalid", error });
+  if (search.length > 4096) return { status: "invalid", error: "This fIPTV title link is too long." };
+  const invalid = (error = "This fIPTV title link is invalid."): PartnerLinkParse => ({ status: "invalid", error });
   if (PARTNER_LINK_KEYS.some(key => params.getAll(key).length > 1)) return invalid();
   if (params.get("open") !== "1") return invalid();
   const imdb = params.get("imdb") || undefined;

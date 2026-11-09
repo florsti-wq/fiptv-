@@ -47,7 +47,7 @@ export async function packageAesSources(output = defaultPackageOutput) {
     "See source-root/web/distribution-sources/aes/README.md for provenance, component licence and rebuild instructions.\n" +
     "Run the documented commands from source-root/. No installed tools or local cache/build directories are included.\n" +
     "verified-comparison.json records this build's successful npm/source comparison.\n" +
-    "This bundle does not assert licensing clearance for the complete ARVIO/Telegram bundle or container.\n";
+    "This bundle does not assert licensing clearance for the complete fIPTV/Telegram bundle or container.\n";
   await writeFile(path.join(target, "README.txt"), directions);
   inventory["README.txt"] = sha256(Buffer.from(directions));
   await writeFile(path.join(target, "source-files.json"), `${JSON.stringify(inventory, null, 2)}\n`);

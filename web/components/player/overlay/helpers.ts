@@ -105,7 +105,7 @@ export function qualityBadges(stream: StreamSource) {
 }
 
 // The preference is a code ("en") or the Android app's display name
-// ("English", "Portuguese (Brazil)") synced from ARVIO Cloud.
+// ("English", "Portuguese (Brazil)") synced from fIPTV Cloud.
 export function defaultSubtitleIndex(stream: StreamSource, language: string) {
   const desired = languageCode(language);
   if (!desired) return -1;

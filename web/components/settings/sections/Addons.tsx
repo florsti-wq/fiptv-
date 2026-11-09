@@ -96,7 +96,7 @@ export function AddonsSection() {
 
   return (
     <>
-      <SectionHeader title="Addons" description="Stremio-compatible addons supply catalogs, sources and subtitles. Addons are shared by every profile and every ARVIO app on your account." />
+      <SectionHeader title="Addons" description="Stremio-compatible addons supply catalogs, sources and subtitles. Addons are shared by every profile and every fIPTV app on your account." />
       <ManagedConnections items={addons.filter(addon => addon.managedOrganizationId)} />
       <Group title="Install an addon">
         <div className="st-addon-installer"><AddonInstaller /></div>

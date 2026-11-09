@@ -24,7 +24,7 @@ import { setPremiumGate, type PremiumIntent } from "@/lib/premiumGate";
 import { clearStreamTicket, refreshStreamTicket } from "@/lib/streamTicket";
 import { captureReferralCode, claimPendingReferral } from "@/lib/referral";
 
-// Explore mode. Signed-in accounts use ARVIO Web freely; Premium is asked for
+// Explore mode. Signed-in accounts use fIPTV Web freely; Premium is asked for
 // only when they start something that plays (see lib/premiumGate.ts). A
 // still-valid cached membership survives transient backend errors, and access
 // ending mid-film never stops the film: the next play asks again.
@@ -163,6 +163,14 @@ export function EntitlementGate({ children }: { children: React.ReactNode }) {
     void claimPendingReferral(authClient, Boolean(access.everPaid || access.entitled));
   }, [accountId, status, access?.everPaid, access?.entitled]);
 
+  // fIPTV: kein Abo – jedes angemeldete Konto holt Tickets für den eigenen Weiterleiter (IPTV im Browser)
+  useEffect(() => {
+    if (config.paywallEnabled || config.selfHosted || !accountId) return;
+    void refreshStreamTicket(authClient);
+    const timer = window.setInterval(() => { void refreshStreamTicket(authClient); }, 6 * 60 * 60 * 1000);
+    return () => window.clearInterval(timer);
+  }, [accountId]);
+
   if (!config.paywallEnabled) return <>{children}</>;
   return <EntitlementContext.Provider value={access}>
     {children}
@@ -210,7 +218,7 @@ export function PaywallScreen({
     void trackPremiumMilestone(authClient, "account_connected");
   }, [isSignedIn, accountId]);
 
-  // Shown to signed-out visitors only: signing in opens ARVIO Web in explore
+  // Shown to signed-out visitors only: signing in opens fIPTV Web in explore
   // mode, and Premium is offered when they press Play.
   return (
     <WebFeaturePreview isSignedIn={isSignedIn} expired={expired} onConnect={onConnect} onSignOut={onSignOut} checkout={

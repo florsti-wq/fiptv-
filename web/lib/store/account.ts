@@ -1,4 +1,4 @@
-// App store (lib/store.tsx): Sign-in / sign-out and the ARVIO auth portal callback (#access_token=...).
+// App store (lib/store.tsx): Sign-in / sign-out and the fIPTV auth portal callback (#access_token=...).
 import { useCallback, useEffect } from "react";
 import { SESSION_KEY, decodeJwtPayload } from "../auth";
 import { config } from "../config";
@@ -95,7 +95,7 @@ export function useAccountActions(store: StoreCore & Pick<ReturnType<typeof useR
     authClient.signOut();
     setAuth(null);
     setCloudProfilesHydrated(true);
-    setToast("Signed out of ARVIO Cloud.");
+    setToast("Signed out of fIPTV Cloud.");
   }, []);
   return { signIn, signOut };
 }

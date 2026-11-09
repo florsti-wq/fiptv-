@@ -108,7 +108,7 @@ async function loadGram(sessionString: string): Promise<Gram> {
   const session = new StringSession(sessionString);
   const client = new TelegramClient(session, credentials.apiId, credentials.apiHash, {
     connectionRetries: 5,
-    deviceModel: "ARVIO Web",
+    deviceModel: "fIPTV Web",
     appVersion: "1.0.0",
     systemVersion: typeof navigator !== "undefined" ? navigator.platform || "Web" : "Web",
     langCode: typeof navigator !== "undefined" ? navigator.language || "en" : "en",

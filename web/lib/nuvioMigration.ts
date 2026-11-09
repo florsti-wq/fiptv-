@@ -1,7 +1,7 @@
 import type { CatalogConfig, Profile } from "./types";
 
 /**
- * Migration from a Nuvio account into ARVIO.
+ * Migration from a Nuvio account into fIPTV.
  *
  * Nuvio stores a user's setup server side (Supabase): `profiles`, `addons`,
  * `plugins`, `collections` and `home_catalog_settings`, all keyed by an integer
@@ -353,16 +353,16 @@ export async function fetchNuvioSnapshot(
   return snapshot;
 }
 
-// ── Mapping Nuvio profiles onto ARVIO profiles ──────────────────────────────
+// ── Mapping Nuvio profiles onto fIPTV profiles ──────────────────────────────
 
-/** Nuvio stores "#RRGGBB"; ARVIO stores the Android ARGB long. */
+/** Nuvio stores "#RRGGBB"; fIPTV stores the Android ARGB long. */
 export function hexToArgb(hex: string, fallback: number): number {
   const match = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
   if (!match) return fallback;
   return (0xff000000 | Number.parseInt(match[1], 16)) >>> 0;
 }
 
-/** Nuvio avatar ids are free text; ARVIO uses 0 (initial) or an avatar 1-84. */
+/** Nuvio avatar ids are free text; fIPTV uses 0 (initial) or an avatar 1-84. */
 export function avatarIdToArvio(avatarId: string | null): number {
   const digits = /(\d{1,3})/.exec(avatarId ?? "");
   if (!digits) return 0;
@@ -385,7 +385,7 @@ export interface MigrationChoice {
 const normalizedName = (value: string) => value.trim().toLocaleLowerCase("en");
 
 /**
- * Default plan: a Nuvio profile lands on the ARVIO profile with the same name,
+ * Default plan: a Nuvio profile lands on the fIPTV profile with the same name,
  * otherwise it is created. That keeps a repeated import idempotent instead of
  * growing a second copy of every profile.
  */
@@ -401,7 +401,7 @@ export function defaultChoices(snapshot: NuvioSnapshot, existing: Pick<Profile, 
 
 /**
  * Recomputes the default plan against a profile list that arrived later — the
- * Nuvio step runs before the ARVIO sign-in, so the first pass necessarily saw
+ * Nuvio step runs before the fIPTV sign-in, so the first pass necessarily saw
  * no profiles and proposed creating all of them. A choice the user already
  * changed by hand is kept exactly as they set it.
  */
@@ -429,7 +429,7 @@ export function newProfileFrom(profile: NuvioProfileData, id: string, fallbackCo
     createdAt: Date.now(),
     lastUsedAt: 0,
     // A Nuvio PIN hash cannot be carried over, so the copy starts unlocked and
-    // the user sets a new PIN in ARVIO rather than being locked out of it.
+    // the user sets a new PIN in fIPTV rather than being locked out of it.
     isLocked: false,
     pin: null
   };
@@ -487,7 +487,7 @@ export function addonsToInstall(existing: string[], incoming: NuvioAddon[]): Nuv
 
 /**
  * Nuvio's home catalog settings describe row order and visibility by catalog id.
- * ARVIO keeps the same two ideas, so the parts that line up are applied and the
+ * fIPTV keeps the same two ideas, so the parts that line up are applied and the
  * rest is ignored rather than guessed at.
  */
 export function applyHomeCatalogSettings(catalogs: CatalogConfig[], settings: unknown): CatalogConfig[] {

@@ -141,7 +141,7 @@ export function CatalogsSection() {
 
   return (
     <>
-      <SectionHeader title="Home rows" description="The rows on your Home screen, in order. Changes apply to this profile on every ARVIO app.">
+      <SectionHeader title="Home rows" description="The rows on your Home screen, in order. Changes apply to this profile on every fIPTV app.">
         <button type="button" className="st-btn" onClick={() => updateCatalogs([...homeServerCatalogs, ...defaultCatalogs])}><RotateCcw size={16} /> {translateUi("Reset to defaults")}</button>
       </SectionHeader>
 

@@ -103,7 +103,7 @@ export function useProgressTracking({ activeProfileId, addons, canAdvance, item,
       if (stopped || !playbackStarted) return;
       stopped = true;
       scrobbleActive = false;
-      // Match ARVIO's 90% completion threshold; lower-progress stops remain resumable.
+      // Match fIPTV's 90% completion threshold; lower-progress stops remain resumable.
       scrobble(progress >= 90 ? "stop" : "pause", progress);
       if (progress >= 90 && authClient.session?.userId === userId && authClient.session && !isLiveStream) {
         void saveWatchedState(authClient, {

@@ -1,0 +1,35 @@
+# fIPTV: prüft, ob fIPTV Web baut (die eigentliche Veröffentlichung macht Netlify)
+name: fIPTV Web prüfen
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "web/**"
+      - ".github/workflows/fiptv-web-check.yml"
+
+jobs:
+  build:
+    name: Web bauen
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Abhängigkeiten
+        working-directory: web
+        run: npm ci --no-audit --no-fund
+      - name: Typprüfung
+        working-directory: web
+        run: npx tsc --noEmit
+      - name: Bauen
+        working-directory: web
+        env:
+          NEXT_PUBLIC_NETLIFY_BACKEND_URL: https://fipsite.netlify.app/.netlify/functions
+          NEXT_PUBLIC_PAYWALL_ENABLED: "false"
+          NEXT_PUBLIC_TELEGRAM_ENABLED: "false"
+        run: npm run build

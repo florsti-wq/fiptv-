@@ -109,7 +109,7 @@ export function splitPlaylistWarning(warning: string): { name: string; message: 
   return index > 0 ? { name: warning.slice(0, index), message: warning.slice(index + 2) } : { name: "", message: warning };
 }
 
-/** Xtream Codes login → the M3U and XMLTV links ARVIO stores (same as Android). */
+/** Xtream Codes login → the M3U and XMLTV links fIPTV stores (same as Android). */
 export function xtreamPlaylistUrls(host: string, username: string, password: string): { m3uUrl: string; epgUrl: string } | null {
   let base = host.trim();
   if (!base || !username.trim() || !password.trim()) return null;

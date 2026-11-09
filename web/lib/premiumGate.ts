@@ -1,4 +1,4 @@
-// Explore mode: anyone signed in can use ARVIO Web; Premium is asked for only
+// Explore mode: anyone signed in can use fIPTV Web; Premium is asked for only
 // when they start something that plays (a title, a channel, a catch-up
 // programme, an external player, a download or a copied stream link).
 //

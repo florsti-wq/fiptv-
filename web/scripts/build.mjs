@@ -9,6 +9,13 @@ const env = { ...process.env };
 // the CI-supplied public key under a separate name until the actual Next build.
 if (env.ARVIO_BUILD_APP_ANON_KEY) env.NEXT_PUBLIC_ARVIO_APP_ANON_KEY = env.ARVIO_BUILD_APP_ANON_KEY;
 delete env.ARVIO_BUILD_APP_ANON_KEY;
+// fIPTV: derselbe App-Schlüssel wie beim eigenen Sync-Server (Netlify-Variable APP_ANON_KEY,
+// darf auch als ganze Zeile „APP_ANON_KEY = …“ eingefügt sein)
+if (!env.NEXT_PUBLIC_ARVIO_APP_ANON_KEY && env.APP_ANON_KEY) {
+  env.NEXT_PUBLIC_ARVIO_APP_ANON_KEY = String(env.APP_ANON_KEY).trim()
+    .replace(/^APP_ANON_KEY\s*[=:]\s*/i, "").trim().replace(/^["']+|["']+$/g, "");
+  env.APP_ANON_KEY = env.NEXT_PUBLIC_ARVIO_APP_ANON_KEY;
+}
 if (env.ARVIO_VERIFY_BUILD_CONFIG === "true") {
   const key = env.NEXT_PUBLIC_ARVIO_APP_ANON_KEY ?? "";
   if (key.length < 40 || key.includes("*") || key.startsWith("$")) {

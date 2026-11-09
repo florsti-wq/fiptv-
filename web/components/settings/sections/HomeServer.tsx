@@ -85,7 +85,7 @@ export function HomeServerSection() {
 
   return (
     <>
-      <SectionHeader title="Home server" description="Connect Plex, Jellyfin or Emby. Matching movies and episodes appear as sources, and the connection syncs to this profile on your other ARVIO apps." />
+      <SectionHeader title="Home server" description="Connect Plex, Jellyfin or Emby. Matching movies and episodes appear as sources, and the connection syncs to this profile on your other fIPTV apps." />
       <ManagedConnections items={settings.homeServers.filter(server => isManagedId(server.id))} />
       <Group title={`${translateUi("Servers")} · ${servers.length}`}
         description={<>{translateUi("When several servers have the same title, the one higher in the list is used first.")} <ScopeBadge scope="all" /></>}>

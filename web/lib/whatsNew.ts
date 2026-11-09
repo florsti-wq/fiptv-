@@ -1,4 +1,4 @@
-// "What's new in Premium": a short monthly note so members see ARVIO Web
+// "What's new in Premium": a short monthly note so members see fIPTV Web
 // improving. Newest first; ids must stay unique (they remember dismissal).
 export interface WhatsNewEntry { id: string; date: string; title: string; body: string }
 

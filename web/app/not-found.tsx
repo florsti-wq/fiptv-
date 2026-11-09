@@ -84,8 +84,8 @@ export default function NotFound() {
           zIndex: 10
         }}
       >
-        <Link href="/" aria-label="ARVIO home" style={{ display: "inline-flex", alignItems: "center" }}>
-          <img src="/arvio-wordmark.svg" alt="ARVIO" width={134} height={34} style={{ width: "134px", height: "auto", display: "block" }} />
+        <Link href="/" aria-label="fIPTV home" style={{ display: "inline-flex", alignItems: "center" }}>
+          <img src="/arvio-wordmark.svg" alt="fIPTV" width={134} height={34} style={{ width: "134px", height: "auto", display: "block" }} />
         </Link>
         <nav style={{ display: "flex", alignItems: "center", gap: "24px", fontSize: "13px", fontWeight: 500 }}>
           <Link href="/" style={{ color: "#d6d9da", textDecoration: "none" }}>
@@ -360,10 +360,10 @@ export default function NotFound() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-          <Link href="/" aria-label="ARVIO home">
-            <img src="/arvio-wordmark.svg" alt="ARVIO" width={100} height={25} style={{ width: "100px", height: "auto" }} />
+          <Link href="/" aria-label="fIPTV home">
+            <img src="/arvio-wordmark.svg" alt="fIPTV" width={100} height={25} style={{ width: "100px", height: "auto" }} />
           </Link>
-          <span>&copy; 2026 ARVIO</span>
+          <span>&copy; 2026 fIPTV</span>
         </div>
         <div style={{ display: "flex", gap: "20px" }}>
           <a href="https://arvio.tv/" target="_blank" rel="noopener noreferrer" style={{ color: "#b9c1bd", textDecoration: "none" }}>
@@ -372,7 +372,7 @@ export default function NotFound() {
           <a href="https://arvio.tv/guides/" target="_blank" rel="noopener noreferrer" style={{ color: "#b9c1bd", textDecoration: "none" }}>
             Guides
           </a>
-          <a href="https://github.com/ProdigyV21/ARVIO" target="_blank" rel="noopener noreferrer" style={{ color: "#b9c1bd", textDecoration: "none" }}>
+          <a href="https://github.com/ProdigyV21/fIPTV" target="_blank" rel="noopener noreferrer" style={{ color: "#b9c1bd", textDecoration: "none" }}>
             GitHub
           </a>
           <a href="https://discord.gg/UavuEYMfQ4" target="_blank" rel="noopener noreferrer" style={{ color: "#b9c1bd", textDecoration: "none" }}>

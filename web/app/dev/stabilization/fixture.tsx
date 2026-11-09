@@ -86,7 +86,7 @@ export function StabilizationFixture({ testLiveUrl, useSourceUrls = false }: { t
   return <AppContext.Provider value={app}>
     <div data-fixture-ready={ready} data-play-requests={playRequests} style={{ maxWidth: 1600, margin: "auto", padding: "18px 20px" }}>
       {layoutBanner && <div style={{ height: 240 }} role="status">Layout shift test</div>}
-      <nav className="fixture-nav" aria-label="Test navigation"><img src="/arvio-wordmark.svg" alt="ARVIO" width={130} />
+      <nav className="fixture-nav" aria-label="Test navigation"><img src="/arvio-wordmark.svg" alt="fIPTV" width={130} />
         {[{ id: "home", label: "Home", icon: Home }, { id: "library", label: "Library", icon: Library }, { id: "tv", label: "Live TV", icon: Tv }, { id: "settings", label: "Settings", icon: Settings }].map(({ id, label, icon: Icon }) => <button className={page === id ? "primary" : "secondary"} key={id} onClick={() => setPage(id)}><Icon size={18} />{label}</button>)}
         <button className="secondary" onClick={() => setPage("premium")}>Premium</button><span>Test data</span>
       </nav>

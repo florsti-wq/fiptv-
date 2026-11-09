@@ -7,7 +7,7 @@ export async function resolvePartnerMedia(target: PartnerTarget, language: strin
   const request: PartnerTmdbRequest = (path, params) => tmdb(path, { ...params, language }, customKey);
   const reference = await resolvePartnerReference(target, request);
   const details = await request<Parameters<typeof mapTmdbItem>[0]>(`${reference.mediaType}/${reference.id}`);
-  if (details.id !== reference.id || details.adult) throw new PartnerLinkError("This title is unavailable in ARVIO.");
+  if (details.id !== reference.id || details.adult) throw new PartnerLinkError("This title is unavailable in fIPTV.");
   const item = mapTmdbItem(details, reference.mediaType);
   if (!details.title && !details.name) throw new PartnerLinkError("This title's metadata is unavailable. Please try again.");
   if (reference.season !== undefined) {

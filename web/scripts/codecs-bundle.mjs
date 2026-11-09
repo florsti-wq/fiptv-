@@ -13,7 +13,7 @@ process.chdir(root);
 const banner = `/*!
  * Copyright (c) 2026-present, Vanilagy and contributors.
  * Mediabunny Source Code Form is governed by Mozilla Public License 2.0.
- * This ARVIO rebuild embeds FFmpeg 8.1.3 under LGPL-2.1-or-later.
+ * This fIPTV rebuild embeds FFmpeg 8.1.3 under LGPL-2.1-or-later.
  * Corresponding sources, compiler pins and relink objects are supplied in
  * /distribution-sources/codecs/. No additional restrictions on modification.
  */`;

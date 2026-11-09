@@ -26,7 +26,7 @@ export function HomeScreenTip({ playerOpen }: { playerOpen: boolean }) {
   return (
     <div className="toast home-screen-tip" role="status">
       <Share size={20} aria-hidden="true" />
-      <p>{translateUi("Add ARVIO to your Home Screen: tap Share, then Add to Home Screen")}</p>
+      <p>{translateUi("Add fIPTV to your Home Screen: tap Share, then Add to Home Screen")}</p>
       <button type="button" className="home-screen-tip-close" onClick={dismiss} aria-label={translateUi("Dismiss")}>
         <X size={18} />
       </button>

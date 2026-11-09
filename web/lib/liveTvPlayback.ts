@@ -333,7 +333,7 @@ export function attemptAllowed(attempt: LiveAttempt, faults: LiveFault[], contex
   const refusal = providerRefusal(faults, context);
   if (refusal === 429) return false;
   if (refusal) {
-    // A 401/403 seen only through ARVIO's servers (the relay or the app
+    // A 401/403 seen only through fIPTV's servers (the relay or the app
     // backend) is often the provider's anti-bot wall refusing a datacenter
     // address, not the subscription: the viewer's own connection still gets
     // its one try (it then explains itself, e.g. an http:// video server).
@@ -460,17 +460,17 @@ function codecFailure(info: PlaybackMediaInfo | undefined, context: LiveFailureC
   const browser = context.browser;
   const safari = !!context.appleWebKit;
   if (info.videoCodec && /^(mpeg2|mp2v)/i.test(info.videoCodec)) {
-    return { kind: "codec-video", title: translateUi("Video format not supported"), message: translateUi("This channel's video is MPEG-2, which no web browser can decode. Watch it in the ARVIO app or VLC.") };
+    return { kind: "codec-video", title: translateUi("Video format not supported"), message: translateUi("This channel's video is MPEG-2, which no web browser can decode. Watch it in the fIPTV app or VLC.") };
   }
   if (info.videoCodec && !canDecode("video", info.videoCodec)) {
     const label = codecLabel(info.videoCodec, "video");
     return { kind: "codec-video", title: translateUi("Video format not supported"), values: { value0: label, value1: browser },
-      message: safari || !/HEVC/.test(label) ? translateUi("This channel's video is {value0}, which {value1} can't decode. Watch it in the ARVIO app or VLC.") : translateUi("This channel's video is {value0}, which {value1} can't decode on this device. Try Safari, or watch it in the ARVIO app.") };
+      message: safari || !/HEVC/.test(label) ? translateUi("This channel's video is {value0}, which {value1} can't decode. Watch it in the fIPTV app or VLC.") : translateUi("This channel's video is {value0}, which {value1} can't decode on this device. Try Safari, or watch it in the fIPTV app.") };
   }
   if (info.audioCodec && !canDecode("audio", info.audioCodec)) {
     const label = codecLabel(info.audioCodec, "audio");
     return { kind: "codec-audio", title: translateUi("Audio format not supported"), values: { value0: label, value1: browser },
-      message: safari || !/Dolby/.test(label) ? translateUi("This channel's audio is {value0}, which {value1} can't decode. Watch it in the ARVIO app or VLC.") : translateUi("This channel's audio is {value0}, which {value1} can't decode. It plays with sound in Safari and in the ARVIO app.") };
+      message: safari || !/Dolby/.test(label) ? translateUi("This channel's audio is {value0}, which {value1} can't decode. Watch it in the fIPTV app or VLC.") : translateUi("This channel's audio is {value0}, which {value1} can't decode. It plays with sound in Safari and in the fIPTV app.") };
   }
   return null;
 }
@@ -500,19 +500,19 @@ export function classifyLiveFailure(faults: LiveFault[], context: LiveFailureCon
   }
   if (blocked === "no-engine") return { kind: "unsupported-browser", title: translateUi("Not playable in this browser"), values: { value0: context.browser },
     message: shape === "mpegts"
-      ? translateUi("This channel is sent as a raw MPEG-TS stream, which {value0} on this device can't play (on iPhone it needs iOS 17.1 or later). Update the system, or watch it in the ARVIO app.")
-      : translateUi("This channel's stream format can't be played by {value0} on this device. Watch it in the ARVIO app or VLC.") };
+      ? translateUi("This channel is sent as a raw MPEG-TS stream, which {value0} on this device can't play (on iPhone it needs iOS 17.1 or later). Update the system, or watch it in the fIPTV app.")
+      : translateUi("This channel's stream format can't be played by {value0} on this device. Watch it in the fIPTV app or VLC.") };
   if (blocked === "insecure") return { kind: "insecure", title: translateUi("Blocked by browser security"),
-    message: translateUi("This channel is only offered over an insecure http:// connection, which browsers don't load inside a secure page, and the ARVIO stream relay isn't available here. Watch it in the ARVIO app or VLC.") };
+    message: translateUi("This channel is only offered over an insecure http:// connection, which browsers don't load inside a secure page, and the fIPTV stream relay isn't available here. Watch it in the fIPTV app or VLC.") };
   // Video from an http:// IP address: blocked by the browser, unreachable for
   // the relay. Tell the viewer how to allow it (not "subscription expired").
   if (insecureIpMediaFault(faults)) {
     return { kind: "insecure-media", title: translateUi("Your browser blocked this channel"),
       message: context.appleWebKit
-        ? translateUi("This channel's video comes from an insecure http:// server. Safari and the browsers on iPhone and iPad block that inside a secure page, and there is no setting to allow it. Watch it in Chrome or Edge on a computer, in the ARVIO app, or in VLC.")
+        ? translateUi("This channel's video comes from an insecure http:// server. Safari and the browsers on iPhone and iPad block that inside a secure page, and there is no setting to allow it. Watch it in Chrome or Edge on a computer, in the fIPTV app, or in VLC.")
         : translateUi("This channel's video comes from an insecure http:// server, which browsers block inside a secure page. Allow insecure content for web.arvio.tv and the video comes straight from your provider to your computer, for free. Chrome or Edge: click the icon left of the address, then Site settings, set Insecure content to Allow, then reload. Firefox: click the shield or lock icon in the address bar and turn off protection for this site. Then press Retry.") };
   }
-  // A 401/403 from ARVIO's own backend hop is usually the provider's anti-bot
+  // A 401/403 from fIPTV's own backend hop is usually the provider's anti-bot
   // wall refusing a datacenter address. When the viewer's own connection got
   // through without an HTTP refusal, it says nothing about the subscription.
   const backendHop = (attempt: LiveAttempt) => attempt.route === "manifest-relay" || attempt.route === "manifest-direct" || attempt.route === "app-proxy";
@@ -524,8 +524,8 @@ export function classifyLiveFailure(faults: LiveFault[], context: LiveFailureCon
   if (relayDenied(faults, context)) {
     return { kind: "relay-denied", title: translateUi("Stream relay unavailable"),
       message: context.relayTicket
-        ? translateUi("ARVIO's stream relay didn't accept this session, so the channel can't be loaded securely. Reload the page, then retry.")
-        : translateUi("ARVIO's stream relay didn't accept this session, so the channel can't be loaded securely. Make sure you're signed in with ARVIO Premium, then retry.") };
+        ? translateUi("fIPTV's stream relay didn't accept this session, so the channel can't be loaded securely. Reload the page, then retry.")
+        : translateUi("fIPTV's stream relay didn't accept this session, so the channel can't be loaded securely. Make sure you're signed in with fIPTV Premium, then retry.") };
   }
   // Media that arrived but could not be decoded is the answer, even when the
   // channel's other form (the Xtream twin) was refused.
@@ -537,8 +537,8 @@ export function classifyLiveFailure(faults: LiveFault[], context: LiveFailureCon
     }
     return { kind: "codec", title: translateUi("Format not supported"), values: { value0: context.browser },
       message: context.appleWebKit
-        ? translateUi("This channel uses a video or audio format {value0} can't decode. Watch it in the ARVIO app or VLC.")
-        : translateUi("This channel uses a video or audio format {value0} can't decode. Try Safari, or watch it in the ARVIO app.") };
+        ? translateUi("This channel uses a video or audio format {value0} can't decode. Watch it in the fIPTV app or VLC.")
+        : translateUi("This channel uses a video or audio format {value0} can't decode. Try Safari, or watch it in the fIPTV app.") };
   }
   if (statuses.length) {
     // What the provider said about the channel itself outranks its other
@@ -587,10 +587,10 @@ export function liveMediaNotice(observed: LiveObservation, context: Pick<LiveFai
   if (context.appleWebKit) return null;
   const codec = observed.info?.audioCodec;
   if (codec && !canDecode("audio", codec)) {
-    return { message: translateUi("No sound: this channel's audio is {value0}, which {value1} can't decode. Safari and the ARVIO app play it with sound."), values: { value0: codecLabel(codec, "audio"), value1: context.browser } };
+    return { message: translateUi("No sound: this channel's audio is {value0}, which {value1} can't decode. Safari and the fIPTV app play it with sound."), values: { value0: codecLabel(codec, "audio"), value1: context.browser } };
   }
   if (observed.sound === false) {
-    return { message: translateUi("No sound: {value0} can't decode this channel's audio (usually Dolby Digital). Safari and the ARVIO app play it with sound."), values: { value0: context.browser } };
+    return { message: translateUi("No sound: {value0} can't decode this channel's audio (usually Dolby Digital). Safari and the fIPTV app play it with sound."), values: { value0: context.browser } };
   }
   return null;
 }

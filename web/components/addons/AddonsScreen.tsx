@@ -24,12 +24,12 @@ export function AddonsScreen() {
       <section className="section-heading">
         <p className="eyebrow">{translateUi("Sources")}</p>
         <h2>{translateUi("Addons")}</h2>
-        <p className="addons-intro">{translateUi("Addons supply catalogs, sources and subtitles. They are shared by every profile and every ARVIO app on your account.")}</p>
+        <p className="addons-intro">{translateUi("Addons supply catalogs, sources and subtitles. They are shared by every profile and every fIPTV app on your account.")}</p>
       </section>
       {addonsReady && !sources.hasOnDemand && <section className="source-setup-panel" aria-labelledby="addon-setup-title">
         <h3 id="addon-setup-title">{translateUi("Connect your media sources")}</h3>
         {sources.catalogOnly && <p className="source-setup-warning">{translateUi("None of your enabled addons provide playback sources.")}</p>}
-        <p>{translateUi("ARVIO does not include a film or TV subscription. Connect your Plex, Emby or Jellyfin server in Settings, or add a compatible addon supplied by a service you are authorized to use.")}</p>
+        <p>{translateUi("fIPTV does not include a film or TV subscription. Connect your Plex, Emby or Jellyfin server in Settings, or add a compatible addon supplied by a service you are authorized to use.")}</p>
         <div className="source-setup-actions">
           <button type="button" className="secondary" onClick={() => openSettings("homeserver")}><Server size={17} />{translateUi("Home Server")}</button>
           <button type="button" className="secondary" onClick={() => openSettings("tv")}><Tv size={17} />{translateUi("Live TV")}</button>

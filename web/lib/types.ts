@@ -383,7 +383,7 @@ export interface IptvPlaylistEntry {
 /**
  * One Stalker/Ministra portal, in the Android app's shape
  * (iptvByProfile.<id>.stalkerPortals[], IptvRepository.StalkerPortalEntry).
- * Fields ARVIO Web does not know are kept when the list is written back.
+ * Fields fIPTV Web does not know are kept when the list is written back.
  */
 export interface StalkerPortalEntry {
   /** "stalker1", "stalker2", … Channel ids are `stalker:<id>:<channel>`, category keys `<id>|<group>`. */

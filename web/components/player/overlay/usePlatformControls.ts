@@ -50,7 +50,7 @@ export function usePlatformControls({ canAdvance, item, liveTv, onAdvance, onToa
     if (!video) return undefined;
     const line = liveTv ? translateUi("Live TV") : [subtitleLabel, episodeTitle].filter(Boolean).join(" · ") || stream.addonName || "";
     const unbind = bindMediaSession({
-      title, subtitle: line, album: "ARVIO",
+      title, subtitle: line, album: "fIPTV",
       poster: item?.image ?? null, backdrop: item?.backdrop ?? null, still: item?.episodeStill ?? null
     }, {
       play: () => { void video.play().catch(() => undefined); },

@@ -45,7 +45,7 @@ export function defaultTrackingPreferences(): TrackingPreferences {
   const trakt = traktClient.isConnected;
   const simkl = simklClient.isConnected;
   const mdb = mdblistClient.isConnected;
-  // Trakt is ARVIO's canonical default when it is connected. Android already
+  // Trakt is fIPTV's canonical default when it is connected. Android already
   // follows this rule; defaulting the web client to "both" made a fresh
   // profile show a mixed Continue Watching rail even though the user expected
   // the Trakt list. Users can still explicitly select "both" in settings.

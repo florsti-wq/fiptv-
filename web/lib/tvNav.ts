@@ -281,7 +281,7 @@ function stepBackInApp(): boolean {
     window.history.back();
     return true;
   }
-  // Deep-linked first entry: history.back() would leave ARVIO entirely. Rewrite
+  // Deep-linked first entry: history.back() would leave fIPTV entirely. Rewrite
   // the entry to the home root and let BackHandler's popstate ladder apply it.
   const root = new URL(window.location.href);
   root.searchParams.delete("title");

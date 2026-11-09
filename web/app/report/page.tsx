@@ -54,7 +54,7 @@ function ReportContent() {
     ? "https://console.firebase.google.com/project/arvio-15c5a/crashlytics"
     : id !== "N/A" ? `https://sentry.io/issues/?query=id%3A${encodeURIComponent(id)}` : "N/A";
 
-  const reportText = `**🚨 ARVIO Crash Report**
+  const reportText = `**🚨 fIPTV Crash Report**
 **Crash ID:** \`${id}\`
 **${firebase ? "Crashlytics" : "Sentry Link"}:** ${dashboard}
 ${firebase ? `**Report reference:** \`arvio_report_id=${id}\`` : ""}
@@ -72,8 +72,8 @@ ${firebase ? `**Report reference:** \`arvio_report_id=${id}\`` : ""}
     <div style={{ minHeight: "100vh", background: "#050606", color: "#f6f7f7", fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", sans-serif' }}>
       <header style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.11)", background: "rgba(4, 5, 5, 0.85)", position: "sticky", top: 0, zIndex: 10 }}>
         <div style={{ maxWidth: "1180px", margin: "0 auto", padding: "0 24px", minHeight: "70px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <a href="/" aria-label="ARVIO home" style={{ display: "inline-flex", alignItems: "center" }}>
-            <img src="/arvio-wordmark.svg" alt="ARVIO" width={134} height={34} style={{ width: "134px", height: "auto" }} />
+          <a href="/" aria-label="fIPTV home" style={{ display: "inline-flex", alignItems: "center" }}>
+            <img src="/arvio-wordmark.svg" alt="fIPTV" width={134} height={34} style={{ width: "134px", height: "auto" }} />
           </a>
           <nav style={{ display: "flex", gap: "22px", fontSize: "14px", fontWeight: 600 }}>
             <a href="/" style={{ color: "#d6d9da", textDecoration: "none" }}>{translateUi("Home")}</a>
@@ -87,7 +87,7 @@ ${firebase ? `**Report reference:** \`arvio_report_id=${id}\`` : ""}
           {translateUi("Support & Troubleshooting")}
         </p>
         <h1 style={{ fontSize: "32px", fontWeight: 750, letterSpacing: "-0.03em", margin: "0 0 10px", color: "#fff" }}>
-          {translateUi("ARVIO Diagnostics")}
+          {translateUi("fIPTV Diagnostics")}
         </h1>
         <p style={{ color: "#a6abad", fontSize: "15px", lineHeight: 1.6, margin: "0 0 32px" }}>
           {translateUi("App health status, crash reports, and troubleshooting references.")}
@@ -103,7 +103,7 @@ ${firebase ? `**Report reference:** \`arvio_report_id=${id}\`` : ""}
               <span style={{ color: "#717779", fontSize: "13px" }}>{timeStr}</span>
             </div>
             <p style={{ color: "#a6abad", fontSize: "14px", lineHeight: 1.6, margin: "0 0 16px" }}>
-              {translateUi("An unexpected issue was captured on your device. Copy the diagnostic summary below to paste in the ARVIO Discord bug channel.")}
+              {translateUi("An unexpected issue was captured on your device. Copy the diagnostic summary below to paste in the fIPTV Discord bug channel.")}
             </p>
             <div style={{ background: "#000", border: "1px solid #25292b", borderRadius: "8px", padding: "14px 16px", marginBottom: "20px" }}>
               <pre style={{ margin: 0, fontFamily: "ui-monospace, SFMono-Regular, Consolas, monospace", fontSize: "12.5px", color: "#d6d9da", lineHeight: 1.6, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
@@ -175,7 +175,7 @@ ${firebase ? `**Report reference:** \`arvio_report_id=${id}\`` : ""}
               <span style={{ color: "#717779", fontSize: "13px" }}>{translateUi("Normal Session")}</span>
             </div>
             <p style={{ color: "#a6abad", fontSize: "14px", lineHeight: 1.6, margin: "0 0 20px" }}>
-              {translateUi("No crash data was passed to this page. When ARVIO encounters an unexpected exception on Android TV or mobile, scanning the on-screen QR code opens this diagnostic page with the captured error trace.")}
+              {translateUi("No crash data was passed to this page. When fIPTV encounters an unexpected exception on Android TV or mobile, scanning the on-screen QR code opens this diagnostic page with the captured error trace.")}
             </p>
             <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center" }}>
               <a
@@ -213,7 +213,7 @@ ${firebase ? `**Report reference:** \`arvio_report_id=${id}\`` : ""}
                   textDecoration: "none"
                 }}
               >
-                {translateUi("Return to ARVIO Web")} &rarr;
+                {translateUi("Return to fIPTV Web")} &rarr;
               </a>
             </div>
           </div>
@@ -225,7 +225,7 @@ ${firebase ? `**Report reference:** \`arvio_report_id=${id}\`` : ""}
           </h2>
           <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: "10px" }}>
             <li style={{ padding: "14px 18px", background: "#0d0f10", border: "1px solid #25292b", borderRadius: "8px" }}>
-              <a href="https://github.com/ProdigyV21/ARVIO/issues" target="_blank" rel="noopener noreferrer" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", color: "#f6f7f7", textDecoration: "none", fontSize: "14px", fontWeight: 500 }}>
+              <a href="https://github.com/ProdigyV21/fIPTV/issues" target="_blank" rel="noopener noreferrer" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", color: "#f6f7f7", textDecoration: "none", fontSize: "14px", fontWeight: 500 }}>
                 <span>GitHub Issue Tracker</span>
                 <span style={{ color: "#717779" }}>&rarr;</span>
               </a>

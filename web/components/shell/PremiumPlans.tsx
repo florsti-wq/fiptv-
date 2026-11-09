@@ -90,6 +90,6 @@ export function AndroidAppNote() {
   useEffect(() => setAndroid(isAndroidBrowser()), []);
   if (!android) return null;
   return <p className="premium-android-note"><Smartphone size={16} />
-    <span>{translateUi("On Android, the ARVIO app is free.")} <a href={ANDROID_APP_URL} target="_blank" rel="noopener noreferrer">{translateUi("Get the Android app")}</a></span>
+    <span>{translateUi("On Android, the fIPTV app is free.")} <a href={ANDROID_APP_URL} target="_blank" rel="noopener noreferrer">{translateUi("Get the Android app")}</a></span>
   </p>;
 }

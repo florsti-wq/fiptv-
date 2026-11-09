@@ -271,7 +271,7 @@ export async function loadCalendar(options: CalendarLoadOptions): Promise<Calend
     }));
   };
   publish();
-  // Each provider schedules its titles independently; a stalled tracker cannot hold ARVIO dates back.
+  // Each provider schedules its titles independently; a stalled tracker cannot hold fIPTV dates back.
   await Promise.all(options.sources.map(async ({ source, read }) => {
     try {
       const sourceItems = new Map<string, MediaItem>();

@@ -3,8 +3,8 @@ import { MigrateApp } from "@/components/migrate/MigrateApp";
 import "./setup.css";
 
 export const metadata: Metadata = {
-  title: "ARVIO setup",
-  description: "Install addons and move a Nuvio account into ARVIO"
+  title: "fIPTV setup",
+  description: "Install addons and move a Nuvio account into fIPTV"
 };
 
 /**

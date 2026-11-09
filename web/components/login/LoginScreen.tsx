@@ -15,7 +15,7 @@ export function LoginScreen() {
   const { backToProfiles, cloudLoginRequired } = useAppPick("backToProfiles", "cloudLoginRequired");
   const cloudConfigured = hasNetlifyBackendConfig() || hasSupabaseConfig();
   const [mounted, setMounted] = useState(false);
-  // Signing in hands over to the ARVIO auth portal right away: show that,
+  // Signing in hands over to the fIPTV auth portal right away: show that,
   // not a Back button that disappears a moment later.
   const [redirecting] = useState(() => cloudConfigured && typeof window !== "undefined" && !(window.location.hash || "").includes("access_token="));
 
@@ -44,8 +44,8 @@ export function LoginScreen() {
     <main className="login-shell login-redirecting" aria-busy="true">
       <div className="login-card">
         <img src="/arvio-logo.svg" alt="" className="login-brand-logo" />
-        <p className="login-card-title" role="status">{translateUi("Opening ARVIO sign-in…")}</p>
-        <button type="button" className="secondary login-submit" onClick={redirectToAuthPortal}>{translateUi("Sign In with ARVIO Cloud")}</button>
+        <p className="login-card-title" role="status">{translateUi("Opening fIPTV sign-in…")}</p>
+        <button type="button" className="secondary login-submit" onClick={redirectToAuthPortal}>{translateUi("Sign In with fIPTV Cloud")}</button>
       </div>
     </main>
   );
@@ -59,10 +59,10 @@ export function LoginScreen() {
         <div className="login-copy">
           <div className="login-brand-lockup">
             <img src="/arvio-logo.svg" alt="" className="login-brand-logo" />
-            <img src="/arvio-wordmark.svg" alt="ARVIO" className="login-wordmark" />
+            <img src="/arvio-wordmark.svg" alt="fIPTV" className="login-wordmark" />
           </div>
           {cloudLoginRequired && <p className="login-tag">{translateUi("Cloud sign-in required")}</p>}
-          <p className="login-sub">{translateUi("Use your ARVIO Cloud account to sync profiles, continue watching, Trakt activity, addons, catalogs, and playback settings across devices.")}</p>
+          <p className="login-sub">{translateUi("Use your fIPTV Cloud account to sync profiles, continue watching, Trakt activity, addons, catalogs, and playback settings across devices.")}</p>
           <div className="login-proof">
             <span>{translateUi("Profiles")}</span>
             <span>{translateUi("Watch history")}</span>
@@ -73,9 +73,9 @@ export function LoginScreen() {
 
         <div className="login-card">
           <p className="login-card-title">{translateUi("Sign in to continue")}</p>
-          {!cloudConfigured && <p className="login-error">{translateUi("ARVIO Cloud backend env is missing. Add values in web/.env.local.")}</p>}
+          {!cloudConfigured && <p className="login-error">{translateUi("fIPTV Cloud backend env is missing. Add values in web/.env.local.")}</p>}
           <button type="button" className="primary login-submit" onClick={redirectToAuthPortal} disabled={!cloudConfigured}>
-            {translateUi("Sign In with ARVIO Cloud")}</button>
+            {translateUi("Sign In with fIPTV Cloud")}</button>
         </div>
       </div>
     </main>

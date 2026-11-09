@@ -108,7 +108,7 @@ export function buildHomeServerDeviceProfile(caps: BrowserMediaCapabilities = ge
   const video = directVideoCodecs(caps);
   const audio = directAudioCodecs(caps);
   return {
-    Name: "ARVIO Browser", MaxStreamingBitrate: MAX_BITRATE,
+    Name: "fIPTV Browser", MaxStreamingBitrate: MAX_BITRATE,
     // Do not advertise MKV, lossless surround, or software decoders as native browser support.
     DirectPlayProfiles: video.length && audio.length
       ? [{ Type: "Video", Container: "mp4,m4v", VideoCodec: video.join(","), AudioCodec: audio.join(",") }] : [],

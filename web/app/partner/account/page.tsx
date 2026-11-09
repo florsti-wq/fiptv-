@@ -54,7 +54,7 @@ export default function ManagedAccount() {
     finally { setBusy(false); }
   }
   return <main className="partner-app partner-auth">
-    <a className="partner-wordmark" href="/"><img src="/arvio-icon-192.png" alt="" /><img className="partner-logo-wordmark" src="/arvio-wordmark.svg" alt="ARVIO" /> <span>Managed account</span></a>
+    <a className="partner-wordmark" href="/"><img src="/arvio-icon-192.png" alt="" /><img className="partner-logo-wordmark" src="/arvio-wordmark.svg" alt="fIPTV" /> <span>Managed account</span></a>
     <section className="partner-auth-form">
       <ShieldCheck size={30} className="partner-accent" /><h1>{membership?.name || "Your managed account"}</h1>
       {error && <div role="alert" className="partner-message error">{error}</div>}
@@ -86,6 +86,6 @@ export default function ManagedAccount() {
         </>}
         <button className="partner-text" disabled={busy} onClick={() => { partnerAuth.signOut(); setSignedIn(false); setMembership(null); setEditing(null); setNotice(""); setError(""); }}><LogOut size={16} />Sign out</button>
       </>}
-    </section><a className="partner-back" href="/"><ArrowLeft size={16} />Back to ARVIO</a>
+    </section><a className="partner-back" href="/"><ArrowLeft size={16} />Back to fIPTV</a>
   </main>;
 }

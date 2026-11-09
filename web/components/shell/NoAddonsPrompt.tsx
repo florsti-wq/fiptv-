@@ -55,7 +55,7 @@ export function NoAddonsPrompt() {
   return <aside className="source-setup-card" aria-labelledby="source-setup-title">
     <div className="source-setup-copy">
       <h2 id="source-setup-title"><Puzzle size={20} aria-hidden />{translateUi("Add a source to start watching")}</h2>
-      <p>{translateUi("ARVIO plays from your own Plex, Jellyfin or Emby server, your IPTV playlist, or addons from services you are authorized to use. Sources you added in the ARVIO Android app sync here automatically.")}</p>
+      <p>{translateUi("fIPTV plays from your own Plex, Jellyfin or Emby server, your IPTV playlist, or addons from services you are authorized to use. Sources you added in the fIPTV Android app sync here automatically.")}</p>
       {sources.catalogOnly && <p className="source-setup-warning">{translateUi("None of your enabled addons provide playback sources.")}</p>}
     </div>
     <div className="source-setup-actions">

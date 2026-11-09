@@ -77,7 +77,7 @@ export function ExternalPlaybackPrompt() {
   const syncProgress = async (progress: number, action: "start" | "pause" | "stop") => {
     if (!pending) return;
     setSaving(true);
-    // ARVIO's completion threshold is 90 % (Android WATCHED_THRESHOLD): Continue
+    // fIPTV's completion threshold is 90 % (Android WATCHED_THRESHOLD): Continue
     // Watching drops anything at or past it, so "90 %" saved as plain progress
     // made the title vanish without ever being marked watched. Treat it as
     // finished: watched badge, tracker history, out of Continue Watching.
@@ -199,7 +199,7 @@ export function ExternalPlaybackPrompt() {
         )}
 
         <small>
-          {translateUi("ARVIO cannot read playback from external apps, so it only updates Trakt and ARVIO Cloud after you confirm.")}</small>
+          {translateUi("fIPTV cannot read playback from external apps, so it only updates Trakt and fIPTV Cloud after you confirm.")}</small>
       </article>
     </section>
   );

@@ -15,7 +15,7 @@ export const config = {
   supabaseUrl: selfHosted ? "" : process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
   supabaseAnonKey: selfHosted ? "" : process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "",
   appAnonKey: selfHosted ? "" : envValue(process.env.NEXT_PUBLIC_ARVIO_APP_ANON_KEY, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ""),
-  netlifyBackendUrl: selfHosted ? "" : process.env.NEXT_PUBLIC_NETLIFY_BACKEND_URL ?? process.env.NETLIFY_BACKEND_URL ?? "https://auth.arvio.tv/.netlify/functions",
+  netlifyBackendUrl: selfHosted ? "" : process.env.NEXT_PUBLIC_NETLIFY_BACKEND_URL ?? process.env.NETLIFY_BACKEND_URL ?? "https://fipsite.netlify.app/.netlify/functions",
   // Next can evaluate client modules before beforeInteractive scripts execute.
   // Read bootstrap values when used, never freeze an empty module-load snapshot.
   get resolverUrl() { return browserSelfhostRuntimeConfig()?.resolverUrl ?? envValue(process.env.NEXT_PUBLIC_ARVIO_RESOLVER_URL, ""); },

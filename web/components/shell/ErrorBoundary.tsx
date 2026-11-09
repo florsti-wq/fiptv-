@@ -45,7 +45,7 @@ export function RecoverPanel({ error, screen, onRetry, onDismiss, fullPage = fal
   return (
     <div className={fullPage ? "recover-screen recover-screen-full" : "recover-screen"} role="alert">
       <AlertTriangle size={fullPage ? 40 : 28} aria-hidden="true" />
-      <h2>{fullPage ? translateUi("ARVIO hit a problem") : translateUi("This screen hit a problem")}</h2>
+      <h2>{fullPage ? translateUi("fIPTV hit a problem") : translateUi("This screen hit a problem")}</h2>
       <p>{translateUi("Your library, settings and progress are safe. Try again, or go back to Home.")}</p>
       <div className="recover-actions">
         <button type="button" className="recover-btn recover-btn-primary" data-autofocus onClick={onRetry}>
@@ -98,7 +98,7 @@ export class ScreenBoundary extends Component<ScreenBoundaryProps, BoundaryState
   }
 
   componentDidCatch(error: unknown, info: ErrorInfo) {
-    console.error(`[ARVIO] ${this.props.screen} screen crashed`, error, info.componentStack);
+    console.error(`[fIPTV] ${this.props.screen} screen crashed`, error, info.componentStack);
     if (this.autoRetried) return;
     // First crash: clear what this screen reads from cache and retry once.
     this.autoRetried = true;
@@ -148,7 +148,7 @@ export class RowBoundary extends Component<{ children: ReactNode; fallback?: Rea
   }
 
   componentDidCatch(error: unknown) {
-    console.error(`[ARVIO] row ${this.props.name ?? ""} crashed`, error);
+    console.error(`[fIPTV] row ${this.props.name ?? ""} crashed`, error);
   }
 
   componentDidUpdate(previous: { resetKey?: unknown }) {

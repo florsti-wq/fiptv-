@@ -1,8 +1,8 @@
 {
   "id": "/",
-  "name": "ARVIO",
-  "short_name": "ARVIO",
-  "description": "ARVIO media hub",
+  "name": "fIPTV",
+  "short_name": "fIPTV",
+  "description": "fIPTV media hub",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

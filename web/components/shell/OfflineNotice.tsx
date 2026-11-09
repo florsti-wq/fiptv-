@@ -6,7 +6,7 @@ import { useTranslation } from "@/lib/i18n";
 
 /**
  * Offline handling inside the app. Opened without a network (the service
- * worker served the cached shell), ARVIO can't load anything, so a full
+ * worker served the cached shell), fIPTV can't load anything, so a full
  * offline screen replaces the app until the connection returns. Losing the
  * network mid-session only shows a small banner — the screen the user is on
  * stays usable for what is already loaded.
@@ -45,7 +45,7 @@ export function OfflineNotice() {
       <div>
         <WifiOff size={40} aria-hidden="true" />
         <h1>{translateUi("You're offline")}</h1>
-        <p>{translateUi("ARVIO needs a connection to browse and play. Downloads you saved on this device stay in the folder you chose and play in any video player.")}</p>
+        <p>{translateUi("fIPTV needs a connection to browse and play. Downloads you saved on this device stay in the folder you chose and play in any video player.")}</p>
         <button type="button" className="recover-btn recover-btn-primary" data-autofocus onClick={() => window.location.reload()}>
           <RotateCw size={18} aria-hidden="true" />
           {translateUi("Try again")}

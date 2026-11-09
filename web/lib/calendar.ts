@@ -2,7 +2,7 @@ import type { MediaItem } from "./types";
 
 export type CalendarSource = "arvio" | "trakt" | "simkl" | "mdblist";
 export type ReleaseKind = "episode" | "cinema" | "digital" | "physical" | "tv" | "release";
-export const CALENDAR_SOURCE_LABELS: Record<CalendarSource, string> = { arvio: "ARVIO", trakt: "Trakt", simkl: "SIMKL", mdblist: "MDBList" };
+export const CALENDAR_SOURCE_LABELS: Record<CalendarSource, string> = { arvio: "fIPTV", trakt: "Trakt", simkl: "SIMKL", mdblist: "MDBList" };
 export interface CalendarTitle { item: MediaItem; sources: CalendarSource[] }
 export interface CalendarRelease extends CalendarTitle {
   id: string;

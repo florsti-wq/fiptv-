@@ -171,7 +171,7 @@ function MembershipCheckoutSession({ children, className, entry, title, onEntitl
       <h2 id={`${id}-title`}>{translateUi("Finish your membership")}</h2>
       <p>{translateUi("Finish on Ko-fi, then return to this tab. We will check your access automatically. Do not pay again if activation is delayed.")}</p>
       <div className="membership-email">
-        <span>{translateUi("Your ARVIO account")}</span><strong>{auth.email}</strong>
+        <span>{translateUi("Your fIPTV account")}</span><strong>{auth.email}</strong>
         <button type="button" className="paywall-trial" onClick={async () => {
           try { await navigator.clipboard.writeText(auth.email); setCopied(true); } catch { setCopied(false); }
         }}><Copy size={15} /> {translateUi(copied ? "Copied" : "Copy email")}</button>
