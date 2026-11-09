@@ -611,7 +611,7 @@ class AuthRepository @Inject constructor(
 
             val message = safeErrorMessage(e, context.getString(R.string.auth_signin_failed))
             _authState.value = AuthState.Error(message)
-            AppLogger.breadcrumb("Auth", "email_sign_in_failed ${e::class.java.simpleName}", severity = "warning")
+            AppLogger.breadcrumb("Auth", "email_sign_in_failed ${e::class.java.simpleName}: ${e.message.orEmpty().take(160)}", severity = "warning")
             Result.failure(Exception(message))
         }
     }
