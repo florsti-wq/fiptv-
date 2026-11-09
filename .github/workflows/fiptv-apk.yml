@@ -150,8 +150,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           tag="v${{ steps.apk.outputs.version }}"
-          notes="fIPTV ${{ steps.apk.outputs.version }} (Basis ARVIO, Build ${{ github.run_number }}).
-          Commit: ${{ github.sha }}
-
-          Fire TV: im Downloader https://github.com/${{ github.repository }}/releases/latest/download/fiptv.apk öffnen."
+          # Kurzer Text für das Update-Fenster der App: was ist neu?
+          notes="Neu: $(git log -1 --pretty=%s)"
           gh release create "$tag" fiptv.apk --title "fIPTV $tag" --notes "$notes" --target "${{ github.sha }}" --latest
