@@ -595,13 +595,12 @@
         const isLocal =
           (url.protocol === "http:" || url.protocol === "https:") &&
           (url.hostname === "localhost" || url.hostname === "127.0.0.1");
-        const isArvioDomain =
-          url.protocol === "https:" &&
-          (url.hostname === "arvio.tv" || url.hostname.endsWith(".arvio.tv"));
+        const isArvioDomain = false; // fIPTV: keine ARVIO-Adressen
+        // fIPTV: nur die eigene Browser-Version (inkl. Netlify-Vorschauen)
         const isArvioWebPreview =
           url.protocol === "https:" &&
-          (url.hostname === "arvio-web.netlify.app" ||
-            url.hostname.endsWith("--arvio-web.netlify.app"));
+          (url.hostname === "fiptv-web.netlify.app" ||
+            url.hostname.endsWith("--fiptv-web.netlify.app"));
 
         return !url.username && !url.password && (isLocal || isArvioDomain || isArvioWebPreview);
       } catch {
