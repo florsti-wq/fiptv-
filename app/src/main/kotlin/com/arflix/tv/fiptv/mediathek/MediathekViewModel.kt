@@ -33,6 +33,7 @@ data class MediathekUiState(
 class MediathekViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val profileManager: ProfileManager,
+    private val cloudSyncRepository: com.arflix.tv.data.repository.CloudSyncRepository,
 ) : ViewModel() {
     private val _state = MutableStateFlow(MediathekUiState())
     val state: StateFlow<MediathekUiState> = _state.asStateFlow()
@@ -116,5 +117,8 @@ class MediathekViewModel @Inject constructor(
     fun progressOf(item: MediathekItem): FiptvResume.Entry? =
         item.bestVideo?.let { FiptvResume.entry(context, profileId, it) }
 
-    fun removeResume(entry: FiptvResume.Entry) = FiptvResume.remove(context, profileId, entry.url)
+    fun removeResume(entry: FiptvResume.Entry) {
+        FiptvResume.remove(context, profileId, entry.url)
+        viewModelScope.launch { runCatching { cloudSyncRepository.pushToCloud() } }
+    }
 }

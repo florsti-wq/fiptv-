@@ -45,6 +45,7 @@ class VodViewModel @Inject constructor(
     private val iptvRepository: IptvRepository,
     @ApplicationContext private val context: Context,
     private val profileManager: ProfileManager,
+    private val cloudSyncRepository: com.arflix.tv.data.repository.CloudSyncRepository,
 ) : ViewModel() {
     private val _state = MutableStateFlow(VodUiState())
     val state: StateFlow<VodUiState> = _state.asStateFlow()
@@ -168,5 +169,8 @@ class VodViewModel @Inject constructor(
     fun episodeProgress(e: VodEpisode): FiptvResume.Entry? =
         episodeUrl(e)?.let { FiptvResume.entry(context, profileId, it) }
 
-    fun removeResume(entry: FiptvResume.Entry) = FiptvResume.remove(context, profileId, entry.url)
+    fun removeResume(entry: FiptvResume.Entry) {
+        FiptvResume.remove(context, profileId, entry.url)
+        viewModelScope.launch { runCatching { cloudSyncRepository.pushToCloud() } }
+    }
 }

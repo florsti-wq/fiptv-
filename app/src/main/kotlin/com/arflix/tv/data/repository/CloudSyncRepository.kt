@@ -339,7 +339,10 @@ class CloudSyncRepository @Inject constructor(
         val streamMacroEnabledMap: Map<String, Boolean> = emptyMap(),
         val streamProviderEnabledMap: Map<String, Boolean> = emptyMap(),
         // fIPTV: Hintergrundfarbe (null von älteren Ständen: lokale Wahl behalten)
-        val fiptvBackground: String? = null
+        val fiptvBackground: String? = null,
+        // fIPTV: Weiterschauen (Anbieter-VOD/Mediathek) und gemerkte YouTube-Kanäle, je als JSON
+        val fiptvResumeJson: String? = null,
+        val fiptvYtChannelsJson: String? = null
     )
 
     // ── DataStore key helpers ──
@@ -716,6 +719,8 @@ class CloudSyncRepository @Inject constructor(
                         watchlistOnHome = prefs[watchlistOnHomeKeyFor(profile.id)] ?: false,
                         clockFormat = prefs[clockFormatKeyFor(profile.id)] ?: "24h",
                         fiptvBackground = prefs[profileManager.profileStringKeyFor(profile.id, com.arflix.tv.fiptv.FiptvBackgrounds.PREF_NAME)],
+                        fiptvResumeJson = runCatching { com.arflix.tv.fiptv.FiptvResume.exportJson(context, profile.id) }.getOrNull(),
+                        fiptvYtChannelsJson = prefs[profileManager.profileStringKeyFor(profile.id, "fiptv_yt_channels")],
                         guideRowCount = prefs[guideRowCountKeyFor(profile.id)]?.toIntOrNull()
                             ?.takeIf { it in 6..10 } ?: 0,
                         showBudget = prefs[showBudgetKeyFor(profile.id)] ?: true,
@@ -1686,6 +1691,12 @@ class CloudSyncRepository @Inject constructor(
                         prefs[clockFormatKeyFor(profileId)] = state.clockFormat
                         state.fiptvBackground?.let {
                             prefs[profileManager.profileStringKeyFor(profileId, com.arflix.tv.fiptv.FiptvBackgrounds.PREF_NAME)] = it
+                        }
+                        state.fiptvYtChannelsJson?.let {
+                            prefs[profileManager.profileStringKeyFor(profileId, "fiptv_yt_channels")] = it
+                        }
+                        state.fiptvResumeJson?.let {
+                            runCatching { com.arflix.tv.fiptv.FiptvResume.mergeJson(context, profileId, it) }
                         }
                         // Older clients omit this field; keep the local preference in that case.
                         state.guideRowCount?.let { count ->

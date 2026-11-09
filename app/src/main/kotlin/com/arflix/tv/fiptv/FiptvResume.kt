@@ -32,11 +32,14 @@ object FiptvResume {
         val durationMs: Long = 0,
         val finished: Boolean = false,
         val updatedAt: Long = 0,
+        /** vom Nutzer aus „Weiterschauen“ entfernt (bleibt als Markierung für den Abgleich) */
+        val dismissed: Boolean = false,
     ) {
         val progress: Float get() = if (durationMs > 0) (positionMs.toFloat() / durationMs).coerceIn(0f, 1f) else 0f
         val remainingMin: Int get() = (((durationMs - positionMs).coerceAtLeast(0) + 30_000) / 60_000).toInt()
         /** Lohnt es sich, hier weiterzumachen? */
         val resumable: Boolean get() = !finished && positionMs >= MIN_POSITION_MS && durationMs > 0
+        val showInContinue: Boolean get() = resumable && !dismissed
     }
 
     private const val PREFS = "fiptv_resume"
@@ -81,6 +84,7 @@ object FiptvResume {
             durationMs = durationMs,
             finished = finished,
             updatedAt = System.currentTimeMillis(),
+            dismissed = false,
         )
         persist(context, profileId, force = closing || finished)
     }
@@ -98,14 +102,52 @@ object FiptvResume {
     /** Angefangene Titel, neueste zuerst. */
     fun continueWatching(context: Context, profileId: String, kinds: Set<Kind>): List<Entry> =
         entries(context, profileId)
-            .filter { it.kind in kinds && it.resumable }
+            .filter { it.kind in kinds && it.showInContinue }
             .sortedByDescending { it.updatedAt }
             .take(30)
 
+    /** Aus „Weiterschauen“ entfernen; die Markierung wird mit den anderen Geräten abgeglichen. */
     @Synchronized
     fun remove(context: Context, profileId: String, url: String) {
         val list = load(context, profileId)
-        if (list.removeAll { it.url == url }) persist(context, profileId, force = true)
+        val i = list.indexOfFirst { it.url == url }
+        if (i < 0) return
+        list[i] = list[i].copy(dismissed = true, updatedAt = System.currentTimeMillis())
+        persist(context, profileId, force = true)
+    }
+
+    // ---------- Abgleich über den eigenen Sync-Server ----------
+
+    /** Für den Cloud-Abgleich: die letzten 150 Einträge der letzten 120 Tage. */
+    @Synchronized
+    fun exportJson(context: Context, profileId: String): String? {
+        val cutoff = System.currentTimeMillis() - 120L * 24 * 60 * 60 * 1000
+        val list = load(context, profileId).filter { it.updatedAt >= cutoff && it.durationMs > 0 }
+            .sortedByDescending { it.updatedAt }.take(150)
+        if (list.isEmpty()) return null
+        val arr = JSONArray()
+        list.forEach { arr.put(toJson(it)) }
+        return arr.toString()
+    }
+
+    /** Einträge aus der Cloud übernehmen – je Titel gewinnt der neuere Stand. */
+    @Synchronized
+    fun mergeJson(context: Context, profileId: String, json: String) {
+        val incoming = runCatching {
+            val arr = JSONArray(json)
+            (0 until arr.length()).mapNotNull { arr.optJSONObject(it)?.let(::fromJson) }
+        }.getOrNull() ?: return
+        val list = load(context, profileId)
+        var changed = false
+        incoming.forEach { e ->
+            val i = list.indexOfFirst { it.url == e.url }
+            if (i < 0) {
+                list.add(e); changed = true
+            } else if (e.updatedAt > list[i].updatedAt) {
+                list[i] = e; changed = true
+            }
+        }
+        if (changed) persist(context, profileId, force = true)
     }
 
     // ---------- Speicher ----------
@@ -140,6 +182,7 @@ object FiptvResume {
         .put("url", e.url).put("kind", e.kind.name).put("title", e.title).put("sub", e.subtitle)
         .put("img", e.image ?: "").put("tmdb", e.tmdbId ?: -1).put("s", e.season ?: -1).put("e", e.episode ?: -1)
         .put("pos", e.positionMs).put("dur", e.durationMs).put("fin", e.finished).put("at", e.updatedAt)
+        .put("dis", e.dismissed)
 
     private fun fromJson(o: JSONObject): Entry? {
         val url = o.optString("url").takeIf { it.isNotBlank() } ?: return null
@@ -156,6 +199,7 @@ object FiptvResume {
             durationMs = o.optLong("dur"),
             finished = o.optBoolean("fin"),
             updatedAt = o.optLong("at"),
+            dismissed = o.optBoolean("dis"),
         )
     }
 }

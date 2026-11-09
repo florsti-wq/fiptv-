@@ -57,6 +57,7 @@ data class YouTubeUiState(
 class YouTubeViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val profileManager: ProfileManager,
+    private val cloudSyncRepository: com.arflix.tv.data.repository.CloudSyncRepository,
 ) : ViewModel() {
     private val _state = MutableStateFlow(YouTubeUiState())
     val state: StateFlow<YouTubeUiState> = _state.asStateFlow()
@@ -110,7 +111,11 @@ class YouTubeViewModel @Inject constructor(
             s.savedChannels + channel
         }
         _state.update { it.copy(savedChannels = updated) }
-        viewModelScope.launch { writeSavedChannels(updated) }
+        viewModelScope.launch {
+            writeSavedChannels(updated)
+            // an die anderen Geräte schicken
+            runCatching { cloudSyncRepository.pushToCloud() }
+        }
     }
 
     private fun load(append: Boolean) {

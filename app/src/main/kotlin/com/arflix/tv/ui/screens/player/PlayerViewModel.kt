@@ -8035,6 +8035,7 @@ class PlayerViewModel @Inject constructor(
     }
 
     private var progressDiscardedForIdle = false
+    private var fiptvLastCloudPush = 0L
 
     fun discardProgressForIdle() {
         progressDiscardedForIdle = true
@@ -8057,8 +8058,18 @@ class PlayerViewModel @Inject constructor(
                 closing = closing || !isPlaying || playbackState == Player.STATE_ENDED,
             )
         }
-        // fIPTV: ohne TMDB-Nummer keinen ARVIO-Verlauf unter der Id 0 anlegen
-        if (currentMediaId <= 0 && !currentProvidedStreamUrl.isNullOrBlank()) return null
+        // fIPTV: ohne TMDB-Nummer keinen ARVIO-Verlauf unter der Id 0 anlegen –
+        // „Weiterschauen“ trotzdem beim Pausieren/Beenden an die anderen Geräte schicken
+        if (currentMediaId <= 0 && !currentProvidedStreamUrl.isNullOrBlank()) {
+            val now = System.currentTimeMillis()
+            if ((closing || !isPlaying || playbackState == Player.STATE_ENDED) && (closing || now - fiptvLastCloudPush > 20_000L)) {
+                fiptvLastCloudPush = now
+                // eigener Scope: beim Verlassen des Players wird viewModelScope sofort beendet
+                kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.IO)
+                    .launch { runCatching { cloudSyncRepository.pushToCloud() } }
+            }
+            return null
+        }
         noteRecentSourcePlayback(position, isPlaying)
 
         // A completion transaction must not be cancelled/restarted by the ended polling tick
