@@ -16,6 +16,8 @@
   NETLIFY_BACKEND_URL = "https://fipsite.netlify.app/.netlify/functions"
   NEXT_PUBLIC_PAYWALL_ENABLED = "false"
   NEXT_PUBLIC_TELEGRAM_ENABLED = "false"
+  # Eigener Cloudflare-Weiterleiter (resolver-worker/)
+  NEXT_PUBLIC_ARVIO_RESOLVER_URL = "https://fiptv-resolver.florsti.workers.dev"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
