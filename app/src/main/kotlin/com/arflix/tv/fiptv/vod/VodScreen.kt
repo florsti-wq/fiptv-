@@ -46,6 +46,10 @@ import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import coil.compose.AsyncImage
+import com.arflix.tv.fiptv.FiptvResume
+import com.arflix.tv.fiptv.ProgressBar
+import com.arflix.tv.fiptv.ResumeRow
+import com.arflix.tv.util.LocalDeviceType
 
 private val Bg: Color get() = com.arflix.tv.ui.theme.BackgroundDark
 private val Panel = Color(0xFF14161C)
@@ -58,11 +62,14 @@ private val Accent = Color(0xFF4F7CFF)
  */
 @Composable
 fun VodScreen(
-    onPlayMovie: (movie: VodMovie, url: String) -> Unit,
-    onPlayEpisode: (series: VodSeries, episode: VodEpisode, url: String) -> Unit,
+    /** Abspielen; zweiter Wert = Startposition (Weiterschauen) */
+    onPlay: (entry: FiptvResume.Entry, startPositionMs: Long?) -> Unit,
     viewModel: VodViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val resumeChanges by FiptvResume.changes.collectAsStateWithLifecycle()
+    val resume = remember(resumeChanges, state.accountIndex) { viewModel.resumeEntries() }
+    val isTouch = LocalDeviceType.current.isTouchDevice()
     val firstFocus = remember { FocusRequester() }
     LaunchedEffect(Unit) { runCatching { firstFocus.requestFocus() } }
 
@@ -102,8 +109,18 @@ fun VodScreen(
         }
         Spacer(Modifier.width(20.dp))
 
-        // ---------- rechts: Plakate oder Folgen ----------
-        Box(modifier = Modifier.weight(1f).fillMaxHeight()) {
+        // ---------- rechts: Weiterschauen, Plakate oder Folgen ----------
+        Column(modifier = Modifier.weight(1f).fillMaxHeight()) {
+        if (state.openSeries == null) {
+            ResumeRow(
+                entries = resume,
+                onPlay = { e -> onPlay(e, e.positionMs) },
+                onRemove = { e -> viewModel.removeResume(e) },
+                isTouch = isTouch,
+                modifier = Modifier.padding(bottom = 10.dp),
+            )
+        }
+        Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
             val open = state.openSeries
             when {
                 open != null -> EpisodesPanel(
@@ -111,7 +128,9 @@ fun VodScreen(
                     series = open,
                     onBack = { viewModel.closeSeries() },
                     onSeason = { viewModel.selectSeason(it) },
-                    onPlay = { ep -> viewModel.episodeUrl(ep)?.let { onPlayEpisode(open, ep, it) } },
+                    onPlay = { ep -> viewModel.prepareEpisode(open, ep)?.let { (e, start) -> onPlay(e, start) } },
+                    progressOf = { ep -> viewModel.episodeProgress(ep) },
+                    resumeChanges = resumeChanges,
                 )
                 state.error != null -> Message("⚠ ${state.error}")
                 state.loading -> Message("Wird geladen …")
@@ -121,10 +140,10 @@ fun VodScreen(
                     viewModel.openSeries(state.seriesList[idx])
                 }
                 else -> PosterGrid(state.movies.map { PosterData(it.id, it.name, it.poster, it.rating) }) { idx ->
-                    val m = state.movies[idx]
-                    viewModel.movieUrl(m)?.let { onPlayMovie(m, it) }
+                    viewModel.prepareMovie(state.movies[idx])?.let { (e, start) -> onPlay(e, start) }
                 }
             }
+        }
         }
     }
 }
@@ -197,6 +216,8 @@ private fun EpisodesPanel(
     onBack: () -> Unit,
     onSeason: (Int) -> Unit,
     onPlay: (VodEpisode) -> Unit,
+    progressOf: (VodEpisode) -> FiptvResume.Entry? = { null },
+    resumeChanges: Long = 0L,
 ) {
     val backFocus = remember { FocusRequester() }
     LaunchedEffect(series.id) { runCatching { backFocus.requestFocus() } }
@@ -224,6 +245,7 @@ private fun EpisodesPanel(
                 contentPadding = PaddingValues(bottom = 32.dp),
             ) {
                 items(state.seasonEpisodes, key = { it.id }) { ep ->
+                    val progress = remember(ep.id, resumeChanges) { progressOf(ep) }
                     Surface(
                         onClick = { onPlay(ep) },
                         modifier = Modifier.fillMaxWidth(),
@@ -248,8 +270,13 @@ private fun EpisodesPanel(
                                 Text(ep.title, fontSize = 15.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 ep.plot?.let { Text(it, color = Muted, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis) }
                             }
-                            if (ep.durationSec > 0) Text("${(ep.durationSec + 30) / 60} Min.", color = Muted, fontSize = 12.sp)
+                            when {
+                                progress?.finished == true -> Text("✓ gesehen", color = Color(0xFF81C784), fontSize = 12.sp)
+                                progress?.resumable == true -> Text("noch ${progress.remainingMin} Min.", color = Color(0xFFFFB74D), fontSize = 12.sp)
+                                ep.durationSec > 0 -> Text("${(ep.durationSec + 30) / 60} Min.", color = Muted, fontSize = 12.sp)
+                            }
                         }
+                        if (progress?.resumable == true) ProgressBar(progress.progress, Modifier.align(Alignment.BottomCenter))
                     }
                 }
             }

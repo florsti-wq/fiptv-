@@ -1,6 +1,10 @@
 package com.arflix.tv.fiptv.mediathek
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
+import com.arflix.tv.data.repository.ProfileManager
+import com.arflix.tv.fiptv.FiptvResume
+import dagger.hilt.android.qualifiers.ApplicationContext
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -26,7 +30,10 @@ data class MediathekUiState(
 }
 
 @HiltViewModel
-class MediathekViewModel @Inject constructor() : ViewModel() {
+class MediathekViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
+    private val profileManager: ProfileManager,
+) : ViewModel() {
     private val _state = MutableStateFlow(MediathekUiState())
     val state: StateFlow<MediathekUiState> = _state.asStateFlow()
     private var job: Job? = null
@@ -87,4 +94,27 @@ class MediathekViewModel @Inject constructor() : ViewModel() {
             }
         }
     }
+
+    // ---------- fIPTV: Weiterschauen ----------
+    private val profileId: String get() = profileManager.getProfileIdSync()
+
+    /** Sendung anmelden; liefert Eintrag und ggf. Startposition. */
+    fun prepare(item: MediathekItem): Pair<FiptvResume.Entry, Long?>? {
+        val url = item.bestVideo ?: return null
+        val sender = MediathekRepository.channels.firstOrNull { item.channel.contains(it.id, ignoreCase = true) }?.label ?: item.channel
+        val entry = FiptvResume.Entry(
+            url = url, kind = FiptvResume.Kind.MEDIATHEK, title = item.title,
+            subtitle = listOf(sender, item.topic.takeIf { it != item.title }.orEmpty()).filter { it.isNotBlank() }.joinToString(" · "),
+        )
+        FiptvResume.register(context, profileId, entry)
+        return entry to FiptvResume.startPosition(context, profileId, url)
+    }
+
+    fun resumeEntries(): List<FiptvResume.Entry> =
+        FiptvResume.continueWatching(context, profileId, setOf(FiptvResume.Kind.MEDIATHEK))
+
+    fun progressOf(item: MediathekItem): FiptvResume.Entry? =
+        item.bestVideo?.let { FiptvResume.entry(context, profileId, it) }
+
+    fun removeResume(entry: FiptvResume.Entry) = FiptvResume.remove(context, profileId, entry.url)
 }

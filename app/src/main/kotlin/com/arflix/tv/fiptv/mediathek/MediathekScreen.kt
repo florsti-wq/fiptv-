@@ -40,6 +40,10 @@ import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import com.arflix.tv.ui.components.TextInputModal
+import com.arflix.tv.fiptv.FiptvResume
+import com.arflix.tv.fiptv.ProgressBar
+import com.arflix.tv.fiptv.ResumeRow
+import com.arflix.tv.util.LocalDeviceType
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -57,10 +61,14 @@ private val dateFormat = SimpleDateFormat("EE dd.MM. HH:mm", Locale.GERMANY)
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
 fun MediathekScreen(
-    onPlay: (item: MediathekItem) -> Unit,
+    /** Abspielen; zweiter Wert = Startposition (Weiterschauen) */
+    onPlay: (entry: FiptvResume.Entry, startPositionMs: Long?) -> Unit,
     viewModel: MediathekViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val resumeChanges by FiptvResume.changes.collectAsStateWithLifecycle()
+    val resume = remember(resumeChanges) { viewModel.resumeEntries() }
+    val isTouch = LocalDeviceType.current.isTouchDevice()
     var searchOpen by remember { mutableStateOf(false) }
     val firstFocus = remember { FocusRequester() }
     val listState = rememberLazyListState()
@@ -108,6 +116,16 @@ fun MediathekScreen(
             }
         }
         Spacer(Modifier.height(10.dp))
+        // Weiterschauen nur in der Startansicht (ohne Suche)
+        if (state.search.isBlank()) {
+            ResumeRow(
+                entries = resume,
+                onPlay = { e -> onPlay(e, e.positionMs) },
+                onRemove = { e -> viewModel.removeResume(e) },
+                isTouch = isTouch,
+                modifier = Modifier.padding(bottom = 10.dp),
+            )
+        }
         when {
             state.error != null -> Text("⚠ ${state.error}", color = Color(0xFFFF8A80), fontSize = 15.sp)
             state.loading && state.items.isEmpty() -> Text("Wird geladen …", color = Muted, fontSize = 15.sp)
@@ -122,7 +140,10 @@ fun MediathekScreen(
             itemsIndexed(state.items, key = { _, it -> it.id }) { index, item ->
                 // kurz vor dem Ende die nächste Seite laden
                 if (index >= state.items.size - 6) LaunchedEffect(state.items.size) { viewModel.loadMore() }
-                MediathekRow(item = item, onClick = { onPlay(item) })
+                val progress = remember(item.id, resumeChanges) { viewModel.progressOf(item) }
+                MediathekRow(item = item, progress = progress, onClick = {
+                    viewModel.prepare(item)?.let { (e, start) -> onPlay(e, start) }
+                })
             }
             if (state.loading && state.items.isNotEmpty()) {
                 item { Text("Weitere werden geladen …", color = Muted, fontSize = 14.sp, modifier = Modifier.padding(8.dp)) }
@@ -170,7 +191,7 @@ private fun Pill(label: String, selected: Boolean, onClick: () -> Unit, modifier
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
-private fun MediathekRow(item: MediathekItem, onClick: () -> Unit) {
+private fun MediathekRow(item: MediathekItem, progress: FiptvResume.Entry?, onClick: () -> Unit) {
     Surface(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
@@ -230,7 +251,12 @@ private fun MediathekRow(item: MediathekItem, onClick: () -> Unit) {
                     color = Muted,
                     fontSize = 13.sp,
                 )
+                when {
+                    progress?.finished == true -> Text("✓ gesehen", color = Color(0xFF81C784), fontSize = 12.sp)
+                    progress?.resumable == true -> Text("noch ${progress.remainingMin} Min.", color = Color(0xFFFFB74D), fontSize = 12.sp)
+                }
             }
         }
+        if (progress?.resumable == true) ProgressBar(progress.progress, Modifier.align(Alignment.BottomCenter))
     }
 }

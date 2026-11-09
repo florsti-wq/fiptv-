@@ -7758,14 +7758,16 @@ class PlayerViewModel @Inject constructor(
     ): ResumeData {
         val navStart = navigationStartPositionMs?.coerceAtLeast(0L) ?: 0L
 
-        val cloudEntry = watchHistoryRepository.getProgress(mediaType, mediaId, seasonNumber, episodeNumber)
+        // fIPTV: Inhalte ohne TMDB-Nummer (Mediathek, Anbieter-VOD ohne Zuordnung) teilen sich die Id 0 –
+        // dort gilt nur die übergebene Startposition, sonst startete jede Sendung an einer fremden Stelle.
+        val cloudEntry = if (mediaId > 0) watchHistoryRepository.getProgress(mediaType, mediaId, seasonNumber, episodeNumber) else null
         val cloudPositionMs = cloudEntry?.let { entry ->
             computeResumePositionMs(entry, mediaType, mediaId, seasonNumber, episodeNumber)
         } ?: 0L
 
-        val localEntry = runCatching {
+        val localEntry = if (mediaId > 0) runCatching {
             traktRepository.getLocalContinueWatchingEntry(mediaType, mediaId, seasonNumber, episodeNumber)
-        }.getOrNull()
+        }.getOrNull() else null
 
         val localPositionMs = localEntry?.let { item ->
             when {
@@ -8048,6 +8050,15 @@ class PlayerViewModel @Inject constructor(
         closing: Boolean = false
     ): Job? {
         if (progressDiscardedForIdle || duration <= 0) return null
+        // fIPTV: Weiterschauen für Anbieter-VOD und Mediathek (nur dort angemeldete Adressen)
+        if (!currentIsLiveStreamPlayback) runCatching {
+            com.arflix.tv.fiptv.FiptvResume.report(
+                context, profileManager.getProfileIdSync(), currentProvidedStreamUrl, position, duration,
+                closing = closing || !isPlaying || playbackState == Player.STATE_ENDED,
+            )
+        }
+        // fIPTV: ohne TMDB-Nummer keinen ARVIO-Verlauf unter der Id 0 anlegen
+        if (currentMediaId <= 0 && !currentProvidedStreamUrl.isNullOrBlank()) return null
         noteRecentSourcePlayback(position, isPlaying)
 
         // A completion transaction must not be cancelled/restarted by the ended polling tick

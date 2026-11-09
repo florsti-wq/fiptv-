@@ -185,6 +185,31 @@ internal fun NavHostController.navigateToProfileSelection() {
     }
 }
 
+/** fIPTV: Player-Adresse für Anbieter-VOD und Mediathek (mit Startposition fürs Weiterschauen). */
+private fun fiptvPlayerRoute(entry: com.arflix.tv.fiptv.FiptvResume.Entry, startPositionMs: Long?): String {
+    val start = startPositionMs?.takeIf { it > 0 }
+    val tmdb = entry.tmdbId
+    return if (entry.kind == com.arflix.tv.fiptv.FiptvResume.Kind.EPISODE && tmdb != null) {
+        Screen.Player.createRoute(
+            mediaType = MediaType.TV,
+            mediaId = tmdb,
+            seasonNumber = entry.season,
+            episodeNumber = entry.episode,
+            streamUrl = entry.url,
+            startPositionMs = start,
+            isLiveStream = false,
+        )
+    } else {
+        Screen.Player.createRoute(
+            mediaType = MediaType.MOVIE,
+            mediaId = if (entry.kind == com.arflix.tv.fiptv.FiptvResume.Kind.MOVIE) tmdb ?: 0 else 0,
+            streamUrl = entry.url,
+            startPositionMs = start,
+            isLiveStream = false,
+        )
+    }
+}
+
 /** Per-destination clearance keeps the NavHost and outgoing screens at a stable width. */
 @Composable
 internal fun NavigationRailScreen(
@@ -298,34 +323,7 @@ fun AppNavigation(
         composable(FiptvNav.VOD) {
             NavigationRailScreen(navigationRailInset, bottomInset = navigationRailBottomInset) {
                 com.arflix.tv.fiptv.vod.VodScreen(
-                    onPlayMovie = { movie, url ->
-                        navController.navigate(
-                            Screen.Player.createRoute(
-                                mediaType = MediaType.MOVIE,
-                                mediaId = movie.tmdbId ?: 0,
-                                streamUrl = url,
-                                isLiveStream = false
-                            )
-                        )
-                    },
-                    onPlayEpisode = { series, episode, url ->
-                        val tmdb = series.tmdbId
-                        navController.navigate(
-                            if (tmdb != null) Screen.Player.createRoute(
-                                mediaType = MediaType.TV,
-                                mediaId = tmdb,
-                                seasonNumber = episode.season,
-                                episodeNumber = episode.episode,
-                                streamUrl = url,
-                                isLiveStream = false
-                            ) else Screen.Player.createRoute(
-                                mediaType = MediaType.MOVIE,
-                                mediaId = 0,
-                                streamUrl = url,
-                                isLiveStream = false
-                            )
-                        )
-                    }
+                    onPlay = { entry, start -> navController.navigate(fiptvPlayerRoute(entry, start)) }
                 )
             }
         }
@@ -341,19 +339,7 @@ fun AppNavigation(
         composable(FiptvNav.MEDIATHEK) {
             NavigationRailScreen(navigationRailInset, bottomInset = navigationRailBottomInset) {
                 com.arflix.tv.fiptv.mediathek.MediathekScreen(
-                    onPlay = { item ->
-                        val url = item.bestVideo
-                        if (url != null) {
-                            navController.navigate(
-                                Screen.Player.createRoute(
-                                    mediaType = MediaType.MOVIE,
-                                    mediaId = 0,
-                                    streamUrl = url,
-                                    isLiveStream = false
-                                )
-                            )
-                        }
-                    }
+                    onPlay = { entry, start -> navController.navigate(fiptvPlayerRoute(entry, start)) }
                 )
             }
         }
