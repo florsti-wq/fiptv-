@@ -57,15 +57,17 @@ private val Highlight = Color(0xFF2A3A2E)
 
 /**
  * fIPTV: Sport – Bundesliga und Champions League.
- * Meine Teams · Ligen (Tabelle, Spiele, Teams) · Team · Spiel (Ereignisse, Aufstellungen, Statistik).
- * „Live im TV“ öffnet den Sports-Hub im TV-Bereich.
+ * Sports-Hub (Spiele mit Quellen: IPTV-Sender und Stremio) · Meine Teams · Ligen (Tabelle, Spiele, Teams)
+ * · Team · Spiel (Ereignisse, Aufstellungen, Statistik).
  */
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
 fun SportScreen(
-    onOpenTvSports: () -> Unit,
+    onPlayChannel: (com.arflix.tv.data.model.IptvChannel) -> Unit,
+    onPlayStream: (title: String, url: String) -> Unit,
     viewModel: SportViewModel = hiltViewModel(),
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     val state by viewModel.state.collectAsStateWithLifecycle()
     val isTouch = LocalDeviceType.current.isTouchDevice()
     val firstFocus = remember { FocusRequester() }
@@ -87,7 +89,7 @@ fun SportScreen(
                 Text("⚽ Sport", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(end = 10.dp, top = 2.dp))
             }
             item {
-                Pill("📺 Live im TV", false, onOpenTvSports, Modifier.focusRequester(firstFocus))
+                Pill("🏟 Sports-Hub", state.stack.first() == SportView.Hub, { viewModel.showRoot(SportView.Hub) }, Modifier.focusRequester(firstFocus))
             }
             item {
                 Pill("⭐ Meine Teams", state.stack.first() == SportView.MyTeams, { viewModel.showRoot(SportView.MyTeams) })
@@ -130,11 +132,191 @@ fun SportScreen(
                     modifier = Modifier.fillMaxSize(),
                 ) {
                     when (view) {
+                        SportView.Hub -> hubItems(state, onOpen = { viewModel.open(SportView.Sources(it)) })
+                        is SportView.Sources -> sourceItems(view.match, state, viewModel,
+                            onPlayChannel = onPlayChannel,
+                            onPlayStream = { title, stream ->
+                                if (stream.external) runCatching {
+                                    context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(stream.url))
+                                        .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK))
+                                } else onPlayStream(title, stream.url)
+                            })
                         SportView.MyTeams -> myTeams(state, viewModel)
                         is SportView.League -> if (view.tab == 0) tableItems(state.table, highlightId = null, onTeam = { viewModel.open(SportView.Team(it)) })
                             else matchItems(state.matches, grouped = true, onMatch = { viewModel.open(SportView.Match(it.league, it.id)) })
                         is SportView.Team -> teamItems(view.team, state, viewModel)
                         is SportView.Match -> state.detail?.let { matchDetailItems(it) }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ---------- Sports-Hub ----------
+
+private fun LazyListScope.hubItems(state: SportUiState, onOpen: (SportMatch) -> Unit) {
+    if (state.hubGames.isEmpty()) {
+        item { Text("Keine Spiele in den nächsten Tagen.", color = Muted, fontSize = 15.sp) }
+        return
+    }
+    item {
+        Text(
+            if (state.sourcesLoading) "Suche passende Sender und Streams …" else "Spiel auswählen → Quelle wählen (TV-Sender oder Stremio)",
+            color = Muted.copy(alpha = 0.75f), fontSize = 12.sp,
+        )
+    }
+    val sections = linkedMapOf<String, MutableList<SportMatch>>()
+    state.hubGames.forEach { m ->
+        val title = if (m.isLive) "● Jetzt live" else SportRepository.formatDay(m.startMs)
+        sections.getOrPut(title) { mutableListOf() }.add(m)
+    }
+    sections.forEach { (title, games) ->
+        item(key = "h$title") {
+            Column {
+                Text(title, color = if (title.startsWith("●")) LiveRed else Accent, fontSize = 16.sp, fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(top = 10.dp, bottom = 6.dp))
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp), contentPadding = PaddingValues(vertical = 4.dp, horizontal = 2.dp)) {
+                    items(games, key = { it.id }) { m ->
+                        GameCard(m, state.sources[m.id], state.sourcesLoading, followed = state.isFollowed(m.home.team.id) || state.isFollowed(m.away.team.id)) { onOpen(m) }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalTvMaterial3Api::class)
+@Composable
+private fun GameCard(m: SportMatch, sources: GameSources?, searching: Boolean, followed: Boolean, onClick: () -> Unit) {
+    Surface(
+        onClick = onClick,
+        modifier = Modifier.width(250.dp).height(150.dp),
+        shape = ClickableSurfaceDefaults.shape(shape = RoundedCornerShape(12.dp)),
+        colors = ClickableSurfaceDefaults.colors(
+            containerColor = BackgroundCard, contentColor = Color.White,
+            focusedContainerColor = Color(0xFF2A2E3A), focusedContentColor = Color.White,
+        ),
+        scale = ClickableSurfaceDefaults.scale(focusedScale = 1.06f),
+        border = focusBorder(),
+    ) {
+        Column(Modifier.fillMaxSize().padding(10.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(m.league.label, color = Muted, fontSize = 11.sp, modifier = Modifier.weight(1f), maxLines = 1)
+                if (followed) Text("★ ", color = Color(0xFFFFC107), fontSize = 12.sp)
+                if (m.isLive) Text("● LIVE ${SportRepository.statusText(m)}", color = LiveRed, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            }
+            Row(Modifier.fillMaxWidth().weight(1f), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceEvenly) {
+                Logo(m.home.team.logo, 46)
+                Text(
+                    if (m.state == "pre") SportRepository.formatTime(m.startMs) else "${m.home.score ?: "–"}:${m.away.score ?: "–"}",
+                    color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold,
+                )
+                Logo(m.away.team.logo, 46)
+            }
+            Text("${m.home.team.name} – ${m.away.team.name}", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 1,
+                overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+            val src = when {
+                sources == null && searching -> "Quellen werden gesucht …"
+                sources == null -> " "
+                sources.count == 0 -> "keine Quelle gefunden"
+                else -> listOfNotNull(
+                    sources.tv.size.takeIf { it > 0 }?.let { "📺 $it Sender" },
+                    sources.addons.size.takeIf { it > 0 }?.let { "🔌 $it Stremio" },
+                ).joinToString("  ")
+            }
+            Text(src, color = if ((sources?.count ?: 0) > 0) Accent else Muted, fontSize = 11.sp, maxLines = 1,
+                textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+        }
+    }
+}
+
+// ---------- Quellen eines Spiels ----------
+
+private fun LazyListScope.sourceItems(
+    m: SportMatch,
+    state: SportUiState,
+    vm: SportViewModel,
+    onPlayChannel: (com.arflix.tv.data.model.IptvChannel) -> Unit,
+    onPlayStream: (String, com.arflix.tv.data.repository.SportsAddonStream) -> Unit,
+) {
+    item {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Logo(m.home.team.logo, 44); Spacer(Modifier.width(10.dp))
+            Column(Modifier.weight(1f)) {
+                Text("${m.home.team.name} – ${m.away.team.name}", color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text("${m.league.label} · " + (if (m.isLive) "LIVE ${SportRepository.statusText(m)} · ${m.home.score ?: "–"}:${m.away.score ?: "–"}"
+                    else "${SportRepository.formatDay(m.startMs)} ${SportRepository.formatTime(m.startMs)}"), color = if (m.isLive) LiveRed else Muted, fontSize = 14.sp)
+            }
+            Spacer(Modifier.width(10.dp)); Logo(m.away.team.logo, 44); Spacer(Modifier.width(16.dp))
+            Pill("ℹ Spieldetails", false, { vm.open(SportView.Match(m.league, m.id)) }, small = true)
+        }
+    }
+    val sources = state.sources[m.id]
+    if (sources == null) {
+        item { Text(if (state.sourcesLoading) "Suche passende Sender und Streams …" else "Keine Angaben.", color = Muted, fontSize = 15.sp) }
+        return
+    }
+    item { Section("📺 TV-Sender (${sources.tv.size})") }
+    if (sources.tv.isEmpty()) {
+        item {
+            Text("Kein passender Sender gefunden. Sender tauchen auf, sobald dein Anbieter das Spiel im Programmführer hat (meist 1–2 Tage vorher) " +
+                "oder einen Event-Sender mit beiden Teamnamen anbietet.", color = Muted, fontSize = 14.sp)
+        }
+    }
+    items(sources.tv, key = { "c" + it.channel.id }) { s ->
+        FocusCard(onClick = { onPlayChannel(s.channel) }) {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.width(64.dp), contentAlignment = Alignment.Center) { Logo(s.channel.logo, 40) }
+                Spacer(Modifier.width(10.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(s.channel.name, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    val p = s.programme
+                    Text(
+                        if (p != null) "${SportRepository.formatTime(p.startUtcMillis)}–${SportRepository.formatTime(p.endUtcMillis)}  ${p.title}" else s.channel.group,
+                        color = Muted, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                if (s.uhd) Text("4K ", color = Color(0xFF60A5FA), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                Text(s.confidence, color = when (s.score) { 3 -> Accent; 2 -> Color(0xFFA3E635); else -> Color(0xFFFBBF24) }, fontSize = 12.sp)
+            }
+        }
+    }
+    item { Section("🔌 Stremio (${sources.addons.size})") }
+    if (sources.addons.isEmpty()) {
+        item { Text("Kein Stremio-Sport-Addon mit diesem Spiel gefunden.", color = Muted, fontSize = 14.sp) }
+    }
+    sources.addons.forEach { e ->
+        item(key = "a" + e.key) {
+            FocusCard(onClick = { vm.resolveAddon(e) }) {
+                Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text(e.title, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(e.addonName, color = Muted, fontSize = 13.sp, maxLines = 1)
+                    }
+                    Text(
+                        when {
+                            state.resolvingAddon == e.key -> "lädt …"
+                            state.addonStreams.containsKey(e.key) -> "${state.addonStreams[e.key].orEmpty().size} Streams"
+                            else -> "Streams anzeigen ›"
+                        },
+                        color = Accent, fontSize = 13.sp,
+                    )
+                }
+            }
+        }
+        val list = state.addonStreams[e.key]
+        if (list != null) {
+            if (list.isEmpty()) item(key = "a0" + e.key) { Text("   Keine abspielbaren Streams.", color = Muted, fontSize = 13.sp) }
+            list.forEachIndexed { i, st ->
+                item(key = "s$i" + e.key) {
+                    FocusCard(onClick = { onPlayStream(e.title, st) }) {
+                        Row(Modifier.fillMaxWidth().padding(start = 32.dp, end = 12.dp, top = 6.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Text("▶ ", color = Accent, fontSize = 14.sp)
+                            Text(listOfNotNull(st.name, st.description).joinToString(" · "), color = Color.White, fontSize = 14.sp,
+                                maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                            if (st.external) Text("extern", color = Muted, fontSize = 12.sp)
+                        }
                     }
                 }
             }

@@ -11,12 +11,6 @@ object FiptvNav {
     const val YOUTUBE = "fiptv_youtube"
     const val SPORT = "fiptv_sport"
 
-    /** Sport → „Live im TV“: Der TV-Bereich öffnet beim nächsten Aufbau direkt den Sports-Hub. */
-    @Volatile
-    var openSportsHub = false
-
-    fun consumeSportsHub(): Boolean = openSportsHub.also { openSportsHub = false }
-
     @Volatile
     var navigator: ((String) -> Unit)? = null
 

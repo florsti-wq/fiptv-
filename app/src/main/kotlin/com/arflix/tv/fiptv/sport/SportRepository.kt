@@ -27,6 +27,8 @@ data class SportTeam(
     val logo: String?,
     /** Liga, über die das Team gefunden wurde (für Abfragen) */
     val league: String = SportLeague.BUNDESLIGA.code,
+    /** vollständiger Name laut ESPN (für die Suche nach Sendern) */
+    val fullName: String = "",
 )
 
 data class SportSide(val team: SportTeam, val score: String?, val winner: Boolean)
@@ -240,7 +242,7 @@ object SportRepository {
         val logo = t.optJSONArray("logos")?.optJSONObject(0)?.optString("href")?.takeIf { it.isNotBlank() }
             ?: t.optString("logo").takeIf { it.isNotBlank() }
             ?: "https://a.espncdn.com/i/teamlogos/soccer/500/$id.png"
-        return SportTeam(id, name, logo, league)
+        return SportTeam(id, name, logo, league, t.optString("displayName"))
     }
 
     /** ESPN nennt deutsche Vereine englisch – die gängigen Namen eindeutschen. */

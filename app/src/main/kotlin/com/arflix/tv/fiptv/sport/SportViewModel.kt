@@ -25,6 +25,10 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 sealed interface SportView {
+    /** Sports-Hub: Spiele mit verfügbaren Quellen (TV-Sender, Stremio) */
+    data object Hub : SportView
+    /** Quellen eines Spiels */
+    data class Sources(val match: SportMatch) : SportView
     data object MyTeams : SportView
     data class League(val league: SportLeague, val tab: Int = 0) : SportView  // 0 Tabelle, 1 Spiele, 2 Teams
     data class Team(val team: SportTeam) : SportView
@@ -35,7 +39,14 @@ sealed interface SportView {
 data class TeamOverview(val team: SportTeam, val live: SportMatch?, val next: SportMatch?, val last: SportMatch?)
 
 data class SportUiState(
-    val stack: List<SportView> = listOf(SportView.MyTeams),
+    val stack: List<SportView> = listOf(SportView.Hub),
+    /** Sports-Hub: Spiele (live und kommende) */
+    val hubGames: List<SportMatch> = emptyList(),
+    val sources: Map<String, GameSources> = emptyMap(),
+    val sourcesLoading: Boolean = false,
+    /** aufgelöste Stremio-Streams je Addon-Ereignis */
+    val addonStreams: Map<String, List<com.arflix.tv.data.repository.SportsAddonStream>> = emptyMap(),
+    val resolvingAddon: String? = null,
     val followed: List<SportTeam> = emptyList(),
     val overview: List<TeamOverview> = emptyList(),
     val table: List<SportTableRow> = emptyList(),
@@ -58,7 +69,9 @@ class SportViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val profileManager: ProfileManager,
     private val cloudSyncRepository: CloudSyncRepository,
+    private val sourceFinder: SportSourceFinder,
 ) : ViewModel() {
+    private var sourcesJob: Job? = null
     private val _state = MutableStateFlow(SportUiState())
     val state: StateFlow<SportUiState> = _state.asStateFlow()
     private var job: Job? = null
@@ -69,8 +82,6 @@ class SportViewModel @Inject constructor(
         viewModelScope.launch {
             val followed = readFollowed()
             _state.update { it.copy(followed = followed) }
-            // Ohne gefolgte Teams direkt die Bundesliga-Tabelle zeigen
-            if (followed.isEmpty()) _state.update { it.copy(stack = listOf(SportView.League(SportLeague.BUNDESLIGA))) }
             load()
         }
         // Laufende Spiele jede Minute aktualisieren
@@ -79,6 +90,8 @@ class SportViewModel @Inject constructor(
                 delay(60_000)
                 val s = _state.value
                 val live = when (val v = s.view) {
+                    SportView.Hub -> s.hubGames.any { it.isLive }
+                    is SportView.Sources -> false
                     SportView.MyTeams -> s.overview.any { it.live != null }
                     is SportView.League -> v.tab == 1 && s.matches.any { it.isLive }
                     is SportView.Team -> s.matches.any { it.isLive }
@@ -139,6 +152,18 @@ class SportViewModel @Inject constructor(
         job = viewModelScope.launch {
             try {
                 when (view) {
+                    SportView.Hub -> {
+                        val games = SportLeague.entries.map { lg -> async { runCatching { SportRepository.matches(lg) }.getOrDefault(emptyList()) } }
+                            .awaitAll().flatten()
+                        val now = System.currentTimeMillis()
+                        val hub = games.filter { it.isLive || (it.state == "pre" && it.startMs - now < 8 * 24 * 3600_000L) }
+                            .sortedWith(compareByDescending<SportMatch> { it.isLive }.thenBy { it.startMs })
+                        _state.update { it.copy(hubGames = hub) }
+                        findSources(hub, force = quiet)
+                    }
+                    is SportView.Sources -> {
+                        if (_state.value.sources[view.match.id] == null) findSources(listOf(view.match))
+                    }
                     SportView.MyTeams -> {
                         val overview = _state.value.followed.map { t ->
                             async {
@@ -174,6 +199,32 @@ class SportViewModel @Inject constructor(
             } catch (e: Exception) {
                 if (!quiet) _state.update { it.copy(loading = false, error = e.message ?: "Sportdaten nicht erreichbar") }
             }
+        }
+    }
+
+    // ---------- Quellen ----------
+
+    private fun findSources(games: List<SportMatch>, force: Boolean = false) {
+        if (games.isEmpty()) return
+        sourcesJob?.cancel()
+        _state.update { it.copy(sourcesLoading = true) }
+        sourcesJob = viewModelScope.launch {
+            try {
+                val allTeams = games.flatMap { listOf(it.home.team, it.away.team) }.distinctBy { it.id }
+                val found = sourceFinder.find(games, allTeams, force)
+                _state.update { it.copy(sources = it.sources + found) }
+            } finally {
+                _state.update { it.copy(sourcesLoading = false) }
+            }
+        }
+    }
+
+    fun resolveAddon(event: com.arflix.tv.data.model.SportsAddonEvent) {
+        if (_state.value.addonStreams.containsKey(event.key)) return
+        _state.update { it.copy(resolvingAddon = event.key) }
+        viewModelScope.launch {
+            val list = sourceFinder.resolveAddon(event)
+            _state.update { it.copy(addonStreams = it.addonStreams + (event.key to list), resolvingAddon = null) }
         }
     }
 

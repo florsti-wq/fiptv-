@@ -332,10 +332,29 @@ fun AppNavigation(
         composable(FiptvNav.SPORT) {
             NavigationRailScreen(navigationRailInset, bottomInset = navigationRailBottomInset) {
                 com.arflix.tv.fiptv.sport.SportScreen(
-                    onOpenTvSports = {
-                        FiptvNav.openSportsHub = true
-                        navigateTopLevel(Screen.Tv.createRoute())
-                    }
+                    onPlayChannel = { ch ->
+                        navController.navigate(
+                            Screen.Player.createRoute(
+                                mediaType = MediaType.MOVIE,
+                                mediaId = 0,
+                                streamUrl = ch.streamUrl,
+                                preferredSourceName = ch.name,
+                                isLiveStream = true,
+                                iptvSourceId = com.arflix.tv.ui.screens.tv.live.channelPlaylistId(ch.id),
+                            )
+                        )
+                    },
+                    onPlayStream = { title, url ->
+                        navController.navigate(
+                            Screen.Player.createRoute(
+                                mediaType = MediaType.MOVIE,
+                                mediaId = 0,
+                                streamUrl = url,
+                                preferredSourceName = title,
+                                isLiveStream = true,
+                            )
+                        )
+                    },
                 )
             }
         }

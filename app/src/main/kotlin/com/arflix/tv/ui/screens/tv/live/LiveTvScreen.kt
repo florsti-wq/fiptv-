@@ -1944,13 +1944,6 @@ fun LiveTvScreen(
 
     var categoryDrawerOpen by rememberSaveable { mutableStateOf(true) }
     var sportsSelected by rememberSaveable(currentProfile?.id) { mutableStateOf(false) }
-    // fIPTV: aus dem Sport-Bereich („Live im TV“) direkt den Sports-Hub öffnen
-    LaunchedEffect(Unit) {
-        if (com.arflix.tv.navigation.FiptvNav.consumeSportsHub()) {
-            sportsSelected = true
-            if (isTouchDevice) currentMode = LiveTvStartup.LiveTvMode.Guide
-        }
-    }
     LaunchedEffect(sportsAddonInstallations, state.isConfigured) {
         if (!state.isConfigured && sportsAddonInstallations.isNotEmpty()) {
             sportsSelected = true
