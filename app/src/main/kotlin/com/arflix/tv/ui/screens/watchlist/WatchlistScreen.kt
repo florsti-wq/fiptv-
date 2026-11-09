@@ -285,7 +285,7 @@ fun WatchlistScreen(
                             Key.Enter, Key.DirectionCenter, Key.NumPadEnter -> {
                                 when(topBarFocusedItem(topIndex, currentProfile != null)) {
                                     SidebarItem.HOME -> onNavigateToHome(); SidebarItem.SEARCH -> onNavigateToSearch()
-                                    SidebarItem.TV -> onNavigateToTv(); SidebarItem.VOD -> com.arflix.tv.navigation.FiptvNav.open(com.arflix.tv.navigation.FiptvNav.VOD); SidebarItem.MEDIATHEK -> com.arflix.tv.navigation.FiptvNav.open(com.arflix.tv.navigation.FiptvNav.MEDIATHEK); SidebarItem.SETTINGS -> onNavigateToSettings(null)
+                                    SidebarItem.TV -> onNavigateToTv(); SidebarItem.VOD -> com.arflix.tv.navigation.FiptvNav.open(com.arflix.tv.navigation.FiptvNav.VOD); SidebarItem.MEDIATHEK -> com.arflix.tv.navigation.FiptvNav.open(com.arflix.tv.navigation.FiptvNav.MEDIATHEK); SidebarItem.YOUTUBE -> com.arflix.tv.navigation.FiptvNav.open(com.arflix.tv.navigation.FiptvNav.YOUTUBE); SidebarItem.SETTINGS -> onNavigateToSettings(null)
                                     SidebarItem.WATCHLIST -> firstTab.requestFocus(); null -> onSwitchProfile()
                                 }; true
                             }

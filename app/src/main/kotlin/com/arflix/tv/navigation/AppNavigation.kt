@@ -247,7 +247,7 @@ fun AppNavigation(
     // fIPTV: zusätzliche Bereiche (Mediathek …) aus allen Bildschirmen erreichbar machen
     SideEffect {
         FiptvNav.navigator = { route ->
-            if (!(isKidsProfile && (route == FiptvNav.MEDIATHEK || route == FiptvNav.VOD))) navigateTopLevel(route)
+            if (!(isKidsProfile && (route == FiptvNav.MEDIATHEK || route == FiptvNav.VOD || route == FiptvNav.YOUTUBE))) navigateTopLevel(route)
         }
     }
 
@@ -327,6 +327,13 @@ fun AppNavigation(
                         )
                     }
                 )
+            }
+        }
+
+        // fIPTV: YouTube (offizieller Player)
+        composable(FiptvNav.YOUTUBE) {
+            NavigationRailScreen(navigationRailInset, bottomInset = navigationRailBottomInset) {
+                com.arflix.tv.fiptv.youtube.YouTubeScreen(onFullscreenChanged = onOverlayFullscreenChanged)
             }
         }
 

@@ -8,6 +8,7 @@ package com.arflix.tv.navigation
 object FiptvNav {
     const val MEDIATHEK = "fiptv_mediathek"
     const val VOD = "fiptv_vod"
+    const val YOUTUBE = "fiptv_youtube"
 
     @Volatile
     var navigator: ((String) -> Unit)? = null

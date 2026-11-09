@@ -4284,7 +4284,7 @@ fun LiveTvScreen(
                                                 SidebarItem.HOME -> onNavigateToHome()
                                                 SidebarItem.WATCHLIST -> onNavigateToWatchlist()
                                                 SidebarItem.TV -> Unit
-                                                SidebarItem.VOD -> com.arflix.tv.navigation.FiptvNav.open(com.arflix.tv.navigation.FiptvNav.VOD); SidebarItem.MEDIATHEK -> com.arflix.tv.navigation.FiptvNav.open(com.arflix.tv.navigation.FiptvNav.MEDIATHEK); SidebarItem.SETTINGS -> onNavigateToSettings()
+                                                SidebarItem.VOD -> com.arflix.tv.navigation.FiptvNav.open(com.arflix.tv.navigation.FiptvNav.VOD); SidebarItem.MEDIATHEK -> com.arflix.tv.navigation.FiptvNav.open(com.arflix.tv.navigation.FiptvNav.MEDIATHEK); SidebarItem.YOUTUBE -> com.arflix.tv.navigation.FiptvNav.open(com.arflix.tv.navigation.FiptvNav.YOUTUBE); SidebarItem.SETTINGS -> onNavigateToSettings()
                                                 null -> Unit
                                             }
                                         }

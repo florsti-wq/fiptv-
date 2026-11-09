@@ -929,7 +929,7 @@ fun ArflixApp(
     val mainScreenBottomBarOffsets = remember { mutableMapOf<String, Float>() }
     val currentMainRoute = remember(currentRoute) {
         when (currentRoute?.substringBefore('?')) {
-            Screen.Home.route, Screen.Search.route, Screen.Watchlist.route, "tv", "settings", com.arflix.tv.navigation.FiptvNav.MEDIATHEK, com.arflix.tv.navigation.FiptvNav.VOD ->
+            Screen.Home.route, Screen.Search.route, Screen.Watchlist.route, "tv", "settings", com.arflix.tv.navigation.FiptvNav.MEDIATHEK, com.arflix.tv.navigation.FiptvNav.VOD, com.arflix.tv.navigation.FiptvNav.YOUTUBE ->
                 currentRoute.substringBefore('?')
             else -> null
         }

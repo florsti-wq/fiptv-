@@ -30,6 +30,7 @@ import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.VideoLibrary
 import androidx.compose.material.icons.outlined.Newspaper
+import androidx.compose.material.icons.outlined.SmartDisplay
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -68,6 +69,8 @@ enum class SidebarItem(val icon: ImageVector, @StringRes val labelRes: Int) {
     VOD(Icons.Outlined.VideoLibrary, R.string.fiptv_nav_vod),
     // fIPTV: Mediatheken der öffentlich-rechtlichen Sender
     MEDIATHEK(Icons.Outlined.Newspaper, R.string.fiptv_nav_mediathek),
+    // fIPTV: YouTube
+    YOUTUBE(Icons.Outlined.SmartDisplay, R.string.fiptv_nav_youtube),
     SETTINGS(Icons.Outlined.Settings, R.string.settings)
 }
 

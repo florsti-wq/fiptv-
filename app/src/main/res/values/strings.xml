@@ -10,6 +10,7 @@
     <string name="library_sort_release_oldest">Release date: oldest first</string>
     <string name="app_name" translatable="false">fIPTV</string>
     <string name="fiptv_nav_mediathek">Mediathek</string>
+    <string name="fiptv_nav_youtube">YouTube</string>
     <string name="fiptv_nav_vod">Filme &amp; Serien</string>
     <string name="about_credits">About &amp; Credits</string>
     <string name="about_credits_description">Metadata attribution and copyright information</string>
