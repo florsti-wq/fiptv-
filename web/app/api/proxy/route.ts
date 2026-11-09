@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
     signal: request.signal
   });
   if (HOME_LOG) {
-    console.log(`[proxy] ${response.status} ${Date.now() - started}ms ${range ? `range=${range} ` : ""}${scrubTarget(target)} type=${response.headers.get("content-type") ?? "-"} len=${response.headers.get("content-length") ?? "-"}${response.status >= 400 ? ` ${response.headers.get("x-fiptv-error") ?? ""}` : ""}`);
+    console.log(`[proxy] ${response.status} ${Date.now() - started}ms ${range ? `range=${range} ` : ""}${scrubTarget(target)} type=${response.headers.get("content-type") ?? "-"} len=${response.headers.get("content-length") ?? "-"} cr=${response.headers.get("content-range") ?? "-"}${response.status >= 400 ? ` ${response.headers.get("x-fiptv-error") ?? ""}` : ""}`);
   }
 
   const contentType = response.headers.get("content-type") ?? "application/octet-stream";
@@ -81,6 +81,12 @@ export async function GET(request: NextRequest) {
   const contentRange = response.headers.get("content-range");
   if (contentLength) headers.set("content-length", contentLength);
   if (contentRange) headers.set("content-range", contentRange);
+  let body: ReadableStream<Uint8Array> | null = response.body;
+  if (HOME_LOG && range && response.status === 206) {
+    const fixed = fitRangeResponse(range, contentRange, contentLength, body);
+    for (const [key, value] of Object.entries(fixed.headers)) value === null ? headers.delete(key) : headers.set(key, value);
+    body = fixed.body;
+  }
 
   // Cache big, rarely-changing IPTV catalog responses (multi-MB channel/VOD
   // lists, M3U playlists) on the CDN so repeat loads don't re-invoke this
@@ -91,7 +97,57 @@ export async function GET(request: NextRequest) {
   // Live "what's on now" data (get_short_epg etc.) is deliberately excluded.
   if (response.ok) cacheIptvCatalog(headers, target);
 
-  return new NextResponse(response.body, { status: response.status, headers });
+  return new NextResponse(body, { status: response.status, headers });
+}
+
+/**
+ * Manche IPTV-Anbieter ignorieren das Ende einer Range-Anfrage (liefern ab Start bis
+ * Dateiende) oder senden als Content-Length die ganze Dateigröße. Der Browser bricht
+ * dann ab („Failed to fetch“) oder wartet ewig. Hier wird die Antwort passend gemacht.
+ */
+function fitRangeResponse(range: string, contentRange: string | null, _contentLength: string | null, body: ReadableStream<Uint8Array> | null) {
+  const asked = range.match(/^bytes=(\d+)-(\d*)$/);
+  const sent = contentRange?.match(/^bytes (\d+)-(\d+)\/(\d+|\*)$/);
+  const headers: Record<string, string | null> = {};
+  if (!asked || !body) return { headers, body };
+  const start = Number(asked[1]);
+  const askedEnd = asked[2] ? Number(asked[2]) : NaN;
+  if (!sent) {
+    // Ohne Content-Range ist die Länge unzuverlässig: nur eine begrenzte Anfrage kürzen.
+    if (Number.isFinite(askedEnd) && askedEnd >= start) {
+      headers["content-length"] = String(askedEnd - start + 1);
+      return { headers, body: limitStream(body, askedEnd - start + 1) };
+    }
+    headers["content-length"] = null;
+    return { headers, body };
+  }
+  const sentStart = Number(sent[1]);
+  const sentEnd = Number(sent[2]);
+  const total = sent[3];
+  if (sentStart !== start) return { headers, body };
+  const end = Number.isFinite(askedEnd) ? Math.min(askedEnd, sentEnd) : sentEnd;
+  if (end < start) return { headers, body };
+  const want = end - start + 1;
+  headers["content-length"] = String(want);
+  headers["content-range"] = `bytes ${start}-${end}/${total}`;
+  return { headers, body: sentEnd > end ? limitStream(body, want) : body };
+}
+
+function limitStream(body: ReadableStream<Uint8Array>, limit: number) {
+  const reader = body.getReader();
+  let left = limit;
+  return new ReadableStream<Uint8Array>({
+    async pull(controller) {
+      if (left <= 0) { controller.close(); void reader.cancel().catch(() => undefined); return; }
+      const chunk = await reader.read();
+      if (chunk.done) { controller.close(); return; }
+      const part = chunk.value.byteLength > left ? chunk.value.subarray(0, left) : chunk.value;
+      left -= part.byteLength;
+      controller.enqueue(part);
+      if (left <= 0) { controller.close(); void reader.cancel().catch(() => undefined); }
+    },
+    cancel(reason) { return reader.cancel(reason); }
+  });
 }
 
 const CACHEABLE_XTREAM_ACTIONS = new Set([
