@@ -91,8 +91,14 @@ export function usePlaybackEngine({ autoSourceHopsRef, currentStreamRef, failure
           const { probeAndPrepareRemux } = await import("@/lib/remux");
           const iptvVod = stream.addonId === "iptv_xtream_vod";
           const directIptv = iptvVod && stream.originalUrl && stream.originalUrl !== stream.url;
-          const prepared = await probeAndPrepareRemux(directIptv ? stream.originalUrl! : stream.url!,
-            directIptv ? undefined : stream.behaviorHints?.proxyHeaders?.request, settings.audioLanguage,
+          // fIPTV Heim-PC/Windows-App: der eigene Server reicht die Datei mit allen nötigen
+          // Kopfzeilen durch (kein CORS-Problem, Anfragen kommen von der Heim-IP).
+          const remuxSource = directIptv ? stream.originalUrl! : stream.url!;
+          const homeProxied = config.allowNetlifyMediaProxy && /^https?:\/\//i.test(remuxSource) && !remuxSource.startsWith(window.location.origin)
+            ? proxiedUrl(remuxSource, { ...liveTvProxyHeaders(), ...(stream.behaviorHints?.proxyHeaders?.request ?? {}) })
+            : null;
+          const prepared = await probeAndPrepareRemux(homeProxied ?? remuxSource,
+            homeProxied || directIptv ? undefined : stream.behaviorHints?.proxyHeaders?.request, settings.audioLanguage,
             { signal: controller.signal, onError: remuxFailed, expectDolbyVision: hasDolbyVision(stream),
               fallbackUrl: directIptv ? stream.url! : undefined, iptv: iptvVod });
           if (cancelled || recovering) { prepared?.destroy(); return; }

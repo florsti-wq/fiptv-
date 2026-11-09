@@ -135,6 +135,15 @@ function createWindow() {
   mainWindow.on("closed", () => { mainWindow = null; });
 
   const wc = mainWindow.webContents;
+  // Warnungen/Fehler der Seite mitschreiben (Alt → fIPTV → Protokoll öffnen zeigt server.log;
+  // daneben liegt renderer.log), ohne Zugangsdaten aus Adressen.
+  const rendererLog = fs.createWriteStream(path.join(app.getPath("userData"), "renderer.log"), { flags: "w" });
+  wc.on("console-message", (event) => {
+    const level = event.level ?? event.params?.level;
+    if (level === "info" || level === "debug" || level === 0 || level === 1) return;
+    const text = String(event.message ?? event.params?.message ?? "").replace(/(username=|password=|\/(?:movie|series|live)\/)[^&/\s"]+(\/[^&/\s"]+)?/gi, "$1***");
+    rendererLog.write(`${new Date().toISOString()} ${level} ${text.slice(0, 2000)}\n`);
+  });
   // Neue Fenster (Links mit target=_blank) im normalen Browser öffnen.
   wc.setWindowOpenHandler(({ url }) => {
     if (/^https?:/i.test(url) && !isAppUrl(url)) shell.openExternal(url);
