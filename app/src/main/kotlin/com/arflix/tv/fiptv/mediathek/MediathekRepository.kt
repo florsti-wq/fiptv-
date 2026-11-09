@@ -82,10 +82,12 @@ object MediathekRepository {
         return out
     }
 
-    fun buildQuery(search: String?, channel: String?, minDurationSec: Int?, offset: Int, size: Int): JSONObject {
+    fun buildQuery(search: String?, channel: String?, minDurationSec: Int?, offset: Int, size: Int, topic: String? = null): JSONObject {
         val queries = JSONArray()
         val parts = parseSearch(search).toMutableList()
         if (!channel.isNullOrBlank()) parts += listOf("channel") to channel
+        // ganzes Thema (Sendungsname) als eine Abfrage, auch mit Leerzeichen
+        if (!topic.isNullOrBlank()) parts += listOf("topic") to topic.replace(',', ' ').trim()
         for ((fields, q) in parts) {
             queries.put(JSONObject().put("fields", JSONArray(fields)).put("query", q))
         }
@@ -144,8 +146,9 @@ object MediathekRepository {
         minDurationSec: Int? = null,
         offset: Int = 0,
         size: Int = 40,
+        topic: String? = null,
     ): MediathekPage = withContext(Dispatchers.IO) {
-        val body = buildQuery(search, channel, minDurationSec, offset, size).toString()
+        val body = buildQuery(search, channel, minDurationSec, offset, size, topic).toString()
             // MediathekViewWeb erwartet text/plain mit JSON-Inhalt
             .toRequestBody("text/plain; charset=utf-8".toMediaType())
         val request = Request.Builder().url(API).post(body).build()
@@ -163,5 +166,37 @@ object MediathekRepository {
             val r = m % 60
             if (r > 0) "$h Std. $r Min." else "$h Std."
         } else "${maxOf(1, m)} Min."
+    }
+
+    /** Kurzname des Senders (ARD, ZDF …) */
+    fun channelLabel(channel: String): String =
+        channels.firstOrNull { channel.contains(it.id, ignoreCase = true) }?.label ?: channel
+
+    /** Themen, die nur ein Sammelbehälter sind (z. B. „Filme im Ersten“) – dann zählt der Titel. */
+    private val containerTopic = Regex("(?i)(film|kino|movie|doku|reportage|dokumentation|serie|krimi|thriller|komödie|drama)")
+    fun isContainerTopic(topic: String): Boolean = topic.isBlank() || containerTopic.containsMatchIn(topic)
+
+    /** Schlüssel für „eine Kachel pro Sendung“ */
+    fun showKey(item: MediathekItem): String =
+        if (isContainerTopic(item.topic)) "t:" + item.title.lowercase() else "s:" + item.topic.lowercase()
+
+    /** Farbe je Sender für Kacheln ohne Bild */
+    fun channelColor(channel: String): Long = when (channelLabel(channel)) {
+        "ARD" -> 0xFF0B3D91
+        "ZDF" -> 0xFFF07800
+        "arte" -> 0xFFE4312B
+        "3sat" -> 0xFF9C1C8C
+        "phoenix" -> 0xFF0073B7
+        "KiKA" -> 0xFF2EA43A
+        "BR" -> 0xFF0067B3
+        "HR" -> 0xFF005EB8
+        "MDR" -> 0xFF004B87
+        "NDR" -> 0xFF1460AA
+        "rbb" -> 0xFFE31F25
+        "SWR" -> 0xFF00A0D2
+        "WDR" -> 0xFF00305E
+        "ORF" -> 0xFFD7141A
+        "SRF" -> 0xFFAF001E
+        else -> 0xFF3A3F55
     }
 }

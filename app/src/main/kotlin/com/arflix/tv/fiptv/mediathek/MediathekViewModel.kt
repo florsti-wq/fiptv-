@@ -2,11 +2,12 @@ package com.arflix.tv.fiptv.mediathek
 
 import android.content.Context
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.arflix.tv.data.api.TmdbApi
 import com.arflix.tv.data.repository.ProfileManager
 import com.arflix.tv.fiptv.FiptvResume
-import dagger.hilt.android.qualifiers.ApplicationContext
-import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,18 +16,45 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-data class MediathekUiState(
-    /** null = alle Sender */
+/** Eine Reihe im Netflix-Stil */
+data class MediathekRowDef(
+    val key: String,
+    val title: String,
+    val search: String? = null,
     val channel: String? = null,
+    val topic: String? = null,
+    /** Mindestlänge in Minuten; null = Einstellung „Nur ganze Sendungen“ */
+    val minMinutes: Int? = null,
+    /** eine Kachel pro Sendung statt jeder Folge */
+    val onePerShow: Boolean = true,
+)
+
+data class MediathekRow(
+    val def: MediathekRowDef,
+    val items: List<MediathekItem> = emptyList(),
+    val loading: Boolean = false,
+    val loaded: Boolean = false,
+    val error: String? = null,
+)
+
+data class MediathekDetail(
+    val item: MediathekItem,
+    val episodes: List<MediathekItem> = emptyList(),
+    val loading: Boolean = true,
+)
+
+data class MediathekUiState(
+    val rows: List<MediathekRow> = emptyList(),
     val search: String = "",
     /** nur längere Beiträge (ab 20 Min.) – blendet Clips und Trailer aus */
     val longOnly: Boolean = true,
-    val items: List<MediathekItem> = emptyList(),
-    val total: Int? = null,
-    val loading: Boolean = false,
-    val error: String? = null,
+    val searchItems: List<MediathekItem> = emptyList(),
+    val searchTotal: Int? = null,
+    val searchLoading: Boolean = false,
+    val searchError: String? = null,
+    val detail: MediathekDetail? = null,
 ) {
-    val canLoadMore: Boolean get() = !loading && error == null && (total == null || items.size < total)
+    val canLoadMoreSearch: Boolean get() = !searchLoading && searchError == null && (searchTotal == null || searchItems.size < searchTotal)
 }
 
 @HiltViewModel
@@ -34,81 +62,170 @@ class MediathekViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val profileManager: ProfileManager,
     private val cloudSyncRepository: com.arflix.tv.data.repository.CloudSyncRepository,
+    tmdbApi: TmdbApi,
 ) : ViewModel() {
-    private val _state = MutableStateFlow(MediathekUiState())
+    private val artCache = MediathekArtCache(context, tmdbApi)
+
+    private val defs: List<MediathekRowDef> = buildList {
+        add(MediathekRowDef("new", "Neu in den Mediatheken"))
+        add(MediathekRowDef("long", "Filme & lange Dokus", minMinutes = 80))
+        add(MediathekRowDef("tatort", "Tatort", topic = "Tatort", minMinutes = 60, onePerShow = false))
+        add(MediathekRowDef("polizeiruf", "Polizeiruf 110", topic = "Polizeiruf 110", minMinutes = 60, onePerShow = false))
+        add(MediathekRowDef("terrax", "Terra X", topic = "Terra X", onePerShow = false))
+        add(MediathekRowDef("doku", "Dokus & Reportagen", search = "#doku"))
+        add(MediathekRowDef("kids", "Für Kinder", channel = "kika", minMinutes = 10))
+        MediathekRepository.channels.filter { it.id != "kika" }.forEach { ch ->
+            add(MediathekRowDef("ch_${ch.id}", "Neu bei ${ch.label}", channel = ch.id))
+        }
+    }
+
+    private val _state = MutableStateFlow(MediathekUiState(rows = defs.map { MediathekRow(it) }))
     val state: StateFlow<MediathekUiState> = _state.asStateFlow()
-    private var job: Job? = null
+    private val rowJobs = mutableMapOf<String, Job>()
+    private var searchJob: Job? = null
+    private var detailJob: Job? = null
 
     init {
-        reload()
+        // die ersten Reihen sofort, der Rest wenn sie ins Bild kommen
+        defs.take(3).forEach { ensureRow(it.key) }
     }
 
-    fun selectChannel(id: String?) {
-        if (_state.value.channel == id) return
-        _state.update { it.copy(channel = id) }
-        reload()
+    private fun minDuration(def: MediathekRowDef, longOnly: Boolean): Int? =
+        def.minMinutes?.let { it * 60 } ?: if (longOnly) 20 * 60 else null
+
+    fun ensureRow(key: String) {
+        val row = _state.value.rows.firstOrNull { it.def.key == key } ?: return
+        if (row.loaded || row.loading || rowJobs[key]?.isActive == true) return
+        updateRow(key) { it.copy(loading = true, error = null) }
+        rowJobs[key] = viewModelScope.launch {
+            try {
+                val def = row.def
+                val page = MediathekRepository.query(
+                    search = def.search,
+                    channel = def.channel,
+                    topic = def.topic,
+                    minDurationSec = minDuration(def, _state.value.longOnly),
+                    size = if (def.onePerShow) 60 else 30,
+                )
+                val items = if (def.onePerShow) page.items.distinctBy { MediathekRepository.showKey(it) } else page.items
+                updateRow(key) { it.copy(items = items.take(30), loading = false, loaded = true) }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                updateRow(key) { it.copy(loading = false, loaded = true, error = e.message ?: "Mediathek nicht erreichbar") }
+            }
+        }
     }
 
-    fun setSearch(text: String) {
-        _state.update { it.copy(search = text.trim()) }
-        reload()
+    fun retryRow(key: String) {
+        updateRow(key) { it.copy(loaded = false, error = null) }
+        ensureRow(key)
+    }
+
+    private fun updateRow(key: String, change: (MediathekRow) -> MediathekRow) {
+        _state.update { s -> s.copy(rows = s.rows.map { if (it.def.key == key) change(it) else it }) }
     }
 
     fun toggleLongOnly() {
-        _state.update { it.copy(longOnly = !it.longOnly) }
-        reload()
+        rowJobs.values.forEach { it.cancel() }
+        rowJobs.clear()
+        _state.update { s -> s.copy(longOnly = !s.longOnly, rows = defs.map { MediathekRow(it) }) }
+        defs.take(3).forEach { ensureRow(it.key) }
+        if (_state.value.search.isNotBlank()) reloadSearch()
     }
 
-    fun reload() {
-        job?.cancel()
-        _state.update { it.copy(items = emptyList(), total = null, error = null) }
-        load(append = false)
+    // ---------- Suche ----------
+    fun setSearch(text: String) {
+        _state.update { it.copy(search = text.trim()) }
+        reloadSearch()
     }
 
-    fun loadMore() {
-        if (!_state.value.canLoadMore || job?.isActive == true) return
-        load(append = true)
+    private fun reloadSearch() {
+        searchJob?.cancel()
+        _state.update { it.copy(searchItems = emptyList(), searchTotal = null, searchError = null) }
+        if (_state.value.search.isNotBlank()) loadSearch(append = false)
     }
 
-    private fun load(append: Boolean) {
+    fun loadMoreSearch() {
+        if (!_state.value.canLoadMoreSearch || searchJob?.isActive == true) return
+        loadSearch(append = true)
+    }
+
+    private fun loadSearch(append: Boolean) {
         val s = _state.value
-        _state.update { it.copy(loading = true, error = null) }
-        job = viewModelScope.launch {
+        _state.update { it.copy(searchLoading = true, searchError = null) }
+        searchJob = viewModelScope.launch {
             try {
                 val page = MediathekRepository.query(
-                    search = s.search.ifBlank { null },
-                    channel = s.channel,
+                    search = s.search,
+                    channel = null,
                     minDurationSec = if (s.longOnly) 20 * 60 else null,
-                    offset = if (append) s.items.size else 0,
+                    offset = if (append) s.searchItems.size else 0,
                 )
                 _state.update {
                     it.copy(
-                        items = if (append) it.items + page.items else page.items,
-                        total = page.total,
-                        loading = false,
+                        searchItems = (if (append) it.searchItems + page.items else page.items).distinctBy { i -> i.id },
+                        searchTotal = page.total,
+                        searchLoading = false,
                     )
                 }
             } catch (e: kotlinx.coroutines.CancellationException) {
                 throw e
             } catch (e: Exception) {
-                _state.update { it.copy(loading = false, error = e.message ?: "Mediathek nicht erreichbar") }
+                _state.update { it.copy(searchLoading = false, searchError = e.message ?: "Mediathek nicht erreichbar") }
             }
         }
     }
+
+    // ---------- Detailseite ----------
+    fun openDetail(item: MediathekItem) {
+        detailJob?.cancel()
+        _state.update { it.copy(detail = MediathekDetail(item)) }
+        if (MediathekRepository.isContainerTopic(item.topic)) {
+            // Film o. Ä.: keine weiteren Folgen
+            _state.update { it.copy(detail = it.detail?.copy(loading = false)) }
+            return
+        }
+        detailJob = viewModelScope.launch {
+            val episodes = runCatching {
+                MediathekRepository.query(
+                    search = null,
+                    channel = MediathekRepository.channels.firstOrNull { item.channel.contains(it.id, ignoreCase = true) }?.id,
+                    topic = item.topic,
+                    minDurationSec = null,
+                    size = 50,
+                ).items.filter { it.topic.equals(item.topic, ignoreCase = true) }.distinctBy { it.id }
+            }.getOrDefault(emptyList())
+            _state.update { s ->
+                if (s.detail?.item?.id != item.id) s
+                else s.copy(detail = s.detail.copy(episodes = episodes, loading = false))
+            }
+        }
+    }
+
+    fun closeDetail() {
+        detailJob?.cancel()
+        _state.update { it.copy(detail = null) }
+    }
+
+    // ---------- Bilder ----------
+    fun cachedArt(item: MediathekItem): MediathekArt? = artCache.cached(item)
+    suspend fun art(item: MediathekItem): MediathekArt = artCache.lookup(item)
 
     // ---------- fIPTV: Weiterschauen ----------
     private val profileId: String get() = profileManager.getProfileIdSync()
 
     /** Sendung anmelden; liefert Eintrag und ggf. Startposition. */
-    fun prepare(item: MediathekItem): Pair<FiptvResume.Entry, Long?>? {
+    fun prepare(item: MediathekItem, fromStart: Boolean = false): Pair<FiptvResume.Entry, Long?>? {
         val url = item.bestVideo ?: return null
-        val sender = MediathekRepository.channels.firstOrNull { item.channel.contains(it.id, ignoreCase = true) }?.label ?: item.channel
+        val sender = MediathekRepository.channelLabel(item.channel)
         val entry = FiptvResume.Entry(
             url = url, kind = FiptvResume.Kind.MEDIATHEK, title = item.title,
             subtitle = listOf(sender, item.topic.takeIf { it != item.title }.orEmpty()).filter { it.isNotBlank() }.joinToString(" · "),
+            image = artCache.cached(item)?.tile,
         )
         FiptvResume.register(context, profileId, entry)
-        return entry to FiptvResume.startPosition(context, profileId, url)
+        return entry to (if (fromStart) null else FiptvResume.startPosition(context, profileId, url))
     }
 
     fun resumeEntries(): List<FiptvResume.Entry> =
