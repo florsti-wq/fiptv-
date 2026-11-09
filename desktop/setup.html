@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'">
+<title>fIPTV einrichten</title>
+<style>
+  body{margin:0;min-height:100vh;display:grid;place-items:center;background:radial-gradient(circle at 30% 20%,#0b2a33,#000 60%);color:#e2e8f0;font-family:"Segoe UI",sans-serif}
+  .card{width:min(520px,90vw);background:#0f1115;border:1px solid #23262d;border-radius:18px;padding:32px}
+  h1{margin:0 0 4px;font-size:34px;background:linear-gradient(90deg,#22D3EE,#A855F7);-webkit-background-clip:text;color:transparent}
+  p{color:#94a3b8;line-height:1.5}
+  label{display:block;margin:18px 0 6px;font-weight:600}
+  input{width:100%;box-sizing:border-box;padding:12px 14px;border-radius:10px;border:1px solid #334155;background:#0b0d11;color:#e2e8f0;font-size:15px}
+  button{margin-top:18px;width:100%;padding:13px;border:0;border-radius:10px;font-size:16px;font-weight:600;color:#001018;background:linear-gradient(90deg,#22D3EE,#A855F7);cursor:pointer}
+  .msg{margin-top:14px;color:#fca5a5;min-height:1.2em}
+</style>
+</head>
+<body>
+  <form class="card" id="form">
+    <h1>fIPTV</h1>
+    <p>Einmalige Einrichtung: Für Filmbilder und Beschreibungen braucht fIPTV deinen TMDB-Schlüssel – denselben wie bei Netlify und GitHub. Er bleibt nur auf diesem PC.</p>
+    <label for="key">TMDB-Schlüssel</label>
+    <input id="key" autocomplete="off" spellcheck="false" placeholder="eyJ… oder 32-stelliger Schlüssel">
+    <button type="submit">Speichern und starten</button>
+    <div class="msg" id="msg"></div>
+  </form>
+<script>
+  const params = new URLSearchParams(location.search);
+  if (params.get("msg")) document.getElementById("msg").textContent = params.get("msg");
+  document.getElementById("form").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const result = await window.fiptvDesktop.saveConfig({ tmdbKey: document.getElementById("key").value });
+    if (!result.ok) document.getElementById("msg").textContent = result.error;
+  });
+</script>
+</body>
+</html>

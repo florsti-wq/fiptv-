@@ -120,17 +120,17 @@ async function fromProviders(playlists: IptvPlaylistEntry[], kind: "movies" | "s
   return [...new Map(results.flat().map(source => [source.url, source])).values()];
 }
 
-function movieVodUrl(info: XtreamInfo, streamId: string | number, ext?: string) {
+export function movieVodUrl(info: XtreamInfo, streamId: string | number, ext?: string) {
   const extension = (ext || "mkv").replace(/^\./, "");
   return `${info.baseUrl}/movie/${encodeURIComponent(info.username)}/${encodeURIComponent(info.password)}/${streamId}.${extension}`;
 }
 
-function seriesVodUrl(info: XtreamInfo, streamId: string | number, ext?: string) {
+export function seriesVodUrl(info: XtreamInfo, streamId: string | number, ext?: string) {
   const extension = (ext || "mkv").replace(/^\./, "");
   return `${info.baseUrl}/series/${encodeURIComponent(info.username)}/${encodeURIComponent(info.password)}/${streamId}.${extension}`;
 }
 
-function toSource(name: string, url: string, quality: string, addonName: string, userAgent?: string): StreamSource {
+export function toSource(name: string, url: string, quality: string, addonName: string, userAgent?: string): StreamSource {
   return {
     source: name,
     addonName,
@@ -151,7 +151,7 @@ function toSource(name: string, url: string, quality: string, addonName: string,
   };
 }
 
-function inferQuality(text: string): string {
+export function inferQuality(text: string): string {
   const upper = text.toUpperCase();
   if (upper.includes("2160") || upper.includes("4K") || upper.includes("UHD")) return "4K";
   if (upper.includes("1080")) return "1080p";

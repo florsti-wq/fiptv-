@@ -1,0 +1,46 @@
+{
+  "name": "fiptv-desktop",
+  "productName": "fIPTV",
+  "version": "1.0.0",
+  "description": "fIPTV für Windows",
+  "author": "fIPTV",
+  "license": "Apache-2.0",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win nsis --publish never"
+  },
+  "dependencies": {
+    "electron-updater": "^6.6.2"
+  },
+  "devDependencies": {
+    "electron": "^38.0.0",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.fiptv.desktop",
+    "productName": "fIPTV",
+    "copyright": "fIPTV – auf Basis von ARVIO (Apache 2.0)",
+    "directories": { "output": "dist", "buildResources": "build" },
+    "files": ["main.js", "preload.js", "setup.html", "build/icon.png", "package.json"],
+    "extraResources": [{ "from": "server", "to": "server", "filter": ["**/*"] }],
+    "asar": true,
+    "win": {
+      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "icon": "build/icon.ico",
+      "artifactName": "fIPTV-Setup.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "fIPTV",
+      "language": "1031",
+      "deleteAppDataOnUninstall": false
+    },
+    "publish": [{ "provider": "generic", "url": "https://github.com/florsti-wq/fiptv-/releases/download/desktop-latest" }]
+  }
+}

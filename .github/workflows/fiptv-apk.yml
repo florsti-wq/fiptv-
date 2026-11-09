@@ -16,6 +16,8 @@ on:
       - "netlify.toml"
       - "supabase/**"
       - "resolver-worker/**"
+      - "desktop/**"
+      - ".github/workflows/fiptv-desktop.yml"
       - ".github/workflows/fiptv-resolver.yml"
       - ".github/workflows/fiptv-web-check.yml"
       - "screenshots/**"
