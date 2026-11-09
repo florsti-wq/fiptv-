@@ -56,9 +56,16 @@ export function safeProxyHeaders(headers: HeadersInit = {}) {
 export async function safeProxyFetch(target: URL, init: RequestInit, options: { maxBytes?: number; textOnly?: boolean } = {}): Promise<Response> {
   let current = target;
   let headers = safeProxyHeaders(init.headers);
-  const signal = AbortSignal.any([AbortSignal.timeout(25_000), ...(init.signal ? [init.signal] : [])]);
   const allowMedia = !options.textOnly && allowsMediaProxy();
-  const maxBytes = Math.min(MAX_BYTES, options.maxBytes ?? MAX_BYTES);
+  // fIPTV Heim-PC/Windows-App: Filme laufen über den eigenen PC. Dann gilt das
+  // 25-s-Limit nur bis zur Antwort des Anbieters, und es gibt keine Größengrenze
+  // (ein Film ist schnell mehrere GB groß).
+  const homeMedia = allowMedia && process.env.FIPTV_HOME_PROXY === "true" && !process.env.NETLIFY;
+  const headerTimeout = new AbortController();
+  const headerTimer = setTimeout(() => headerTimeout.abort(new DOMException("Proxy target timed out", "TimeoutError")), 25_000);
+  const signal = AbortSignal.any([homeMedia ? headerTimeout.signal : AbortSignal.timeout(25_000), ...(init.signal ? [init.signal] : [])]);
+  if (!homeMedia) clearTimeout(headerTimer);
+  const maxBytes = homeMedia ? Number.POSITIVE_INFINITY : Math.min(MAX_BYTES, options.maxBytes ?? MAX_BYTES);
   for (let hop = 0; hop <= 4; hop++) {
     signal.throwIfAborted();
     if (!['https:', 'http:'].includes(current.protocol) || current.username || current.password) throw new Error("Blocked proxy target");
@@ -94,6 +101,7 @@ export async function safeProxyFetch(target: URL, init: RequestInit, options: { 
       current = next;
       continue;
     }
+    if (homeMedia) clearTimeout(headerTimer);
     const type = (response.headers.get("content-type") ?? "").split(";")[0].trim().toLowerCase();
     const imageResponse = !allowMedia && !options.textOnly && type.startsWith("image/");
     const limit = imageResponse ? Math.min(maxBytes, MAX_IMAGE_BYTES) : maxBytes;
@@ -127,7 +135,9 @@ export async function safeProxyFetch(target: URL, init: RequestInit, options: { 
       return chunk;
     };
     const resultHeaders = new Headers(Object.fromEntries(response.headers));
-    resultHeaders.delete("content-encoding"); resultHeaders.delete("content-length");
+    // Heim-Modus: Länge behalten, damit der Player spulen kann (nur ohne Kompression).
+    const keepLength = homeMedia && !response.headers.get("content-encoding");
+    resultHeaders.delete("content-encoding"); if (!keepLength) resultHeaders.delete("content-length");
     resultHeaders.set("x-arvio-final-url", current.toString());
     // Verify bounded images without paying to re-encode every logo/poster.
     if (imageResponse) {

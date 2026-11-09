@@ -230,7 +230,30 @@ function checkUpdates(manual = false) {
   autoUpdater.checkForUpdates().catch(() => undefined);
 }
 
+// Die App-Seite darf Filme direkt beim Anbieter laden (z. B. für MKV-Umwandlung im
+// Player). Browser verlangen dafür CORS-Freigaben, die IPTV-Anbieter nicht senden –
+// in der eigenen App ergänzen wir sie für Anfragen dieser Seite.
+function allowProviderCors() {
+  const { session } = require("electron");
+  const origin = `http://localhost:${PORT}`;
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    let url;
+    try { url = new URL(details.url); } catch { callback({}); return; }
+    const fromApp = (details.referrer || "").startsWith(origin) || details.webContentsId === mainWindow?.webContents.id;
+    if (!fromApp || isAppUrl(details.url) || !/^https?:$/.test(url.protocol) || url.hostname === "fipsite.netlify.app") { callback({}); return; }
+    const headers = { ...details.responseHeaders };
+    for (const key of Object.keys(headers)) if (/^access-control-/i.test(key)) delete headers[key];
+    headers["Access-Control-Allow-Origin"] = [origin];
+    headers["Access-Control-Allow-Headers"] = ["*"];
+    headers["Access-Control-Allow-Methods"] = ["GET, HEAD, OPTIONS"];
+    headers["Access-Control-Expose-Headers"] = ["Content-Length, Content-Range, Content-Type, Accept-Ranges"];
+    const preflight = details.method === "OPTIONS";
+    callback(preflight ? { responseHeaders: headers, statusLine: "HTTP/1.1 204 No Content" } : { responseHeaders: headers });
+  });
+}
+
 app.whenReady().then(() => {
+  allowProviderCors();
   buildMenu();
   createWindow();
   launch();
