@@ -70,15 +70,15 @@
     <application
         android:name=".ArflixApplication"
         android:allowBackup="false"
-        android:banner="@drawable/app_banner"
+        android:banner="@drawable/fiptv_banner"
         android:enableOnBackInvokedCallback="true"
         android:extractNativeLibs="false"
         android:hardwareAccelerated="true"
         android:largeHeap="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/ic_fiptv"
         android:label="@string/app_name"
         android:networkSecurityConfig="@xml/network_security_config"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@mipmap/ic_fiptv_round"
         android:supportsRtl="true"
         android:localeConfig="@xml/locale_config"
         android:theme="@style/Theme.ArflixTV"
@@ -111,7 +111,7 @@
         <!-- Main Activity - Compose Host -->
         <activity
             android:name=".MainActivity"
-            android:banner="@drawable/app_banner"
+            android:banner="@drawable/fiptv_banner"
             android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|keyboard|keyboardHidden"
             android:exported="true"
             android:hardwareAccelerated="true"

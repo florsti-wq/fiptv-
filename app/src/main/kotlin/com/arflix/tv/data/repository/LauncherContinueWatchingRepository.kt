@@ -249,7 +249,7 @@ class LauncherContinueWatchingRepository @Inject constructor(
         ) ?: return null
 
         val channelId = ContentUris.parseId(channelUri)
-        BitmapFactory.decodeResource(context.resources, R.mipmap.ic_launcher)?.let { bitmap ->
+        BitmapFactory.decodeResource(context.resources, R.mipmap.ic_fiptv)?.let { bitmap ->
             runCatching { ChannelLogoUtils.storeChannelLogo(context, channelId, bitmap) }
         }
         runCatching { TvContractCompat.requestChannelBrowsable(context, channelId) }
