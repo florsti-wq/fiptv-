@@ -5,7 +5,7 @@ import java.time.LocalDate
 
 enum class ReleaseCalendarSource(val id: String, val label: String) {
     ALL("all", "All watchlists"),
-    ARVIO("arvio", "ARVIO watchlist"),
+    ARVIO("arvio", "fIPTV watchlist"),
     TRAKT("trakt", "Trakt"),
     SIMKL("simkl", "SIMKL"),
     MDBLIST("mdblist", "MDBList")

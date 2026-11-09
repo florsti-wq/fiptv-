@@ -14,7 +14,7 @@
     <string name="about_credits">About &amp; Credits</string>
     <string name="about_credits_description">Metadata attribution and copyright information</string>
     <string name="tmdb_attribution" translatable="false">This product uses the TMDB API but is not endorsed or certified by TMDB.</string>
-    <string name="authorized_sources_notice">ARVIO is a media hub for sources you configure. A catalog entry does not grant viewing rights. Connect only services and media you are authorized to use.</string>
+    <string name="authorized_sources_notice">fIPTV is a media hub for sources you configure. A catalog entry does not grant viewing rights. Connect only services and media you are authorized to use.</string>
     <string name="credits_and_copyright">Credits &amp; copyright reports</string>
     <string name="thesportsdb_attribution">Sports data and artwork provided by TheSportsDB.</string>
     <string name="trailers_on_youtube">Trailers on YouTube</string>
@@ -162,7 +162,7 @@
     <string name="volume_boost">Volume Boost</string>
     <string name="dns_provider">DNS Provider</string>
     <string name="custom_user_agent">Custom User-Agent</string>
-    <string name="custom_user_agent_desc">Leave blank to use ARVIO defaults. Custom values apply when a source does not provide its own User-Agent.</string>
+    <string name="custom_user_agent_desc">Leave blank to use fIPTV defaults. Custom values apply when a source does not provide its own User-Agent.</string>
     <string name="add_playlist">Add Playlist</string>
     <string name="refresh_iptv">Refresh TV Data</string>
     <string name="delete_iptv">Delete TV Playlists</string>
@@ -266,7 +266,7 @@
     <string name="set_profile_pin">Set Profile PIN</string>
     <string name="done">Done</string>
     <string name="save">Save</string>
-    <string name="connect_to_cloud">Connect to ARVIO Cloud</string>
+    <string name="connect_to_cloud">Connect to fIPTV Cloud</string>
     <string name="view_collection">View Collection</string>
 
     <!-- In-player subtitle settings panel -->
@@ -389,7 +389,7 @@
     <string name="settings_home_server">Home Server</string>
     <string name="library_homeserver_tab">Homeserver</string>
     <string name="settings_trakt_rate_limited">Trakt is temporarily limiting activation requests. Please wait a few minutes and try again.</string>
-    <string name="settings_app_version_label">ARVIO V%1$s</string>
+    <string name="settings_app_version_label">fIPTV V%1$s</string>
     <string name="settings_label_url">URL</string>
     <string name="settings_home_server_https_note">Use HTTPS where possible. HTTP server URLs are allowed for local networks but are not encrypted.</string>
     <string name="homeserver_silo_help">Silo: use the Jellyfin-compatible server address supplied by the owner. If needed, enter username#ProfileName (or email#ProfileName). For a protected profile, enter password#PIN. An admin account is not required.</string>
@@ -426,7 +426,7 @@
     <string name="settings_simkl_instruction_touch">Tap the button. It copies the code and opens %1$s. Paste the code there (long-press the field) and sign in. This window finishes on its own.</string>
     <string name="settings_activation_visit_instruction">Visit %1$s on your phone or computer and enter this code:</string>
     <string name="settings_input_hint_enter">Enter %1$s...</string>
-    <string name="settings_iptv_epg_note">EPG supports multiple sources for this playlist. Add one URL per line; ARVIO will match them in order.</string>
+    <string name="settings_iptv_epg_note">EPG supports multiple sources for this playlist. Add one URL per line; fIPTV will match them in order.</string>
     <string name="settings_label_playlist_name">Playlist Name</string>
     <string name="settings_label_m3u_or_xtream">M3U URL or Xtream Host</string>
     <string name="settings_ph_provider_host">https://provider.host:port</string>
@@ -447,22 +447,22 @@
     <string name="settings_label_title">Title</string>
     <string name="settings_add_quality_filter">Add Quality Filter</string>
     <string name="settings_edit_quality_filter">Edit Quality Filter</string>
-    <string name="settings_plex_auth_touch_instruction">Open the auth page, sign in, then return to ARVIO. This screen will finish automatically.</string>
+    <string name="settings_plex_auth_touch_instruction">Open the auth page, sign in, then return to fIPTV. This screen will finish automatically.</string>
     <string name="settings_plex_auth_tv_instruction">Scan the QR code or open the auth page and confirm this code</string>
-    <string name="settings_jellyfin_auth_instruction">Open your Jellyfin app or web UI, go to Quick Connect, enter this code, then return to ARVIO.</string>
+    <string name="settings_jellyfin_auth_instruction">Open your Jellyfin app or web UI, go to Quick Connect, enter this code, then return to fIPTV.</string>
     <string name="settings_quality_filters_subtitle">Device-local filters. Matching streams are excluded.</string>
     <string name="settings_no_filters_yet">No filters configured yet.</string>
     <string name="settings_unnamed_device">Unnamed Device</string>
     <string name="settings_add_filter">Add Filter</string>
     <string name="settings_label_device_preset_name">Device / Preset Name</string>
     <string name="settings_label_regex_pattern">Regex Pattern</string>
-    <string name="settings_cloud_signin_title">ARVIO Cloud Sign-in</string>
+    <string name="settings_cloud_signin_title">fIPTV Cloud Sign-in</string>
     <string name="settings_label_email">Email</string>
     <string name="settings_label_password">Password</string>
     <string name="settings_btn_create">Create</string>
     <string name="settings_cloud_signin_hint_touch">Enter your email and password to sign in.</string>
     <string name="settings_cloud_signin_hint_tv">Tip: Use TV keyboard. D-pad to navigate.</string>
-    <string name="settings_cloud_pairing_title">ARVIO Cloud Pairing</string>
+    <string name="settings_cloud_pairing_title">fIPTV Cloud Pairing</string>
     <string name="settings_pair_signin_link_device">Sign in with your email and password to link this device.</string>
     <string name="settings_pair_scan_qr_link_tv">Scan this QR code to sign in and link this TV.</string>
     <string name="settings_pair_code">Code: %1$s</string>
@@ -488,7 +488,7 @@
     <string name="settings_force_trakt_sync_desc" tools:ignore="MissingTranslation">Download full watch history, playback progress and continue watching from Trakt.tv</string>
     <string name="settings_syncing_trakt_now" tools:ignore="MissingTranslation">Syncing Trakt data now…</string>
     <string name="settings_disconnect">Disconnect</string>
-    <string name="settings_cloud_disconnect_confirm_title">Disconnect ARVIO Cloud?</string>
+    <string name="settings_cloud_disconnect_confirm_title">Disconnect fIPTV Cloud?</string>
     <string name="settings_cloud_disconnect_confirm_desc">You\'ll need to sign in again to sync your settings.</string>
     <string name="settings_trakt_disconnect_confirm_title">Disconnect Trakt.tv?</string>
     <string name="settings_trakt_disconnect_confirm_desc">Your watch history and lists will no longer sync.</string>
@@ -501,7 +501,7 @@
     <string name="settings_section_audio">AUDIO</string>
     <string name="settings_section_appearance">APPEARANCE</string>
     <string name="settings_allow_unknown_sources">Allow Unknown Sources</string>
-    <string name="settings_allow_unknown_sources_desc">Allow installs from unknown sources for ARVIO so the downloaded update APK can be installed.</string>
+    <string name="settings_allow_unknown_sources_desc">Allow installs from unknown sources for fIPTV so the downloaded update APK can be installed.</string>
     <string name="settings_open_settings">Open Settings</string>
     <string name="settings_overview">Overview</string>
     <string name="settings_focused_setting">Focused setting</string>
@@ -521,7 +521,7 @@
     <string name="settings_desc_catalogs">Discover, rename, order and remove home rows and list catalogs.</string>
     <string name="settings_desc_stremio">Manage third-party addons used for catalog and source discovery.</string>
     <string name="settings_desc_accounts">Cloud sync, Trakt connection, app updates and account controls.</string>
-    <string name="settings_desc_default">Configure ARVIO for this profile.</string>
+    <string name="settings_desc_default">Configure fIPTV for this profile.</string>
     <string name="settings_pill_app">App %1$s</string>
     <string name="settings_pill_audio">Audio %1$s</string>
     <string name="settings_pill_default">Default %1$s</string>
@@ -570,7 +570,7 @@
     <string name="mdblist_code_denied">MDBList authorization denied.</string>
     <string name="mdblist_connect_with_key">Enter API Key manually</string>
     <string name="mdblist_reconnect_required">MDBList no longer accepts this connection. Connect MDBList again to resume syncing.</string>
-    <string name="mdblist_session_unavailable">MDBList could not be reached, so syncing is paused. ARVIO keeps retrying; reconnect MDBList if this lasts.</string>
+    <string name="mdblist_session_unavailable">MDBList could not be reached, so syncing is paused. fIPTV keeps retrying; reconnect MDBList if this lasts.</string>
     <string name="mdblist_library_unavailable">MDBList could not be reached right now. Try again in a few minutes.</string>
     <string name="mdblist_library_load_failed">Could not load this list from MDBList. Try again.</string>
     <!-- Tracking Integrations sub-page -->
@@ -643,7 +643,7 @@
     <string name="settings_play_build">Play build</string>
     <string name="settings_help_choose_title">Choose a setting</string>
     <string name="settings_help_choose_desc">Move into the center panel to edit the selected section.</string>
-    <string name="settings_help_app_language_desc">Changes the interface and metadata language used by ARVIO.</string>
+    <string name="settings_help_app_language_desc">Changes the interface and metadata language used by fIPTV.</string>
     <string name="settings_help_default_audio_desc">Preferred audio language when multiple tracks exist.</string>
     <string name="settings_help_default_subtitle_desc">Preferred subtitle language when playback starts.</string>
     <string name="settings_help_secondary_subtitle">Secondary subtitle</string>
@@ -676,7 +676,7 @@
     <string name="settings_help_catalog_row_desc">Rename, reorder, change layout or remove this catalog.</string>
     <string name="settings_help_addon">Addon</string>
     <string name="settings_help_addon_desc">Enable, disable, add or remove third-party addon sources.</string>
-    <string name="settings_help_cloud_account_desc">Connect or disconnect ARVIO cloud sync.</string>
+    <string name="settings_help_cloud_account_desc">Connect or disconnect fIPTV cloud sync.</string>
     <string name="settings_help_trakt">Trakt</string>
     <string name="settings_help_trakt_desc">Connect or disconnect Trakt watch history and lists.</string>
     <string name="settings_help_force_sync_desc">Push/pull the latest synced profile data now.</string>
@@ -808,14 +808,14 @@
     <string name="settings_section_stremio_addons">STREMIO ADDONS</string>
     <string name="settings_status_installed">Installed</string>
     <string name="settings_disabled">Disabled</string>
-    <string name="settings_arvio_cloud">ARVIO Cloud</string>
+    <string name="settings_arvio_cloud">fIPTV Cloud</string>
     <string name="settings_cloud_account_desc">Optional account for syncing profiles, addons, catalogs and IPTV settings</string>
     <string name="settings_trakt_desc">Sync watch history, progress, and watchlist</string>
     <string name="settings_telegram_desc">Search your channels and groups for video files</string>
     <string name="settings_badge_open">OPEN</string>
     <string name="settings_sync_local_cloud_now">Syncing local and cloud state now</string>
     <string name="settings_upload_restore_now">Upload local state, then restore from cloud now</string>
-    <string name="settings_signin_to_force_sync">Sign in to ARVIO Cloud to force sync</string>
+    <string name="settings_signin_to_force_sync">Sign in to fIPTV Cloud to force sync</string>
     <string name="settings_badge_syncing">SYNCING</string>
     <string name="settings_badge_sync">SYNC</string>
     <string name="settings_update_managed_play">This install is managed by the Play Store</string>
@@ -826,8 +826,8 @@
     <string name="settings_quiet_update_notifications_desc">Show a small notice at startup instead of the update popup. Install from App Update.</string>
     <string name="settings_sidebar_update_available">Update %1$s available. Install it from Accounts → App Update.</string>
     <string name="home_update_available_quiet">Update %1$s is available. Install it from Settings → Accounts → App Update.</string>
-    <string name="settings_update_latest">You already have the latest ARVIO version</string>
-    <string name="settings_update_check_releases">Check GitHub Releases for the latest ARVIO APK</string>
+    <string name="settings_update_latest">You already have the latest fIPTV version</string>
+    <string name="settings_update_check_releases">Check GitHub Releases for the latest fIPTV APK</string>
     <string name="settings_badge_play">PLAY</string>
     <string name="settings_badge_install">INSTALL</string>
     <string name="settings_badge_checking">CHECKING</string>
@@ -838,9 +838,9 @@
     <string name="settings_usage_statistics">Share usage statistics</string>
     <string name="settings_usage_statistics_desc">Optional Firebase Analytics for screen usage and playback reliability. No titles, searches or provider URLs. Off by default; advertising features stay disabled.</string>
     <string name="settings_privacy_policy">Privacy policy</string>
-    <string name="settings_privacy_policy_desc">Read how ARVIO processes data, retention policies, data providers, and your privacy rights</string>
+    <string name="settings_privacy_policy_desc">Read how fIPTV processes data, retention policies, data providers, and your privacy rights</string>
     <string name="settings_account_data_deletion">Delete cloud account and data</string>
-    <string name="settings_account_data_deletion_desc">Open the secure ARVIO Cloud account deletion page</string>
+    <string name="settings_account_data_deletion_desc">Open the secure fIPTV Cloud account deletion page</string>
     <string name="settings_privacy_data_deletion">Privacy and data deletion</string>
     <string name="settings_privacy_data_deletion_desc">Open privacy policy and cloud account deletion page</string>
     <string name="settings_privacy_data_title">Privacy &amp; Data</string>
@@ -851,28 +851,28 @@
     <string name="settings_stats_plugins">%1$d Extensions &amp; Plugins</string>
     <string name="settings_stats_catalogs">%1$d Configured Catalogs</string>
     <string name="settings_force_push">Force Cloud Push</string>
-    <string name="settings_force_push_desc">Upload local settings, addons, and watchlist to ARVIO Cloud</string>
+    <string name="settings_force_push_desc">Upload local settings, addons, and watchlist to fIPTV Cloud</string>
     <string name="settings_force_pull">Force Cloud Pull</string>
-    <string name="settings_force_pull_desc">Overwrite local data with the latest snapshot from ARVIO Cloud</string>
+    <string name="settings_force_pull_desc">Overwrite local data with the latest snapshot from fIPTV Cloud</string>
     <string name="settings_section_sync_stats">SYNC STATISTICS</string>
     <string name="settings_section_cloud_actions">MANUAL CLOUD OPERATIONS</string>
     <string name="settings_section_account_security">ACCOUNT SECURITY &amp; DELETION</string>
     <string name="settings_sign_out">Sign Out</string>
-    <string name="settings_sign_out_desc">Disconnect this device from your ARVIO Cloud account</string>
+    <string name="settings_sign_out_desc">Disconnect this device from your fIPTV Cloud account</string>
     <string name="settings_cloud_pull_confirm_title">Force Cloud Pull?</string>
-    <string name="settings_cloud_pull_confirm_desc">Restoring the cloud snapshot will overwrite your local settings, addons, catalogs, and watch state with the data stored on ARVIO Cloud. Are you sure you want to proceed?</string>
+    <string name="settings_cloud_pull_confirm_desc">Restoring the cloud snapshot will overwrite your local settings, addons, catalogs, and watch state with the data stored on fIPTV Cloud. Are you sure you want to proceed?</string>
     <string name="settings_cloud_restore">Restore</string>
     <string name="settings_action_push">Push</string>
     <string name="settings_action_pull">Pull</string>
-    <string name="settings_cloud_active">ARVIO Cloud Active</string>
+    <string name="settings_cloud_active">fIPTV Cloud Active</string>
     <string name="settings_cloud_not_signed_in">Not Signed In</string>
     <string name="settings_cloud_signin_sub">Sign in to backup settings, addons, and watchlist across devices</string>
     <string name="settings_cloud_manual_sync_sub">Bidirectional sync (push local state &amp; pull cloud snapshot)</string>
     <string name="settings_cloud_push_status_uploading">Uploading local snapshot to cloud…</string>
     <string name="settings_cloud_push_toast_uploading">Pushing local data to cloud…</string>
-    <string name="settings_cloud_session_expired_status">Cloud session expired. Reconnect ARVIO Cloud.</string>
-    <string name="settings_cloud_session_expired_push_toast">Reconnect ARVIO Cloud to push</string>
-    <string name="settings_cloud_session_expired_pull_toast">Reconnect ARVIO Cloud to pull</string>
+    <string name="settings_cloud_session_expired_status">Cloud session expired. Reconnect fIPTV Cloud.</string>
+    <string name="settings_cloud_session_expired_push_toast">Reconnect fIPTV Cloud to push</string>
+    <string name="settings_cloud_session_expired_pull_toast">Reconnect fIPTV Cloud to pull</string>
     <string name="settings_cloud_push_failed_status">Push failed: %1$s</string>
     <string name="settings_cloud_push_success_status">Local data pushed to cloud successfully</string>
     <string name="settings_cloud_push_success_toast">Cloud push complete</string>
@@ -986,7 +986,7 @@
     <string name="telegram_preparing_qr">Preparing QR code...</string>
     <string name="telegram_connect_title">Connect Telegram</string>
     <string name="telegram_connect_desc">Search your channels and groups for video files whenever you open a movie or show.</string>
-    <string name="telegram_disclaimer">Arvio is not responsible for the content streamed through this feature. Only connect your own account and use it fairly — respect copyright and applicable laws.</string>
+    <string name="telegram_disclaimer">fIPTV is not responsible for the content streamed through this feature. Only connect your own account and use it fairly — respect copyright and applicable laws.</string>
     <string name="telegram_scan_title">Scan with Telegram</string>
     <string name="telegram_scan_instructions">Open Telegram on your phone → Settings → Devices → Link Desktop Device</string>
     <string name="telegram_qr_code_desc">Telegram QR code</string>
@@ -1033,16 +1033,16 @@
     <string name="plugin_all_cleared">All plugins and extensions cleared successfully</string>
 
     <!-- Extracted from code: Crash report screen -->
-    <string name="crash_title">⚠️ ARVIO Encountered an Error</string>
-    <string name="crash_desc_tv">Scan the QR code below with your phone camera to automatically copy the crash report &amp; open our Discord bug channel.</string>
-    <string name="crash_desc_mobile">We apologize for the interruption. You can report this crash directly to our Discord channel to help us fix it.</string>
+    <string name="crash_title">⚠️ fIPTV Encountered an Error</string>
+    <string name="crash_desc_tv">Something went wrong. Take a photo of the details below to report the error, then restart fIPTV.</string>
+    <string name="crash_desc_mobile">Sorry for the interruption. Copy the report to pass it on, then restart fIPTV.</string>
     <string name="crash_qr_hint">Scan to open arvio.tv — 1 tap to copy report &amp; jump into Discord.</string>
     <string name="crash_details_title">Crash Reference Details</string>
     <string name="crash_details_body">ID: %1$s\nTime: %2$s\nVersion: %3$s\nError: %4$s</string>
     <string name="crash_error_unexpected">Unexpected error</string>
     <string name="crash_copied_toast">Crash details copied! Opening Discord...</string>
-    <string name="crash_report_discord">Report on Discord</string>
-    <string name="crash_restart_app">Restart ARVIO</string>
+    <string name="crash_report_discord">Copy report</string>
+    <string name="crash_restart_app">Restart fIPTV</string>
 
     <!-- Extracted from code: Profile, Login and Collections -->
     <string name="profile_edit_title">Edit Profile</string>
@@ -1119,7 +1119,7 @@
     <string name="home_sports_opening">Opening live event...</string>
     <string name="home_sports_playback_failed">Could not play this live event</string>
     <string name="home_sports_event_not_live">This event is not live yet</string>
-    <string name="home_optimizing_notice">Still optimizing ARVIO for this device. Scrolling may be slow for now.</string>
+    <string name="home_optimizing_notice">Still optimizing fIPTV for this device. Scrolling may be slow for now.</string>
     <string name="settings_optimizing_notice">Still optimizing for this device. Scrolling may be slow for now.</string>
     <string name="home_cd_primary_provider">Primary streaming provider</string>
     <string name="home_cd_rank">Rank #%1$d</string>
@@ -1500,7 +1500,7 @@
     <string name="update_msg_current_to_latest">Current version %1$s -&gt; latest %2$s</string>
     <string name="update_msg_current_uptodate">Current version %1$s is up to date</string>
     <string name="update_msg_preparing">Preparing...</string>
-    <string name="update_msg_ready">The latest ARVIO update has been downloaded and is ready to install.</string>
+    <string name="update_msg_ready">The latest fIPTV update has been downloaded and is ready to install.</string>
     <string name="update_msg_installer_hint">The Android package installer should appear. If it does not, you can try pressing Install again.</string>
     <string name="stream_tab_all_sources">All sources</string>
     <string name="stream_recently_played">Recently played</string>
@@ -1620,7 +1620,7 @@
     <string name="settings_addon_replace_existing">Replace installed</string>
     <string name="settings_addon_keep_both">Keep both</string>
     <string name="settings_addon_configure_qr_title">Configure %1$s</string>
-    <string name="settings_addon_configure_qr_hint">Scan with your phone, change the settings there and tap Install in ARVIO on your phone. Then choose Refresh Addons here.</string>
+    <string name="settings_addon_configure_qr_hint">Scan with your phone, change the settings there and tap Install in fIPTV on your phone. Then choose Refresh Addons here.</string>
     <string name="settings_community_addons">Community addons</string>
     <string name="settings_community_addons_desc">Browse and install addons made by the Stremio community</string>
     <string name="settings_community_addons_count">%1$d addons from the Stremio community</string>
@@ -1635,7 +1635,7 @@
     <string name="settings_community_addon_uninstall">Uninstall</string>
     <string name="settings_community_addon_removed">Removed %1$s</string>
     <string name="settings_community_addon_setup_hint">This addon has to be set up before it works. Open Configure, choose your settings, then tap Install on its page.</string>
-    <string name="settings_community_addon_disclaimer">Community addons are made by third parties, not by ARVIO. Only add addons you trust.</string>
+    <string name="settings_community_addon_disclaimer">Community addons are made by third parties, not by fIPTV. Only add addons you trust.</string>
     <string name="settings_community_addon_type_movie">Movies</string>
     <string name="settings_community_addon_type_series">Series</string>
     <string name="settings_community_addon_type_anime">Anime</string>
@@ -1689,8 +1689,8 @@
     <string name="settings_cloud_sync_complete">Cloud sync complete</string>
     <string name="settings_cloud_upload_starting_status">Starting cloud upload...</string>
     <string name="settings_cloud_force_sync_toast">Forcing cloud sync...</string>
-    <string name="settings_cloud_session_expired_sync_status">Cloud session expired. Reconnect ARVIO Cloud, then sync again.</string>
-    <string name="settings_cloud_session_expired_sync_toast">Reconnect ARVIO Cloud to sync</string>
+    <string name="settings_cloud_session_expired_sync_status">Cloud session expired. Reconnect fIPTV Cloud, then sync again.</string>
+    <string name="settings_cloud_session_expired_sync_toast">Reconnect fIPTV Cloud to sync</string>
     <string name="settings_cloud_upload_timeout_status">Upload timed out before cloud confirmed it</string>
     <string name="settings_cloud_upload_timeout_toast">Cloud sync upload timed out - try again</string>
     <string name="settings_cloud_upload_failed_status">Upload failed: %1$s</string>
@@ -1806,7 +1806,7 @@
     <string name="trakt_not_authenticated">Not authenticated with Trakt</string>
     <string name="trakt_reconnect_required">Your Trakt authorization expired or was revoked. Connect Trakt again to resume syncing.</string>
     <string name="trakt_sync_refresh_failed">History was imported, but Continue Watching could not be fully refreshed. Saved items have been kept; try again later.</string>
-    <string name="trakt_session_unavailable">Trakt could not be reached, so syncing is paused. ARVIO keeps retrying; reconnect Trakt if this lasts.</string>
+    <string name="trakt_session_unavailable">Trakt could not be reached, so syncing is paused. fIPTV keeps retrying; reconnect Trakt if this lasts.</string>
     <string name="trakt_library_unavailable">Trakt could not be reached right now. Try again in a few minutes.</string>
     <string name="trakt_library_load_failed">Could not load this list from Trakt. Try again.</string>
     <string name="sync_supabase_auth_failed">Supabase auth failed</string>
@@ -2038,7 +2038,7 @@
     <string name="settings_stream_switch_to_parallel">Switch to Parallel</string>
     <string name="settings_stream_switch_to_sequential">Switch to Sequential</string>
     <string name="settings_builtin_collections_title">Built-in Collections</string>
-    <string name="settings_builtin_collections_desc">Show the built-in ARVIO Services / Genres / Franchises rails. Turn off to use only your own imported collections</string>
+    <string name="settings_builtin_collections_desc">Show the built-in fIPTV Services / Genres / Franchises rails. Turn off to use only your own imported collections</string>
     <string name="settings_collections_installed">Installed collections: %1$s (%2$d rails)</string>
     <string name="catalog_collections_invalid">This is not a valid collections file (Nuvio collections export JSON expected)</string>
     <string name="catalog_tmdb_title">TMDB catalog</string>

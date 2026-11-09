@@ -239,7 +239,7 @@ class LauncherContinueWatchingRepository @Inject constructor(
         val channel = Channel.Builder()
             .setType(TvContractCompat.Channels.TYPE_PREVIEW)
             .setDisplayName(context.getString(R.string.continue_watching))
-            .setDescription("Resume watching in Arvio")
+            .setDescription("Resume watching in fIPTV")
             .setInternalProviderId(CHANNEL_INTERNAL_ID)
             .build()
 

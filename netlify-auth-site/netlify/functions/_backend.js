@@ -708,7 +708,7 @@ async function startPasswordSetup(event, email) {
     metadata: { expiresAt }
   });
 
-  const baseUrl = (process.env.SITE_URL || process.env.TV_AUTH_VERIFY_BASE_URL || "https://auth.arvio.tv").replace(/\/+$/, "");
+  const baseUrl = (process.env.SITE_URL || process.env.TV_AUTH_VERIFY_BASE_URL || process.env.URL || "https://fipsite.netlify.app").replace(/\/+$/, "");
   const setupUrl = `${baseUrl}/?mode=set-password&token=${encodeURIComponent(token)}`;
   const emailResult = await sendPasswordSetupEmail(normalizedEmail, setupUrl);
   return {
@@ -1281,7 +1281,7 @@ async function handleTvAuthStart(event) {
       expiresAt
     };
     await saveTvSession(event, session);
-    const verifyBase = (process.env.TV_AUTH_VERIFY_BASE_URL || process.env.SITE_URL || "https://auth.arvio.tv").replace(/\/+$/, "");
+    const verifyBase = (process.env.TV_AUTH_VERIFY_BASE_URL || process.env.SITE_URL || process.env.URL || "https://fipsite.netlify.app") /* fIPTV: Kopplungsseite auf dem eigenen Server */.replace(/\/+$/, "");
     return json(200, {
       device_code: deviceCode,
       user_code: userCode,

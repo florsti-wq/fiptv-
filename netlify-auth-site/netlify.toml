@@ -1,7 +1,7 @@
 # fIPTV: eigener Sync-Server. Nur die Funktionen werden gebraucht – statt der ARVIO-Webseite
 # wird lediglich die kleine Startseite dieses Ordners veröffentlicht.
 [build]
-  command = "rm -rf public-build && mkdir -p public-build && cp -r index.html delete-account.html assets _headers _redirects public-build/"
+  command = "node scripts/fiptv-build.mjs"
   publish = "public-build"
   functions = "netlify/functions"
 

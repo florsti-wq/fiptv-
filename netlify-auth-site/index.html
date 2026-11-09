@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ARVIO Account</title>
-  <link rel="icon" href="/assets/arvio-icon-512.png" type="image/png">
+  <title>fIPTV Konto</title>
+  <link rel="icon" href="/assets/fiptv-icon-512.png" type="image/png">
   <style>
     :root {
       --bg-1: #0a0806;
@@ -392,60 +392,50 @@
   <main class="shell">
     <header class="head">
       <div class="brand">
-        <img class="brand-logo" src="assets/arvio-wordmark.png" alt="ARVIO">
+        <img class="brand-logo" src="assets/fiptv-wordmark.png" alt="fIPTV">
       </div>
-      <h1 class="title">Account Access</h1>
-      <p class="subtitle" id="subtitle">Sign in to your account.</p>
+      <h1 class="title">fIPTV Konto</h1>
+      <p class="subtitle" id="subtitle">Melde dich bei deinem Konto an.</p>
     </header>
 
     <section class="body">
       <div class="pair" id="pairBox">
-        <span class="pair-label">Pairing code</span>
+        <span class="pair-label">Kopplungscode</span>
         <b id="pairCode"></b>
       </div>
       <div class="status" id="status" role="status"></div>
 
       <div id="accountForm">
-        <label class="label" for="email">Email</label>
-        <input class="input" id="email" type="email" autocomplete="email" placeholder="you@example.com" />
+        <label class="label" for="email">E-Mail</label>
+        <input class="input" id="email" type="email" autocomplete="email" placeholder="name@beispiel.de" />
 
-        <label class="label" for="password">Password</label>
-        <input class="input" id="password" type="password" autocomplete="current-password" placeholder="Your password" />
+        <label class="label" for="password">Passwort</label>
+        <input class="input" id="password" type="password" autocomplete="current-password" placeholder="Dein Passwort" />
         <div class="linkrow">
-          <button class="linkbtn" id="forgot" type="button">Forgot password?</button>
+          <button class="linkbtn" id="forgot" type="button">Passwort vergessen?</button>
         </div>
 
         <div class="actions">
-          <button class="btn primary" id="signin">Sign In</button>
-          <button class="btn" id="signup">Create Account</button>
-          <button class="btn" id="savepass" style="display:none;">Save New Password</button>
+          <button class="btn primary" id="signin">Anmelden</button>
+          <button class="btn" id="signup">Konto erstellen</button>
+          <button class="btn" id="savepass" style="display:none;">Neues Passwort speichern</button>
         </div>
 
-        <p class="privacy-notice" id="signupNotice">Creating an account stores your email and the cloud data you choose to sync. Read the <a href="https://arvio.tv/privacy" target="_blank" rel="noopener">Privacy Policy</a> before continuing.</p>
+        <p class="privacy-notice" id="signupNotice">Ein Konto speichert deine E-Mail-Adresse und die Daten, die du synchronisierst, auf dem fIPTV-Server der Familie.</p>
       </div>
 
-      <p class="small" id="tvHelp">If you opened this from a TV QR code, signing in will automatically pair that TV.</p>
+      <p class="small" id="tvHelp">Wenn du diese Seite über den QR-Code am Fernseher geöffnet hast, wird der Fernseher nach der Anmeldung automatisch verbunden.</p>
       <p class="discord-link" id="discordEntry" hidden><a class="privacy-link" href="/?discord=1">Link your Premium Discord badge</a></p>
       <section id="discordClaim" hidden aria-label="Discord Premium badge">
         <button class="btn primary" id="discordConnect" type="button">Link Discord</button>
         <p class="discord-link"><a class="privacy-link" href="/">Back to Account Access</a></p>
       </section>
       <p class="discord-link" id="discordJoin" hidden><a class="premium-link" href="https://discord.gg/UavuEYMfQ4" target="_blank" rel="noopener noreferrer">Join the ARVIO Discord</a></p>
-      <div class="foot">ARVIO Cloud Auth</div>
+      <div class="foot">fIPTV Cloud</div>
       <div class="privacy-links">
-        <a class="privacy-link" href="https://arvio.tv/privacy">Privacy Policy</a>
-        <a class="privacy-link" href="/delete-account">Delete account</a>
+        <a class="privacy-link" href="/delete-account">Konto löschen</a>
       </div>
     </section>
-    <aside class="premium-banner" aria-labelledby="premium-title">
-      <p class="premium-eyebrow">ARVIO Premium · Optional membership</p>
-      <h2 class="premium-title" id="premium-title">Your ARVIO. In your browser.</h2>
-      <p class="premium-copy">Hosted for your iPhone, iPad and computer. Your membership helps fund ARVIO’s hosting and development.</p>
-      <div class="premium-bottom">
-        <a class="premium-link" href="https://arvio.tv/premium/" target="_blank" rel="noopener noreferrer">Explore Premium <span aria-hidden="true">↗</span></a>
-        <span class="premium-note">Android &amp; TV stay free.</span>
-      </div>
-    </aside>
   </main>
 
   <!-- Starfield + shooting-stars -->
@@ -790,7 +780,7 @@
     }
 
     function applyRecoveryModeUi() {
-      subtitleEl.textContent = "Set a new password for your account.";
+      subtitleEl.textContent = "Lege ein neues Passwort für dein Konto fest.";
       pairBox.style.display = "none";
       signInBtn.style.display = "none";
       signUpBtn.style.display = "none";
@@ -798,17 +788,17 @@
       savePassBtn.style.display = "block";
       emailEl.style.display = "none";
       document.querySelector('label[for="email"]').style.display = "none";
-      passEl.placeholder = "New password (min 6 characters)";
+      passEl.placeholder = "Neues Passwort (mind. 6 Zeichen)";
       passEl.autocomplete = "new-password";
     }
 
     if (pairCode) {
-      subtitleEl.textContent = "Sign in to pair your TV device.";
+      subtitleEl.textContent = "Melde dich an oder erstelle ein Konto, um deinen Fernseher zu verbinden.";
       pairBox.style.display = "flex";
       pairCodeEl.textContent = pairCode;
     }
     if (isRecoveryMode || isPasswordSetupMode) applyRecoveryModeUi();
-    if (standaloneAccount && !isDiscordMode) document.getElementById("discordEntry").hidden = false;
+    // fIPTV: kein Discord
     if (isDiscordMode) {
       document.querySelector("h1").textContent = "Premium Discord badge";
       subtitleEl.textContent = "Sign in with the ARVIO account that has Premium. Both monthly memberships and 12-month passes qualify.";
@@ -919,7 +909,7 @@
       const json = await resp.json().catch(() => ({}));
       if (!resp.ok) throw new Error(json.error || "Account creation failed");
       if (!json.access_token || !json.refresh_token) {
-        throw new Error("Account created but sign-in response was incomplete.");
+        throw new Error("Konto erstellt, aber die Anmeldung war unvollständig.");
       }
       markEmailSent("signup", normalizedEmail);
       return { email: normalizedEmail, tokens: json };
@@ -927,8 +917,8 @@
 
     async function signInEmail() {
       const email = requireValidEmail(emailEl.value, false);
-      const password = passEl.value;
-      if (!password) throw new Error("Password is required.");
+      const password = passEl.value.trim();
+      if (!password) throw new Error("Bitte ein Passwort eingeben.");
       const resp = await fetch(`${FUNCTION_BASE}/auth-login`, {
         method: "POST",
         headers: {
@@ -943,11 +933,11 @@
         let setupHint = "";
         if (json.code === "password_setup_required") {
           if (json.email_sent) {
-            setupHint = " We sent you an email to create your new ARVIO Cloud password.";
+            setupHint = " We sent you an email to create your new fIPTV password.";
           } else if (json.setup_error) {
             setupHint = ` Password setup email could not be sent: ${json.setup_error}`;
           } else {
-            setupHint = " Use Forgot password to create your new ARVIO Cloud password.";
+            setupHint = " Use Forgot password to create your new fIPTV password.";
           }
         }
         throw new Error((json.error || "Sign in failed") + setupHint);
@@ -957,9 +947,9 @@
 
     async function signUpEmail() {
       const email = requireValidEmail(emailEl.value);
-      const password = passEl.value;
-      if (!password) throw new Error("Password is required.");
-      if (password.length < 6) throw new Error("Password must be at least 6 characters.");
+      const password = passEl.value.trim();
+      if (!password) throw new Error("Bitte ein Passwort eingeben.");
+      if (password.length < 6) throw new Error("Das Passwort braucht mindestens 6 Zeichen.");
       return await createAccountViaServer(email, password);
     }
 
@@ -980,7 +970,7 @@
       const json = await resp.json().catch(() => ({}));
       if (!resp.ok) throw new Error(json.error || "Password reset failed");
       if (!json.account_exists) {
-        throw new Error("No ARVIO Cloud account was found for this email.");
+        throw new Error("Für diese E-Mail-Adresse gibt es kein Konto.");
       }
       if (!json.email_sent) {
         throw new Error("Account found, but the password email could not be sent. Please try again in a minute.");
@@ -990,8 +980,8 @@
     }
 
     async function saveNewPassword() {
-      const password = passEl.value;
-      if (!password || password.length < 6) throw new Error("Password must be at least 6 characters.");
+      const password = passEl.value.trim();
+      if (!password || password.length < 6) throw new Error("Das Passwort braucht mindestens 6 Zeichen.");
       if (setupToken) {
         const resp = await fetch(`${FUNCTION_BASE}/auth-password-complete`, {
           method: "POST",
@@ -1008,7 +998,7 @@
     signInBtn.onclick = async () => {
       try {
         setBusy(true);
-        setStatus("Signing in...");
+        setStatus("Anmeldung läuft …");
         const creds = await signInEmail();
         if (isDiscordMode) {
           discordAccessToken = creds.tokens.access_token;
@@ -1025,14 +1015,14 @@
         if (pairCode) {
           await approveTvViaServer(creds.email, creds.password);
         }
-        setStatus(pairCode ? "TV paired. Redirecting..." : "Signed in. Redirecting...", "ok");
+        setStatus(pairCode ? "Fernseher verbunden. Du kannst zum Fernseher zurückkehren." : "Angemeldet.", "ok");
         setTimeout(() => {
           if (isValidRedirectUri(redirectUri)) {
             const url = new URL(redirectUri);
             url.hash = `access_token=${creds.tokens.access_token}&refresh_token=${creds.tokens.refresh_token}&email=${encodeURIComponent(creds.email)}&expires_in=${creds.tokens.expires_in || 3600}`;
             window.location.href = url.toString();
           } else {
-            window.location.href = "https://arvio.tv";
+            /* fIPTV: auf der Seite bleiben */
           }
         }, 900);
       } catch (err) {
@@ -1046,15 +1036,15 @@
       try {
         setBusy(true);
         const email = requireValidEmail(emailEl.value);
-        const password = passEl.value;
-        if (!password) throw new Error("Password is required.");
-        if (password.length < 6) throw new Error("Password must be at least 6 characters.");
+        const password = passEl.value.trim();
+        if (!password) throw new Error("Bitte ein Passwort eingeben.");
+        if (password.length < 6) throw new Error("Das Passwort braucht mindestens 6 Zeichen.");
 
         if (pairCode) {
-          setStatus("Creating account and pairing TV...");
+          setStatus("Konto wird erstellt und Fernseher verbunden …");
           await signUpAndPairViaServer(email, password);
-          setStatus("Account created and TV paired. Redirecting...", "ok");
-          setTimeout(() => { window.location.href = "https://arvio.tv"; }, 1200);
+          setStatus("Konto erstellt und Fernseher verbunden. Du kannst zum Fernseher zurückkehren.", "ok");
+          
           return;
         }
 
@@ -1063,14 +1053,14 @@
         if (pairCode) {
           await approveTvViaServer(email, password);
         }
-        setStatus(pairCode ? "Account created and TV paired. Redirecting..." : "Account created. Redirecting...", "ok");
+        setStatus(pairCode ? "Konto erstellt und Fernseher verbunden. Du kannst zum Fernseher zurückkehren." : "Konto erstellt.", "ok");
         setTimeout(() => {
           if (isValidRedirectUri(redirectUri)) {
             const url = new URL(redirectUri);
             url.hash = `access_token=${creds.tokens.access_token}&refresh_token=${creds.tokens.refresh_token}&email=${encodeURIComponent(creds.email)}&expires_in=${creds.tokens.expires_in || 3600}`;
             window.location.href = url.toString();
           } else {
-            window.location.href = "https://arvio.tv";
+            /* fIPTV: auf der Seite bleiben */
           }
         }, 1200);
       } catch (err) {
@@ -1079,11 +1069,11 @@
         if (lower.includes("email") && lower.includes("confirm")) {
           setStatus("Account created. Check your email, then sign in.", "ok");
         } else if (lower.includes("already exists")) {
-          setStatus("An account with this email already exists — use Sign In instead.", "error");
+          setStatus("Mit dieser E-Mail-Adresse gibt es schon ein Konto – bitte „Anmelden“ verwenden.", "error");
         } else if (lower.includes("real email")) {
           setStatus("Please use a real, personal email address (temporary/placeholder addresses aren't allowed).", "error");
         } else if (lower.includes("valid email")) {
-          setStatus("That email address doesn't look valid — please check for typos.", "error");
+          setStatus("Diese E-Mail-Adresse sieht nicht gültig aus – bitte auf Tippfehler prüfen.", "error");
         } else {
           setStatus(msg, "error");
         }
@@ -1108,10 +1098,10 @@
     savePassBtn.onclick = async () => {
       try {
         setBusy(true);
-        setStatus("Saving new password...");
+        setStatus("Neues Passwort wird gespeichert …");
         await saveNewPassword();
         setStatus("Password updated. Redirecting to sign in...", "ok");
-        setTimeout(() => { window.location.href = "https://auth.arvio.tv/"; }, 1200);
+        setTimeout(() => { window.location.href = "/"; }, 1200);
       } catch (err) {
         setStatus(err.message || String(err), "error");
       } finally {

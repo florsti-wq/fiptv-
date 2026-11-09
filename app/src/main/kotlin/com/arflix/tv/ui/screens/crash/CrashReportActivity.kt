@@ -194,7 +194,8 @@ fun CrashReportScreen(
                 textAlign = TextAlign.Center
             )
 
-            if (isTv) {
+            // fIPTV: kein QR-Code zur ARVIO-Fehlerseite
+            if (false && isTv) {
                 // TV layout: Show clean QR Code prominently pointing to arvio.tv/report
                 Surface(
                     shape = RoundedCornerShape(16.dp),
@@ -261,14 +262,10 @@ fun CrashReportScreen(
                     Button(
                         onClick = {
                             val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                            val clip = ClipData.newPlainText("ARVIO Crash Report", formattedReport)
+                            val clip = ClipData.newPlainText("fIPTV Crash Report", formattedReport)
                             clipboard.setPrimaryClip(clip)
                             Toast.makeText(context, R.string.crash_copied_toast, Toast.LENGTH_LONG).show()
-
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(CrashReportActivity.DISCORD_BUG_CHANNEL_URL)).apply {
-                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                            }
-                            context.startActivity(intent)
+                            // fIPTV: nur kopieren, nicht den ARVIO-Discord öffnen
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5865F2)),
                         shape = RoundedCornerShape(8.dp),

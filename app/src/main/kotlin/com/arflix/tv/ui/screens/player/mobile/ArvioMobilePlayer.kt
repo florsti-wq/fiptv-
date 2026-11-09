@@ -549,7 +549,7 @@ fun ArvioMobilePlayer(
     val mainTitleText = if (!uiState.episodeTitle.isNullOrBlank()) {
         "S${uiState.seasonNumber ?: 1} · E${uiState.episodeNumber ?: 1} — ${uiState.episodeTitle}"
     } else {
-        uiState.title.ifBlank { "ARVIO Player" }
+        uiState.title.ifBlank { "fIPTV" }
     }
 
     val currentAudioTrackName = audioTracks.getOrNull(selectedAudioIndex)?.let {

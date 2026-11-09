@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark">
-  <title>Delete ARVIO account</title>
-  <link rel="icon" href="/assets/arvio-icon-512.png" type="image/png">
+  <title>Delete fIPTV account</title>
+  <link rel="icon" href="/assets/fiptv-icon-512.png" type="image/png">
   <style>
     :root {
       --bg: #050505;
@@ -238,13 +238,13 @@
 <body>
   <header class="topbar">
     <div class="topbar-inner">
-      <img class="brand" src="/assets/arvio-wordmark.png" alt="ARVIO">
+      <img class="brand" src="/assets/fiptv-wordmark.png" alt="fIPTV">
     </div>
   </header>
 
   <main class="page">
     <p class="eyebrow">Account privacy</p>
-    <h1>Permanently delete your ARVIO account</h1>
+    <h1>Permanently delete your fIPTV account</h1>
     <p class="intro">
       Verify the account, review what will be removed, and confirm deletion. The process signs out every device and permanently removes your cloud data.
     </p>
@@ -304,7 +304,7 @@
         <div class="status-box" id="success-state" hidden>
           <div class="success-mark" aria-hidden="true">&#10003;</div>
           <h2>Account deleted</h2>
-          <p class="stage-copy">Your ARVIO account and cloud data have been removed. A confirmation email has been sent when delivery is available.</p>
+          <p class="stage-copy">Your fIPTV account and cloud data have been removed. A confirmation email has been sent when delivery is available.</p>
         </div>
         <p class="message" id="progress-message" role="alert"></p>
       </section>
@@ -384,8 +384,8 @@
       } catch (error) {
         if (error.code === "password_setup_required") {
           loginMessage.textContent = error.details?.email_sent
-            ? "A password setup email was sent. Create your new ARVIO Cloud password, then return here."
-            : (error.message || "A new ARVIO Cloud password is required.");
+            ? "A password setup email was sent. Create your new fIPTV password, then return here."
+            : (error.message || "A new fIPTV password is required.");
         } else {
           loginMessage.textContent = error.message;
         }

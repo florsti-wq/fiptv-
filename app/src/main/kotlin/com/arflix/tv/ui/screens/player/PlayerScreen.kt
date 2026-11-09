@@ -2538,7 +2538,7 @@ private fun PlayerScreenContent(args: PlayerScreenArgs, viewModel: PlayerViewMod
                 ""
             }
             com.arflix.tv.ui.screens.details.discord.DiscordRpcManager.updatePlayback(
-                title = titleVal ?: "ARVIO",
+                title = titleVal ?: "fIPTV",
                 subtitle = subtitleVal,
                 isPlaying = isPlaying,
                 progressMs = currentPosition,
@@ -3280,7 +3280,7 @@ private fun PlayerScreenContent(args: PlayerScreenArgs, viewModel: PlayerViewMod
                 ""
             }
             com.arflix.tv.ui.screens.details.discord.DiscordRpcManager.updatePlayback(
-                title = titleVal ?: "ARVIO",
+                title = titleVal ?: "fIPTV",
                 subtitle = subtitleVal,
                 isPlaying = isPlaying,
                 progressMs = currentPosition,

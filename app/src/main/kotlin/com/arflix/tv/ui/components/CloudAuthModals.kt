@@ -400,7 +400,8 @@ fun CloudPairModal(
     val effectiveVerificationUrl = remember(verificationUrl, userCode) {
         verificationUrl.ifBlank {
             userCode.takeIf { it.isNotBlank() }?.let { code ->
-                "https://auth.arvio.tv/?code=$code"
+                // fIPTV: Kopplungsseite liegt auf dem eigenen Server
+                "${com.arflix.tv.util.Constants.NETLIFY_BACKEND_URL.substringBefore("/.netlify/functions")}/?code=$code"
             }.orEmpty()
         }
     }

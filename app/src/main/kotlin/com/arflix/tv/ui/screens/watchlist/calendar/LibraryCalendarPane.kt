@@ -242,7 +242,7 @@ fun LibraryCalendarPane(
                         modifier = if (state.isLoading) Modifier.testTag("calendar-loading") else Modifier)
                     if (!state.isLoading && !hasProblem && nextReleaseDate == null) {
                         Spacer(Modifier.height(7.dp))
-                        Text(tr(if (state.watchlistCount == 0) "Add movies and shows to your ARVIO watchlist. No tracking account needed."
+                        Text(tr(if (state.watchlistCount == 0) "Add movies and shows to your fIPTV watchlist. No tracking account needed."
                             else "Choose another day or watchlist to explore upcoming releases."), color = CalendarSecondary,
                             fontSize = 11.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
                     }

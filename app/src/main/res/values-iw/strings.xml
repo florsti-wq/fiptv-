@@ -182,7 +182,7 @@
     <string name="set_profile_pin">הגדר PIN לפרופיל</string>
     <string name="done">סיום</string>
     <string name="save">שמור</string>
-    <string name="connect_to_cloud">התחבר ל-ARVIO Cloud</string>
+    <string name="connect_to_cloud">התחבר ל-fIPTV Cloud</string>
 
     <!-- Missing settings strings -->
     <string name="now_playing">מנגן עכשיו</string>
@@ -196,7 +196,7 @@
     <string name="oled_black_background">רקע שחור OLED</string>
     <string name="oled_black_background_desc">השתמש ברקעי אפליקציה שחורים טהורים למסכי OLED</string>
     <string name="custom_user_agent">User-Agent מותאם</string>
-    <string name="custom_user_agent_desc">השאר ריק לשימוש בברירת המחדל של ARVIO. ערכים מותאמים חלים כאשר מקור לא מספק User-Agent משלו.</string>
+    <string name="custom_user_agent_desc">השאר ריק לשימוש בברירת המחדל של fIPTV. ערכים מותאמים חלים כאשר מקור לא מספק User-Agent משלו.</string>
     <string name="spoiler_blur">טשטוש ספוילרים</string>
     <string name="spoiler_blur_desc">טשטש כרטיסי פרקים שלא נצפו כדי למנוע ספוילרים</string>
     <string name="accent_color">צבע הדגשה</string>
@@ -255,7 +255,7 @@
     <string name="home_top10_movies_today">10 הסרטים הנצפים היום</string>
     <string name="home_top10_shows_today">10 הסדרות הנצפות היום</string>
     <string name="settings_builtin_collections_title">אוספים מובנים</string>
-    <string name="settings_builtin_collections_desc">הצג את שורות האוספים המובנות של ARVIO (שירותים / ז׳אנרים / זיכיונות). כבה כדי להשתמש רק באוספים שייבאת</string>
+    <string name="settings_builtin_collections_desc">הצג את שורות האוספים המובנות של fIPTV (שירותים / ז׳אנרים / זיכיונות). כבה כדי להשתמש רק באוספים שייבאת</string>
     <string name="settings_collections_installed">אוספים הותקנו: %1$s (%2$d שורות)</string>
     <string name="catalog_collections_invalid">זה לא קובץ אוספים תקין (נדרש JSON של ייצוא אוספים מ-Nuvio)</string>
     <string name="telegram_search_on_click_title">חפש בטלגרם רק בלחיצה על מקור הטלגרם</string>
@@ -275,7 +275,7 @@
     <string name="settings_community_addon_uninstall">הסרה</string>
     <string name="settings_community_addon_removed">%1$s הוסר</string>
     <string name="settings_community_addon_setup_hint">צריך להגדיר את התוסף לפני שהוא עובד. פתח את ״הגדרה״, בחר הגדרות ולחץ Install בעמוד שלו.</string>
-    <string name="settings_community_addon_disclaimer">התוספים בחנות נוצרים על ידי צד שלישי, לא על ידי ARVIO. הוסף רק תוספים שאתה סומך עליהם.</string>
+    <string name="settings_community_addon_disclaimer">התוספים בחנות נוצרים על ידי צד שלישי, לא על ידי fIPTV. הוסף רק תוספים שאתה סומך עליהם.</string>
     <string name="settings_community_addon_type_movie">סרטים</string>
     <string name="settings_community_addon_type_series">סדרות</string>
     <string name="settings_community_addon_type_anime">אנימה</string>
@@ -294,7 +294,7 @@
     <string name="settings_status_installed">מותקן</string>
     <string name="settings_addon_setup_required">נדרשת הגדרה</string>
     <string name="settings_addon_configure_qr_title">הגדרת %1$s</string>
-    <string name="settings_addon_configure_qr_hint">סרוק עם הטלפון, שנה שם את ההגדרות ולחץ ״התקנה״ ב-ARVIO בטלפון. אחר כך בחר כאן ״רענון תוספים״.</string>
+    <string name="settings_addon_configure_qr_hint">סרוק עם הטלפון, שנה שם את ההגדרות ולחץ ״התקנה״ ב-fIPTV בטלפון. אחר כך בחר כאן ״רענון תוספים״.</string>
     <string name="settings_addon_added_with_catalogs">%1$s נוסף (יובאו %2$d קטלוגים)</string>
     <string name="settings_addon_added_no_catalogs">%1$s נוסף (ללא קטלוגים)</string>
     <string name="addon_failed_add">הוספת התוסף נכשלה</string>
@@ -369,11 +369,11 @@
     <string name="tmdb_genre_war_politics">מלחמה ופוליטיקה</string>
     <string name="settings_connected_as">מחובר בתור %1$s</string>
     <string name="trakt_reconnect_required">ההרשאה של Trakt פגה או בוטלה. חבר את Trakt מחדש כדי להמשיך לסנכרן.</string>
-    <string name="trakt_session_unavailable">אין חיבור ל-Trakt, ולכן הסנכרון מושהה. ARVIO ממשיך לנסות; אם זה נמשך, חבר את Trakt מחדש.</string>
+    <string name="trakt_session_unavailable">אין חיבור ל-Trakt, ולכן הסנכרון מושהה. fIPTV ממשיך לנסות; אם זה נמשך, חבר את Trakt מחדש.</string>
     <string name="trakt_library_unavailable">אין חיבור ל-Trakt כרגע. נסה שוב בעוד כמה דקות.</string>
     <string name="trakt_library_load_failed">לא ניתן לטעון את הרשימה הזו מ-Trakt. נסה שוב.</string>
     <string name="mdblist_reconnect_required">MDBList כבר לא מקבל את החיבור הזה. חבר את MDBList מחדש כדי להמשיך לסנכרן.</string>
-    <string name="mdblist_session_unavailable">אין חיבור ל-MDBList, ולכן הסנכרון מושהה. ARVIO ממשיך לנסות; אם זה נמשך, חבר את MDBList מחדש.</string>
+    <string name="mdblist_session_unavailable">אין חיבור ל-MDBList, ולכן הסנכרון מושהה. fIPTV ממשיך לנסות; אם זה נמשך, חבר את MDBList מחדש.</string>
     <string name="mdblist_library_unavailable">אין חיבור ל-MDBList כרגע. נסה שוב בעוד כמה דקות.</string>
     <string name="mdblist_library_load_failed">לא ניתן לטעון את הרשימה הזו מ-MDBList. נסה שוב.</string>
 

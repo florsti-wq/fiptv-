@@ -334,7 +334,7 @@ internal fun ProfileSelectionContent(
                 // Title / Brand Wordmark Logo
                 Image(
                     painter = painterResource(id = R.drawable.ic_arvio_wordmark),
-                    contentDescription = "ARVIO",
+                    contentDescription = "fIPTV",
                     contentScale = ContentScale.Fit,
                     modifier = Modifier
                         .height(if (isTouchDevice) 22.dp else 30.dp)

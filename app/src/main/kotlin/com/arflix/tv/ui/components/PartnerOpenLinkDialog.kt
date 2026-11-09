@@ -36,7 +36,7 @@ internal fun PartnerOpenLinkDialog(failed: Boolean, onRetry: () -> Unit, onCance
                 Modifier.fillMaxWidth().padding(24.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
-                Text("ARVIO", fontSize = 22.sp)
+                Text("fIPTV", fontSize = 22.sp)
                 if (!failed) CircularProgressIndicator(color = Color.White)
                 Text(stringResource(if (failed) R.string.partner_link_failed else R.string.partner_link_loading))
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {

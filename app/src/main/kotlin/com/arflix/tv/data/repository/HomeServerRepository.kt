@@ -527,7 +527,7 @@ class HomeServerRepository @Inject constructor(
             ?.newBuilder()
             ?.addQueryParameter("strong", "true")
             ?.addQueryParameter("X-Plex-Client-Identifier", deviceId())
-            ?.addQueryParameter("X-Plex-Product", "ARVIO")
+            ?.addQueryParameter("X-Plex-Product", "fIPTV")
             ?.build()
             ?.toString()
             ?: error(context.getString(R.string.homeserver_invalid_code_url))
@@ -1150,7 +1150,7 @@ class HomeServerRepository @Inject constructor(
     }
 
     private fun authHeader(token: String? = null): String {
-        val base = "MediaBrowser Client=\"ARVIO\", Device=\"Android\", DeviceId=\"${deviceId()}\", Version=\"${BuildConfig.VERSION_NAME}\""
+        val base = "MediaBrowser Client=\"fIPTV\", Device=\"Android\", DeviceId=\"${deviceId()}\", Version=\"${BuildConfig.VERSION_NAME}\""
         return if (token.isNullOrBlank()) base else "$base, Token=\"$token\""
     }
 
@@ -1158,7 +1158,7 @@ class HomeServerRepository @Inject constructor(
         .add("Accept", "application/json")
         .add("User-Agent", "ARVIO/${BuildConfig.VERSION_NAME}")
         .add("X-Plex-Client-Identifier", deviceId())
-        .add("X-Plex-Product", "ARVIO")
+        .add("X-Plex-Product", "fIPTV")
         .add("X-Plex-Version", BuildConfig.VERSION_NAME)
         .add("X-Plex-Device", "Android")
         .add("X-Plex-Platform", "Android")
@@ -1168,7 +1168,7 @@ class HomeServerRepository @Inject constructor(
         put("Accept", "application/json")
         put("User-Agent", "ARVIO/${BuildConfig.VERSION_NAME}")
         put("X-Plex-Client-Identifier", deviceId())
-        put("X-Plex-Product", "ARVIO")
+        put("X-Plex-Product", "fIPTV")
         put("X-Plex-Version", BuildConfig.VERSION_NAME)
         put("X-Plex-Device", "Android")
         put("X-Plex-Platform", "Android")
@@ -1183,7 +1183,7 @@ class HomeServerRepository @Inject constructor(
                 "!?" + listOf(
                     "clientID=${deviceId()}",
                     "code=$code",
-                    "$contextProductKey=ARVIO"
+                    "$contextProductKey=fIPTV"
                 ).joinToString("&")
             )
             ?.build()

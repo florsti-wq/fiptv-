@@ -310,7 +310,7 @@ class SportsRepository @Inject constructor(
                     key = "locked",
                     title = "Add Sports Live TV Addon",
                     subtitle = "Required for playback",
-                    overview = "Install a sports live TV addon before ARVIO can show or play live sports events.",
+                    overview = "Install a sports live TV addon before fIPTV can show or play live sports events.",
                     badge = "LOCKED"
                 )
             )
