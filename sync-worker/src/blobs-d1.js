@@ -3,7 +3,7 @@
 // delete, list). Große Werte werden in Teilen gespeichert (D1-Zeilen max. 2 MB).
 "use strict";
 
-const PART_SIZE = 900_000; // Zeichen je Teil (UTF-8 kann bis 3 Byte je Zeichen brauchen → < 2,7 MB … sicher unter 2 MB bei ASCII-JSON)
+const PART_SIZE = 600_000; // Zeichen je Teil – auch bei Umlauten sicher unter der D1-Grenze von 2 MB je Wert
 
 function db() {
   const env = globalThis.__FIPTV_ENV;

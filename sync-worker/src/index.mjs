@@ -124,6 +124,20 @@ export default {
     if (!env.URL && globalThis.process?.env) globalThis.process.env.URL = url.origin;
     const match = url.pathname.match(/^\/(?:\.netlify\/functions|api)\/([a-z0-9-]+)\/?/i);
     if (match) return runFunction(match[1], request, url, ctx);
+    // Einmaliger Umzug der Daten von Netlify (nur aktiv, solange MIGRATE_TOKEN gesetzt ist)
+    if (url.pathname === "/fiptv-admin/import" && request.method === "POST") {
+      const token = env.MIGRATE_TOKEN;
+      if (!token || request.headers.get("authorization") !== `Bearer ${token}`) return new Response("Forbidden", { status: 403 });
+      const { getStore } = await import("./blobs-d1.js");
+      const body = await request.json();
+      let written = 0;
+      for (const item of body.items || []) {
+        if (!item || !item.store || !item.key || typeof item.value !== "string") continue;
+        await getStore(item.store).set(item.key, item.value, { metadata: item.metadata || {} });
+        written += 1;
+      }
+      return Response.json({ written });
+    }
     if (url.pathname === "/fiptv-health") {
       const ok = await env.DB.prepare("SELECT 1 AS ok").first().then(() => true).catch(() => false);
       return Response.json({ ok, db: ok, time: new Date().toISOString() }, { headers: CORS });
