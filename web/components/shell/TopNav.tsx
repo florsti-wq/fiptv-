@@ -2,7 +2,7 @@
 import { useTranslation } from "@/lib/i18n";
 
 
-import { BadgeCheck, Bookmark, Clapperboard, Home, Library, Search, Settings, Tv } from "lucide-react";
+import { BadgeCheck, Bookmark, Clapperboard, Home, Library, Search, Settings, MonitorPlay, Trophy, Tv } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useAppPick } from "@/lib/store";
 import { kidsLevelOf } from "@/lib/kids";
@@ -22,7 +22,10 @@ const nav = [
   // fIPTV: Filme und Serien des IPTV-Anbieters
   { id: "vod", label: "VOD", icon: Clapperboard },
   // fIPTV: ARD, ZDF & Co. im Netflix-Stil
-  { id: "mediathek", label: "Mediathek", icon: Library }
+  { id: "mediathek", label: "Mediathek", icon: Library },
+  // fIPTV: gleiche Kanäle und Teams wie am Fire TV
+  { id: "youtube", label: "YouTube", icon: MonitorPlay },
+  { id: "sport", label: "Sport", icon: Trophy }
 ] satisfies Array<{ id: NavSection; label: string; icon: typeof Home }>;
 
 export function TopNav() {
@@ -43,7 +46,7 @@ export function TopNav() {
   const [scrolled, setScrolled] = useState(false);
   const barRef = useRef<HTMLElement>(null);
   // Live TV carries no age ratings: a kids profile loses the tab (Android KidsNavigation).
-  const visibleNav = kidsLevelOf(activeProfile) ? nav.filter((item) => item.id !== "tv" && item.id !== "vod") : nav;
+  const visibleNav = kidsLevelOf(activeProfile) ? nav.filter((item) => !["tv", "vod", "youtube", "sport"].includes(item.id)) : nav;
   const entitlement = useEntitlement();
   const [now, setNow] = useState(Date.now);
   const trialLabel = trialRemainingLabel(entitlement, now);

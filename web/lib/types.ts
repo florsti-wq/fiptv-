@@ -1,6 +1,6 @@
 export type MediaType = "movie" | "tv";
 
-export type NavSection = "home" | "tv" | "vod" | "mediathek" | "search" | "watchlist" | "addons" | "settings";
+export type NavSection = "home" | "tv" | "vod" | "mediathek" | "youtube" | "sport" | "search" | "watchlist" | "addons" | "settings";
 
 export interface MediaItem {
   id: number;
@@ -570,6 +570,10 @@ export interface AppSettings {
   fiptvBackground?: string;
   /** fIPTV: Tageslimit im Kinderprofil (Minuten, nur gelesen – eingestellt auf dem Fire TV) */
   fiptvKidsLimit?: number;
+  /** fIPTV: YouTube-Kanäle des Profils, JSON [{id,title,thumb}] (gleich wie Fire TV) */
+  fiptvYtChannelsJson?: string;
+  /** fIPTV: Lieblingsteams, JSON [{id,name,logo,league}] (gleich wie Fire TV) */
+  fiptvSportTeamsJson?: string;
   clockFormat: "12h" | "24h";
   showBudget: boolean;
   /** Android/TV home layout. Undefined = keep the app's value. */

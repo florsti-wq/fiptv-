@@ -7,6 +7,8 @@ const SECTION_LABELS: Record<NavSection, string> = {
   tv: "TV",
   vod: "VOD",
   mediathek: "Mediathek",
+  youtube: "YouTube",
+  sport: "Sport",
   addons: "Addons",
   settings: "Settings"
 };

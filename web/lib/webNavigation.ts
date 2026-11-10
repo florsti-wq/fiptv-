@@ -1,6 +1,6 @@
 import type { NavSection } from './types';
 export type WebRoute = { section: NavSection; query: string; title: {id:number;mediaType:'movie'|'tv'} | null };
-const sections = new Set(['home','search','watchlist','tv','vod','mediathek','settings','addons']);
+const sections = new Set(['home','search','watchlist','tv','vod','mediathek','youtube','sport','settings','addons']);
 export function readWebRoute(url: URL):WebRoute {
   const section=url.searchParams.get('view')||'home';
   const match=url.searchParams.get('title')?.match(/^(movie|tv):(\d+)$/);
