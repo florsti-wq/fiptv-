@@ -23,7 +23,10 @@ export async function GET(request: NextRequest, context: { params: Promise<{ pat
   input.searchParams.delete("api_key");
 
   let target: URL;
-  const usesNetlifyProxy = process.env.NEXT_PUBLIC_SELF_HOSTED !== "true" && !customKey && netlifyBackendUrl.startsWith("https://") && appAnonKey.length > 40;
+  // fIPTV: Windows-App/Heim-PC fragt TMDB direkt mit dem eigenen Schlüssel – das spart
+  // Netlify-Credits (jede Anfrage über den Sync-Server kostet dort Rechenzeit).
+  const homeDirect = process.env.FIPTV_HOME_PROXY === "true" && Boolean(tmdbKey);
+  const usesNetlifyProxy = !homeDirect && process.env.NEXT_PUBLIC_SELF_HOSTED !== "true" && !customKey && netlifyBackendUrl.startsWith("https://") && appAnonKey.length > 40;
   if (usesNetlifyProxy) {
     target = new URL(`${netlifyBackendUrl}/tmdb-proxy`);
     target.searchParams.set("path", `/${path.join("/")}`);
