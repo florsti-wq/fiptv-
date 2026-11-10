@@ -221,9 +221,11 @@ export function AppShell() {
     {view === "app" && <DetailsPrefetch />}
     {view === "profiles" ? <ScreenBoundary screen="profiles"><ProfileSelectionScreen /></ScreenBoundary> :
     <main
-      style={!settings.oledBlack && settings.fiptvBackground && settings.fiptvBackground !== "default" ? fiptvBackgroundStyle(settings.fiptvBackground) : undefined}
       className={`app-shell ${settings.oledBlack ? "oled" : ""} ${settings.spoilerBlur ? "spoiler-blur" : ""}`}
-      style={{ ["--accent" as string]: accent }}
+      style={{
+        ["--accent" as string]: accent,
+        ...(!settings.oledBlack && settings.fiptvBackground && settings.fiptvBackground !== "default" ? fiptvBackgroundStyle(settings.fiptvBackground) : {})
+      }}
     >
       {(!activeStream || (section === "tv" && activeChannel)) && <TopNav />}
       <PartnerLinkHandler />
