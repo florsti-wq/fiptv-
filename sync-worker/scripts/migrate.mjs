@@ -5,8 +5,26 @@ import { createRequire } from "node:module";
 const require = createRequire(new URL("../../netlify-auth-site/package.json", import.meta.url));
 const { getStore, listStores } = require("@netlify/blobs");
 
-const { NETLIFY_AUTH_TOKEN: token, NETLIFY_SITE_ID: siteID, TARGET_URL: target, MIGRATE_TOKEN: migrateToken } = process.env;
+const token = (process.env.NETLIFY_AUTH_TOKEN || "").trim();
+const siteID = (process.env.NETLIFY_SITE_ID || "").trim();
+const { TARGET_URL: target, MIGRATE_TOKEN: migrateToken } = process.env;
 if (!token || !siteID || !target || !migrateToken) throw new Error("NETLIFY_AUTH_TOKEN, NETLIFY_SITE_ID, TARGET_URL und MIGRATE_TOKEN werden gebraucht");
+
+// Vorab prüfen, ob Token und Projekt-ID stimmen (nur Statuscodes, keine Werte ausgeben)
+{
+  const api = (path) => fetch(`https://api.netlify.com/api/v1${path}`, { headers: { authorization: `Bearer ${token}` } });
+  const user = await api("/user");
+  console.log(`Netlify-Token: HTTP ${user.status} (Länge ${token.length}, beginnt mit ${token.slice(0, 4)}…)`);
+  const site = await api(`/sites/${encodeURIComponent(siteID)}`);
+  const info = site.ok ? await site.json() : {};
+  console.log(`Projekt-ID: HTTP ${site.status}${info.name ? ` → Projekt „${info.name}“` : ""} (Länge ${siteID.length})`);
+  if (!user.ok) throw new Error("Netlify-Token wird nicht akzeptiert – bitte neuen Token erstellen und NETLIFY_AUTH_TOKEN ersetzen");
+  if (!site.ok) {
+    const sites = await (await api("/sites?per_page=50")).json().catch(() => []);
+    console.log("Projekte mit diesem Token:", (Array.isArray(sites) ? sites : []).map((s) => s.name).join(", "));
+    throw new Error("Projekt-ID passt nicht – bitte NETLIFY_SITE_ID prüfen");
+  }
+}
 
 // Stores, die der Sync-Server benutzt (falls listStores nichts liefert)
 const KNOWN = ["account-sync", "account-sync-events", "legacy-supabase-sync", "app-usage", "arvio-auth", "tv-auth-sessions",
