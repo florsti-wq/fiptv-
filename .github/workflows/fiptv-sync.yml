@@ -62,7 +62,7 @@ jobs:
           npx wrangler d1 execute fiptv-sync --local --file schema.sql
           (npx wrangler dev --local --port 8787 > ../wrangler-dev.log 2>&1 &)
           for i in $(seq 1 60); do curl -fs http://127.0.0.1:8787/fiptv-health > /dev/null && break; sleep 1; done
-          echo "--- health"; curl -s http://127.0.0.1:8787/fiptv-health; echo
+          echo "--- health"; curl -s http://127.0.0.1:8787/fiptv-health || { echo "Worker startet nicht:"; cat ../wrangler-dev.log; exit 1; }; echo
           echo "--- config"; curl -s -w " [%{http_code}]" http://127.0.0.1:8787/.netlify/functions/config; echo
           echo "--- Startseite"; curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:8787/
           AK="test-anon-key-0123456789012345678901234567890123456789"

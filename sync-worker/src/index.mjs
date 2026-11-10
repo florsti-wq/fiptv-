@@ -3,6 +3,7 @@
 // unter denselben Pfaden (/.netlify/functions/<name>) – Apps müssen nur die Adresse wechseln.
 // Daten (Netlify Blobs) liegen in D1, die Postgres-Datenbank (DATABASE_URL) bleibt dieselbe.
 import { functions } from "./functions.generated.mjs";
+import * as blobsModule from "./blobs-d1.js";
 import * as sportsWarm from "../../netlify-auth-site/netlify/functions/sports-metadata-warm.mjs";
 
 function pick(mod) {
@@ -128,7 +129,7 @@ export default {
     if (url.pathname === "/fiptv-admin/import" && request.method === "POST") {
       const token = env.MIGRATE_TOKEN;
       if (!token || request.headers.get("authorization") !== `Bearer ${token}`) return new Response("Forbidden", { status: 403 });
-      const { getStore } = await import("./blobs-d1.js");
+      const getStore = blobsModule.getStore || blobsModule.default.getStore;
       const body = await request.json();
       let written = 0;
       for (const item of body.items || []) {
