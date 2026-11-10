@@ -46,7 +46,7 @@ jobs:
         if: always()
         working-directory: sync-worker
         run: |
-          npx wrangler secret delete MIGRATE_TOKEN --force || npx wrangler secret delete MIGRATE_TOKEN || true
+          yes | npx wrangler secret delete MIGRATE_TOKEN || true
       - name: Prüfen
         run: |
           curl -fsS "$TARGET_URL/fiptv-health"; echo
