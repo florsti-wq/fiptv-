@@ -69,7 +69,8 @@ jobs:
           echo "--- tv-auth-start"; curl -s -w " [%{http_code}]" -X POST -H "content-type: application/json" -H "apikey: $AK" -H "x-arvio-app-key: $AK" -d '{"deviceName":"CI"}' http://127.0.0.1:8787/.netlify/functions/tv-auth-start | tee start.json; echo
           echo "--- stream-ticket-key"; curl -s -w " [%{http_code}]" http://127.0.0.1:8787/.netlify/functions/stream-ticket-key | head -c 400; echo
           echo "--- auth-login (ohne Postgres, Fehler erwartet)"; curl -s -w " [%{http_code}]" -X POST -H "content-type: application/json" -H "apikey: $AK" -d '{"email":"ci@example.com","password":"x"}' http://127.0.0.1:8787/.netlify/functions/auth-login | head -c 400; echo
-          echo "--- Import"; curl -s -w " [%{http_code}]" -X POST -H "authorization: Bearer ci-migrate" -H "content-type: application/json" -d '{"items":[{"store":"account-sync","key":"ci/test.json","value":"{\\"ok\\":true}","metadata":{"a":1}}]}' http://127.0.0.1:8787/fiptv-admin/import; echo
+          node -e 'require("fs").writeFileSync("import.json", JSON.stringify({items:[{store:"account-sync",key:"ci/test.json",value:JSON.stringify({ok:true,text:"Grüße ".repeat(200000)}),metadata:{a:1}}]}))'
+          echo "--- Import (großer Wert, mehrere Teile)"; curl -s -w " [%{http_code}]" -X POST -H "authorization: Bearer ci-migrate" -H "content-type: application/json" --data-binary @import.json http://127.0.0.1:8787/fiptv-admin/import; echo
           echo "--- Import ohne Schlüssel (403 erwartet)"; curl -s -o /dev/null -w "%{http_code}\n" -X POST -d '{}' http://127.0.0.1:8787/fiptv-admin/import
           echo "--- D1-Inhalt"; npx wrangler d1 execute fiptv-sync --local --command "SELECT store, key, parts FROM blobs LIMIT 20"
           echo "--- Worker-Protokoll"; tail -n 60 ../wrangler-dev.log
