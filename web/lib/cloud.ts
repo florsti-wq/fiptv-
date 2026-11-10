@@ -554,6 +554,7 @@ function settingsFromAndroidProfile(value: unknown): Partial<AppSettings> {
   if ("showLoadingStats" in state) partial.showLoadingStats = Boolean(state.showLoadingStats);
   if ("spoilerBlurEnabled" in state) partial.spoilerBlur = Boolean(state.spoilerBlurEnabled);
   if (typeof state.fiptvBackground === "string" && state.fiptvBackground) partial.fiptvBackground = state.fiptvBackground;
+  if ("fiptvKidsLimit" in state) partial.fiptvKidsLimit = Math.max(0, Number(state.fiptvKidsLimit) || 0);
   if ("volumeBoostDb" in state) partial.volumeBoostDb = Math.max(0, Math.min(15, Number(state.volumeBoostDb) || 0));
   if ("includeSpecials" in state) partial.includeSpecials = Boolean(state.includeSpecials);
   if ("dnsProvider" in state) partial.dnsProvider = normalizedDns(state.dnsProvider);

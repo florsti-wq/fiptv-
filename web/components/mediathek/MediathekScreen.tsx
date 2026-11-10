@@ -27,6 +27,17 @@ const ROWS: RowDef[] = [
   ...MEDIATHEK_CHANNELS.filter((c) => c.id !== "kika").map((c) => ({ key: `ch_${c.id}`, title: `Neu bei ${c.label}`, query: { channel: c.id }, onePerShow: true }))
 ];
 
+// fIPTV: Kinderprofil – nur KiKA und bekannte Kindersendungen
+const KIDS_ROWS: RowDef[] = [
+  { key: "k_kika", title: "Neu bei KiKA", query: { channel: "kika" }, minMinutes: 5, onePerShow: true },
+  { key: "k_maus", title: "Die Sendung mit der Maus", query: { topic: "Die Sendung mit der Maus" }, minMinutes: 5 },
+  { key: "k_loewenzahn", title: "Löwenzahn", query: { topic: "Löwenzahn" }, minMinutes: 5 },
+  { key: "k_sesam", title: "Sesamstraße", query: { topic: "Sesamstraße" }, minMinutes: 5 },
+  { key: "k_checker", title: "Checker Tobi", query: { topic: "Checker Tobi" }, minMinutes: 5 },
+  { key: "k_wissen", title: "Wissen macht Ah!", query: { topic: "Wissen macht Ah!" }, minMinutes: 5 },
+  { key: "k_logo", title: "logo! Nachrichten für Kinder", query: { topic: "logo!" }, minMinutes: 3 }
+];
+
 type RowState = { items: MediathekItem[]; loading: boolean; error?: string; loaded: boolean };
 
 const dateShort = new Intl.DateTimeFormat("de-DE", { weekday: "short", day: "2-digit", month: "2-digit" });
@@ -157,6 +168,8 @@ function Hero({ item, art, children }: { item?: MediathekItem | null; art?: Medi
 export function MediathekScreen() {
   const { playStream, activeProfile } = useAppPick("playStream", "activeProfile");
   const profileId = activeProfile?.id ?? "";
+  const kids = Boolean(activeProfile?.isKidsProfile);
+  const rowDefs = kids ? KIDS_ROWS : ROWS;
   useResumeSync(profileId);
   useResumeVersion();
   const [longOnly, setLongOnly] = useState(true);
@@ -180,7 +193,10 @@ export function MediathekScreen() {
     queryMediathek({ ...def.query, minDurationSec, size: def.onePerShow ? 60 : 30 })
       .then((page) => {
         const seen = new Set<string>();
-        const items = def.onePerShow ? page.items.filter((i) => { const k = showKey(i); if (seen.has(k)) return false; seen.add(k); return true; }) : page.items;
+        const topic = def.query.topic?.toLowerCase();
+        const items = def.onePerShow
+          ? page.items.filter((i) => { const k = showKey(i); if (seen.has(k)) return false; seen.add(k); return true; })
+          : topic ? page.items.filter((i) => i.topic.toLowerCase().startsWith(topic)) : page.items;
         setRows((r) => ({ ...r, [def.key]: { items: items.slice(0, 30), loading: false, loaded: true } }));
       })
       .catch((err) => setRows((r) => ({ ...r, [def.key]: { items: [], loading: false, loaded: true, error: err instanceof Error ? err.message : String(err) } })));
@@ -190,24 +206,24 @@ export function MediathekScreen() {
   useEffect(() => {
     loadingRows.current.clear();
     setRows({});
-    ROWS.slice(0, 3).forEach((def) => loadRow(def));
-  }, [loadRow]);
+    rowDefs.slice(0, 3).forEach((def) => loadRow(def));
+  }, [loadRow, rowDefs]);
 
   // Suche
   useEffect(() => {
     if (!search) { setResults([]); setResultTotal(undefined); setSearchError(null); return; }
     const ctrl = new AbortController();
     setSearching(true); setSearchError(null); setResults([]);
-    queryMediathek({ search, minDurationSec: longOnly ? 20 * 60 : undefined, size: 60 }, ctrl.signal)
+    queryMediathek({ search, channel: kids ? "kika" : undefined, minDurationSec: !kids && longOnly ? 20 * 60 : undefined, size: 60 }, ctrl.signal)
       .then((page) => { setResults(page.items); setResultTotal(page.total); })
       .catch((err) => { if (!ctrl.signal.aborted) setSearchError(err instanceof Error ? err.message : String(err)); })
       .finally(() => { if (!ctrl.signal.aborted) setSearching(false); });
     return () => ctrl.abort();
-  }, [search, longOnly]);
+  }, [search, longOnly, kids]);
 
   const loadMoreResults = () => {
     setSearching(true);
-    queryMediathek({ search, minDurationSec: longOnly ? 20 * 60 : undefined, size: 60, offset: results.length })
+    queryMediathek({ search, channel: kids ? "kika" : undefined, minDurationSec: !kids && longOnly ? 20 * 60 : undefined, size: 60, offset: results.length })
       .then((page) => { setResults((r) => [...r, ...page.items.filter((i) => !r.some((x) => x.id === i.id))]); setResultTotal(page.total); })
       .catch((err) => setSearchError(err instanceof Error ? err.message : String(err)))
       .finally(() => setSearching(false));
@@ -233,7 +249,7 @@ export function MediathekScreen() {
     return () => window.removeEventListener("keydown", onKey);
   }, [detail]);
 
-  const firstItem = useMemo(() => ROWS.map((d) => rows[d.key]?.items[0]).find(Boolean) ?? null, [rows]);
+  const firstItem = useMemo(() => rowDefs.map((d) => rows[d.key]?.items[0]).find(Boolean) ?? null, [rows, rowDefs]);
   const heroItem = focused ?? firstItem;
   const heroArt = useArt(heroItem);
   const detailArt = useArt(detail);
@@ -272,15 +288,17 @@ export function MediathekScreen() {
   return (
     <div className="fmt">
       <header className="fmt-header">
-        <h1 className="fmt-title">Mediathek</h1>
+        <h1 className="fmt-title">{kids ? "Kinder-Mediathek" : "Mediathek"}</h1>
         <form className="fmt-search" onSubmit={(e) => { e.preventDefault(); setSearch(searchInput.trim()); }}>
           <Search size={16} aria-hidden />
           <input value={searchInput} onChange={(e) => setSearchInput(e.target.value)} placeholder="Suchen: Tatort · !zdf heute · #Thema" aria-label="In den Mediatheken suchen" />
           {search && <button type="button" className="fmt-clear" onClick={() => { setSearch(""); setSearchInput(""); }} aria-label="Suche beenden"><X size={16} /></button>}
         </form>
-        <button type="button" className={`fmt-pill ${longOnly ? "active" : ""}`} onClick={() => setLongOnly((v) => !v)}>
-          {longOnly ? "Nur ganze Sendungen" : "Auch kurze Clips"}
-        </button>
+        {!kids && (
+          <button type="button" className={`fmt-pill ${longOnly ? "active" : ""}`} onClick={() => setLongOnly((v) => !v)}>
+            {longOnly ? "Nur ganze Sendungen" : "Auch kurze Clips"}
+          </button>
+        )}
       </header>
 
       {search ? (
@@ -307,7 +325,7 @@ export function MediathekScreen() {
           </Hero>
           <div className="fmt-rows">
             <ResumeRow profileId={profileId} kinds={["MEDIATHEK"]} onPlay={(e) => playStream(sourceFromResume(e))} />
-            {ROWS.map((def) => (
+            {rowDefs.map((def) => (
               <Row
                 key={def.key}
                 def={def}

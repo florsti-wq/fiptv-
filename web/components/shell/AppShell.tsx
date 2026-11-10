@@ -145,7 +145,7 @@ export function AppShell() {
   const kidsProfile = Boolean(kidsLevelOf(activeProfile));
   // A kids profile never stays on Live TV, however it got there (a saved section, a link).
   useEffect(() => {
-    if (kidsProfile && (section === "tv" || section === "vod" || section === "mediathek")) setSection("home");
+    if (kidsProfile && (section === "tv" || section === "vod")) setSection("home");
   }, [kidsProfile, section, setSection]);
   const [mounted, setMounted] = useState(false);
   const [collectionOpen, setCollectionOpen] = useState(false);
@@ -242,7 +242,7 @@ export function AppShell() {
             {section === "watchlist" && <ScreenBoundary screen="library"><WatchlistScreen /></ScreenBoundary>}
             {section === "tv" && !kidsProfile && <ScreenBoundary screen="tv"><LiveTvScreen /></ScreenBoundary>}
             {section === "vod" && !kidsProfile && <ScreenBoundary screen="vod"><ProviderVodScreen /></ScreenBoundary>}
-            {section === "mediathek" && !kidsProfile && <ScreenBoundary screen="mediathek"><MediathekScreen /></ScreenBoundary>}
+            {section === "mediathek" && <ScreenBoundary screen="mediathek"><MediathekScreen /></ScreenBoundary>}
             {section === "addons" && <ScreenBoundary screen="addons"><AddonsScreen /></ScreenBoundary>}
             {section === "settings" && <ScreenBoundary screen="settings"><SettingsScreen /></ScreenBoundary>}
           </>

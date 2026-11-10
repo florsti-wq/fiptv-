@@ -43,7 +43,7 @@ export function TopNav() {
   const [scrolled, setScrolled] = useState(false);
   const barRef = useRef<HTMLElement>(null);
   // Live TV carries no age ratings: a kids profile loses the tab (Android KidsNavigation).
-  const visibleNav = kidsLevelOf(activeProfile) ? nav.filter((item) => item.id !== "tv" && item.id !== "vod" && item.id !== "mediathek") : nav;
+  const visibleNav = kidsLevelOf(activeProfile) ? nav.filter((item) => item.id !== "tv" && item.id !== "vod") : nav;
   const entitlement = useEntitlement();
   const [now, setNow] = useState(Date.now);
   const trialLabel = trialRemainingLabel(entitlement, now);

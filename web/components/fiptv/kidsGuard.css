@@ -1,0 +1,10 @@
+.fkids-lock { position: fixed; inset: 0; z-index: 2147483000; display: grid; place-items: center; background: rgba(8, 10, 14, 0.94); color: #fff; }
+.fkids-box { max-width: 560px; text-align: center; padding: 32px; }
+.fkids-icon { font-size: 64px; }
+.fkids-box h2 { font-size: 32px; margin: 12px 0 8px; }
+.fkids-box p { color: #cbd5e1; font-size: 18px; margin: 0; }
+.fkids-actions { display: flex; gap: 14px; justify-content: center; align-items: center; flex-wrap: wrap; margin-top: 26px; }
+.fkids-btn { padding: 12px 24px; border-radius: 8px; border: 0; font-size: 18px; font-weight: 700; cursor: pointer; background: rgba(255, 255, 255, 0.16); color: #fff; }
+.fkids-btn.primary { background: #fff; color: #000; }
+.fkids-btn:focus-visible, .fkids-btn:hover { outline: 3px solid #22d3ee; outline-offset: 2px; }
+.fkids-hint { font-size: 14px !important; color: #94a3b8 !important; }

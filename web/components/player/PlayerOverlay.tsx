@@ -1,4 +1,5 @@
 "use client";
+import { KidsGuard } from "@/components/fiptv/KidsGuard";
 import "./player.css";
 import { useTranslation } from "@/lib/i18n";
 import { useMemo } from "react";
@@ -105,5 +106,6 @@ export function PlayerOverlay() {
       onToast={setToast}
       onClose={closePlayer}
     />
+    <KidsGuard profile={activeProfile} limitMinutes={settings.fiptvKidsLimit} onClose={closePlayer} />
   </>);
 }

@@ -568,6 +568,8 @@ export interface AppSettings {
   oledBlack: boolean;
   /** fIPTV: Hintergrundfarbe des Profils (wie Android, z. B. "midnight") */
   fiptvBackground?: string;
+  /** fIPTV: Tageslimit im Kinderprofil (Minuten, nur gelesen – eingestellt auf dem Fire TV) */
+  fiptvKidsLimit?: number;
   clockFormat: "12h" | "24h";
   showBudget: boolean;
   /** Android/TV home layout. Undefined = keep the app's value. */
