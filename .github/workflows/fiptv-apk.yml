@@ -22,6 +22,7 @@ on:
       - ".github/workflows/fiptv-desktop.yml"
       - ".github/workflows/fiptv-resolver.yml"
       - ".github/workflows/fiptv-web-check.yml"
+      - ".github/workflows/fiptv-probe.yml"
       - "screenshots/**"
 
 permissions:
