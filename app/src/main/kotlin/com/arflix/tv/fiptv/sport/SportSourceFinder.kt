@@ -141,6 +141,47 @@ class SportSourceFinder @Inject constructor(
             }
         }
 
+    // ---------- Sendungen im TV-Programm (Formel 1, Tennis, Wrestling …) ----------
+
+    private val listingCache = HashMap<String, Pair<Long, List<TvSource>>>()
+
+    /**
+     * Sendungen der nächsten Tage, deren Titel zu [pattern] passt (auf normalisiertem Text,
+     * z. B. " formel 1 "), auf Sport- und großen Sendern. Live zuerst, dann nach Beginn.
+     */
+    suspend fun tvListings(key: String, pattern: Regex, hoursAhead: Int = 72): List<TvSource> = withContext(Dispatchers.IO) {
+        val now = System.currentTimeMillis()
+        listingCache[key]?.let { (at, list) -> if (now - at < 10 * 60_000) return@withContext list }
+        val candidates = LinkedHashSet<String>()
+        iptv.visitStoredChannelLabels(null) { id, name, group ->
+            val text = " ${norm(group).trim()} ${norm(name).trim()} "
+            if (sportsChannel.containsMatchIn(text) || listingChannels.containsMatchIn(text) || pattern.containsMatchIn(text)) candidates.add(id)
+        }
+        val hits = HashMap<String, IptvProgram>()
+        if (candidates.isNotEmpty()) {
+            for (chunk in candidates.chunked(2000)) {
+                iptv.visitCachedGuideWindow(chunk.toSet(), now - 3 * 3600_000L, now + hoursAhead * 3600_000L) { id, p ->
+                    if (p.endUtcMillis <= now) return@visitCachedGuideWindow
+                    if (pattern.containsMatchIn(norm(p.title))) {
+                        val old = hits[id]
+                        if (old == null || p.startUtcMillis < old.startUtcMillis) hits[id] = p
+                    }
+                }
+            }
+        }
+        // je Sender nur die nächste passende Sendung; dazu Sender, deren Name selbst passt (z. B. „Sky Sport F1“)
+        val channels = hits.keys.chunked(400).flatMap { iptv.pagedChannelsByIds(it) }.associateBy { it.id }
+        val list = hits.mapNotNull { (cid, p) ->
+            val ch = channels[cid] ?: return@mapNotNull null
+            TvSource(ch, p, if (p.isLive(now)) 3 else 1, uhd.containsMatchIn(" ${norm(ch.name)} "))
+        }
+            .sortedWith(compareByDescending<TvSource> { it.programme?.isLive(now) == true }.thenBy { it.programme?.startUtcMillis ?: 0L }.thenByDescending { it.uhd })
+            .distinctBy { "${it.programme?.title}|${it.programme?.startUtcMillis}|${norm(it.channel.name).replace(Regex(" (hd|fhd|uhd|4k|sd|de|ger|raw) "), " ")}" }
+            .take(40)
+        listingCache[key] = now to list
+        list
+    }
+
     // ---------- Stremio ----------
 
     private suspend fun findAddons(games: List<SportMatch>, now: Long): Map<String, List<SportsAddonEvent>> {
@@ -180,6 +221,13 @@ class SportSourceFinder @Inject constructor(
             " (sport|sports|sky|dazn|bundesliga|champions|uefa|liga|ligue|football|fussball|soccer|event|ppv|bein|eurosport|" +
                 "magenta|prime|amazon|ard|zdf|das erste|sat 1|rtl|prosieben|servus|sport1|canal|rmc|movistar|tnt|espn|arena|nova) "
         )
+        private val listingChannels = Regex(" (netflix|maxx|tele 5|dmax|nitro|kabel|sixx|one|tlc|zdfneo|3sat|orf|srf|warner|tnt|max) ")
+
+        /** Suchmuster für Sendungen im TV-Programm (auf normalisiertem Text) */
+        val F1_PATTERN = Regex(" (formel 1|formula 1|formula one|f1|grand prix|qualifying) ")
+        val TENNIS_PATTERN = Regex(" (tennis|atp|wta|davis cup|billie jean king|wimbledon|roland garros|french open|us open|australian open|laver cup|united cup) ")
+        val WRESTLING_PATTERN = Regex(" (wwe|aew|wrestling|smackdown|raw|nxt|dynamite|collision|rampage|royal rumble|wrestlemania|summerslam|survivor series) ")
+
         private val football = Regex(" (bundesliga|champions|league|uefa|fussball|football|soccer|liga|pokal|live|spieltag|cup) ")
         private val uhd = Regex(" (4k|uhd|2160p?) ")
 

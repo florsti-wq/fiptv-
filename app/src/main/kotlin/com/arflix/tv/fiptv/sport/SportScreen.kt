@@ -52,13 +52,13 @@ import com.arflix.tv.ui.theme.BackgroundCard
 import com.arflix.tv.ui.theme.BackgroundDark
 import com.arflix.tv.util.LocalDeviceType
 
-private val Muted = Color(0xFFA0A6B4)
-private val Accent = Color(0xFF22C55E)
-private val LiveRed = Color(0xFFEF4444)
+internal val Muted = Color(0xFFA0A6B4)
+internal val Accent = Color(0xFF22C55E)
+internal val LiveRed = Color(0xFFEF4444)
 private val Highlight = Color(0xFF2A3A2E)
 
 /**
- * fIPTV: Sport – Bundesliga und Champions League.
+ * fIPTV: Sport – Fußball (Top-Ligen, Pokal, Europapokal, Nationalteams, Testspiele), Formel 1, Tennis, Wrestling.
  * Sports-Hub (Spiele mit Quellen: IPTV-Sender und Stremio) · Meine Teams · Ligen (Tabelle, Spiele, Teams)
  * · Team · Spiel (Ereignisse, Aufstellungen, Statistik).
  */
@@ -96,20 +96,45 @@ fun SportScreen(
             item {
                 Pill("⭐ Meine Teams", state.stack.first() == SportView.MyTeams, { viewModel.showRoot(SportView.MyTeams) })
             }
-            items(SportLeague.entries) { lg ->
+            // fIPTV: Sportarten
+            item {
                 val root = state.stack.first()
-                Pill(lg.label, root is SportView.League && root.league == lg, { viewModel.showRoot(SportView.League(lg)) })
+                Pill("⚽ Fußball", root is SportView.Football || root is SportView.League, { viewModel.showRoot(SportView.Football) })
             }
+            item { Pill("🏎 Formel 1", state.stack.first() is SportView.F1, { viewModel.showRoot(SportView.F1()) }) }
+            item { Pill("🎾 Tennis", state.stack.first() is SportView.Tennis, { viewModel.showRoot(SportView.Tennis()) }) }
+            item { Pill("🤼 Wrestling", state.stack.first() is SportView.Wrestling, { viewModel.showRoot(SportView.Wrestling()) }) }
         }
         Spacer(Modifier.height(10.dp))
 
         val view = state.view
-        // Unterleiste der Liga
-        if (view is SportView.League) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf("Tabelle", "Spiele", "Teams").forEachIndexed { i, label ->
-                    Pill(label, view.tab == i, { viewModel.setLeagueTab(i) }, small = true)
+        // Unterleiste (Liga, Formel 1, Tennis, Wrestling)
+        val subTabs: List<Pair<Int, String>> = when (view) {
+            is SportView.League -> buildList {
+                if (view.league.hasTable) add(0 to "Tabelle")
+                add(1 to "Spiele"); add(2 to "Teams")
+                if (view.league.hasStats) add(3 to "Torjäger & Vorlagen")
+            }
+            is SportView.F1 -> listOf(0 to "Rennwochenenden", 1 to "Fahrer-WM", 2 to "Team-WM", 3 to "📺 Im TV")
+            is SportView.Tennis -> listOf(0 to "Turniere", 1 to "Weltrangliste", 2 to "📺 Im TV")
+            is SportView.Wrestling -> listOf(0 to "Shows", 1 to "📺 Im TV", 2 to "▶ Videos")
+            else -> emptyList()
+        }
+        if (subTabs.isNotEmpty()) {
+            val current = when (view) {
+                is SportView.League -> view.tab; is SportView.F1 -> view.tab
+                is SportView.Tennis -> view.tab; is SportView.Wrestling -> view.tab; else -> -1
+            }
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                if (view is SportView.League) item {
+                    Text(view.league.label, color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(end = 6.dp))
                 }
+                if (view is SportView.Tennis) {
+                    item { Pill("ATP Herren", view.tour == "atp", { viewModel.setTennisTour("atp") }, small = true) }
+                    item { Pill("WTA Damen", view.tour == "wta", { viewModel.setTennisTour("wta") }, small = true) }
+                    item { Spacer(Modifier.width(12.dp)) }
+                }
+                items(subTabs) { (i, label) -> Pill(label, current == i, { viewModel.setLeagueTab(i) }, small = true) }
             }
             Spacer(Modifier.height(10.dp))
         }
@@ -144,8 +169,28 @@ fun SportScreen(
                                 } else onPlayStream(title, stream.url)
                             })
                         SportView.MyTeams -> myTeams(state, viewModel)
-                        is SportView.League -> if (view.tab == 0) tableItems(state.table, highlightId = null, onTeam = { viewModel.open(SportView.Team(it)) })
-                            else matchItems(state.matches, grouped = true, onMatch = { viewModel.open(SportView.Match(it.league, it.id)) })
+                        is SportView.League -> when (view.tab) {
+                            0 -> tableItems(state.table, highlightId = null, onTeam = { viewModel.open(SportView.Team(it)) })
+                            3 -> leaderItems(state.leaders)
+                            else -> matchItems(state.matches, grouped = true, onMatch = { viewModel.open(SportView.Match(it.league, it.id)) })
+                        }
+                        SportView.Football -> footballItems(onOpen = { viewModel.open(SportView.League(it)) })
+                        is SportView.F1 -> when (view.tab) {
+                            0 -> f1WeekendItems(state)
+                            1 -> f1StandingItems(state.f1Drivers, "Fahrer-Weltmeisterschaft")
+                            2 -> f1StandingItems(state.f1Teams, "Konstrukteurs-Weltmeisterschaft")
+                            else -> listingItems(state.tvListings, "Formel 1", context, onPlayChannel)
+                        }
+                        is SportView.Tennis -> when (view.tab) {
+                            0 -> tennisItems(state.tennis)
+                            1 -> tennisRankingItems(state.tennisRanking, if (view.tour == "atp") "ATP-Weltrangliste" else "WTA-Weltrangliste")
+                            else -> listingItems(state.tvListings, "Tennis", context, onPlayChannel)
+                        }
+                        is SportView.Wrestling -> when (view.tab) {
+                            0 -> wrestlingItems(state.wrestling)
+                            1 -> listingItems(state.tvListings, "Wrestling", context, onPlayChannel)
+                            else -> videoItems(state.videos)
+                        }
                         is SportView.Team -> teamItems(view.team, state, viewModel)
                         is SportView.Match -> state.detail?.let { matchDetailItems(it) }
                     }
@@ -379,7 +424,7 @@ private fun LazyListScope.tableItems(rows: List<SportTableRow>, highlightId: Str
 }
 
 @Composable
-private fun Cell(text: String, width: Int, bold: Boolean = false, color: Color = Muted) {
+internal fun Cell(text: String, width: Int, bold: Boolean = false, color: Color = Muted) {
     Text(text, color = color, fontSize = 14.sp, fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal,
         textAlign = TextAlign.Center, maxLines = 1, modifier = Modifier.width(width.dp))
 }
@@ -603,12 +648,12 @@ private fun playerText(p: SportPlayer): String {
 // ---------- Bausteine ----------
 
 @Composable
-private fun Section(title: String) {
+internal fun Section(title: String) {
     Text(title, color = Accent, fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 12.dp, bottom = 2.dp))
 }
 
 @Composable
-private fun Logo(url: String?, sizeDp: Int) {
+internal fun Logo(url: String?, sizeDp: Int) {
     if (url == null) Spacer(Modifier.size(sizeDp.dp))
     else AsyncImage(model = url, contentDescription = null, contentScale = ContentScale.Fit, modifier = Modifier.size(sizeDp.dp))
 }
@@ -624,7 +669,7 @@ private fun focusBorder() = ClickableSurfaceDefaults.border(
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
-private fun FocusCard(onClick: () -> Unit, highlighted: Boolean = false, content: @Composable () -> Unit) {
+internal fun FocusCard(onClick: () -> Unit, highlighted: Boolean = false, content: @Composable () -> Unit) {
     // Alle Zeilen sind fokussierbar, damit man auf dem Fernseher mit dem Steuerkreuz durch die Liste scrollen kann
     Surface(
         onClick = onClick,
@@ -648,7 +693,7 @@ private fun FocusCard(onClick: () -> Unit, highlighted: Boolean = false, content
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
-private fun Pill(label: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier, small: Boolean = false) {
+internal fun Pill(label: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier, small: Boolean = false) {
     Surface(
         onClick = onClick,
         modifier = (modifier).then(Modifier.fiptvTap(onClick)),

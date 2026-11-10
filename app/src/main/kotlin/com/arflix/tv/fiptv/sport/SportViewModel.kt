@@ -30,7 +30,15 @@ sealed interface SportView {
     /** Quellen eines Spiels */
     data class Sources(val match: SportMatch) : SportView
     data object MyTeams : SportView
-    data class League(val league: SportLeague, val tab: Int = 0) : SportView  // 0 Tabelle, 1 Spiele, 2 Teams
+    /** Fußball: Auswahl der Wettbewerbe */
+    data object Football : SportView
+    data class League(val league: SportLeague, val tab: Int = if (league.hasTable) 0 else 1) : SportView  // 0 Tabelle, 1 Spiele, 2 Teams, 3 Statistik
+    /** 0 Rennwochenenden, 1 Fahrer-WM, 2 Team-WM, 3 Im TV */
+    data class F1(val tab: Int = 0) : SportView
+    /** tour = atp/wta; 0 Turniere, 1 Weltrangliste, 2 Im TV */
+    data class Tennis(val tour: String = "atp", val tab: Int = 0) : SportView
+    /** 0 Shows, 1 Im TV, 2 Videos */
+    data class Wrestling(val tab: Int = 0) : SportView
     data class Team(val team: SportTeam) : SportView
     data class Match(val league: SportLeague, val eventId: String) : SportView
 }
@@ -53,6 +61,16 @@ data class SportUiState(
     val matches: List<SportMatch> = emptyList(),
     val teams: List<SportTeam> = emptyList(),
     val detail: SportMatchDetail? = null,
+    val leaders: List<StatCategory> = emptyList(),
+    val f1Weekends: List<F1Weekend> = emptyList(),
+    val f1Calendar: List<F1Calendar> = emptyList(),
+    val f1Drivers: List<F1Standing> = emptyList(),
+    val f1Teams: List<F1Standing> = emptyList(),
+    val tennis: List<TennisTournament> = emptyList(),
+    val tennisRanking: List<TennisRank> = emptyList(),
+    val wrestling: List<WrestlingShow> = emptyList(),
+    val tvListings: List<TvSource> = emptyList(),
+    val videos: List<com.arflix.tv.fiptv.youtube.YtVideo> = emptyList(),
     val loading: Boolean = false,
     val error: String? = null,
 ) {
@@ -94,6 +112,10 @@ class SportViewModel @Inject constructor(
                     is SportView.Sources -> false
                     SportView.MyTeams -> s.overview.any { it.live != null }
                     is SportView.League -> v.tab == 1 && s.matches.any { it.isLive }
+                    SportView.Football -> false
+                    is SportView.F1 -> v.tab == 0 && s.f1Weekends.any { w -> w.sessions.any { it.state == "in" } }
+                    is SportView.Tennis -> v.tab == 0 && s.tennis.any { t -> t.matches.any { it.isLive } }
+                    is SportView.Wrestling -> false
                     is SportView.Team -> s.matches.any { it.isLive }
                     is SportView.Match -> s.detail?.match?.isLive == true
                 }
@@ -124,8 +146,22 @@ class SportViewModel @Inject constructor(
     }
 
     fun setLeagueTab(tab: Int) {
-        val v = _state.value.view as? SportView.League ?: return
-        _state.update { it.copy(stack = it.stack.dropLast(1) + v.copy(tab = tab)) }
+        val v = _state.value.view
+        val next = when (v) {
+            is SportView.League -> v.copy(tab = tab)
+            is SportView.F1 -> v.copy(tab = tab)
+            is SportView.Tennis -> v.copy(tab = tab)
+            is SportView.Wrestling -> v.copy(tab = tab)
+            else -> return
+        }
+        _state.update { it.copy(stack = it.stack.dropLast(1) + next) }
+        load()
+    }
+
+    fun setTennisTour(tour: String) {
+        val v = _state.value.view as? SportView.Tennis ?: return
+        if (v.tour == tour) return
+        _state.update { it.copy(stack = it.stack.dropLast(1) + v.copy(tour = tour)) }
         load()
     }
 
@@ -156,8 +192,12 @@ class SportViewModel @Inject constructor(
                         val games = SportLeague.entries.map { lg -> async { runCatching { SportRepository.matches(lg) }.getOrDefault(emptyList()) } }
                             .awaitAll().flatten()
                         val now = System.currentTimeMillis()
+                        val followedIds = _state.value.followed.map { it.id }.toSet()
+                        // Live und die nächsten Tage; Vereins-Testspiele nur mit gefolgten Teams
                         val hub = games.filter { it.isLive || (it.state == "pre" && it.startMs - now < 8 * 24 * 3600_000L) }
+                            .filter { it.league != SportLeague.CLUB_FRIENDLIES || it.home.team.id in followedIds || it.away.team.id in followedIds }
                             .sortedWith(compareByDescending<SportMatch> { it.isLive }.thenBy { it.startMs })
+                            .take(80)
                         _state.update { it.copy(hubGames = hub) }
                         findSources(hub, force = quiet)
                     }
@@ -167,7 +207,7 @@ class SportViewModel @Inject constructor(
                     SportView.MyTeams -> {
                         val overview = _state.value.followed.map { t ->
                             async {
-                                val all = runCatching { SportRepository.teamMatches(t.id) }.getOrDefault(emptyList())
+                                val all = runCatching { SportRepository.teamMatches(t) }.getOrDefault(emptyList())
                                 TeamOverview(
                                     team = t,
                                     live = all.firstOrNull { it.isLive },
@@ -178,14 +218,37 @@ class SportViewModel @Inject constructor(
                         }.awaitAll()
                         _state.update { it.copy(overview = overview) }
                     }
+                    SportView.Football -> Unit
                     is SportView.League -> when (view.tab) {
                         0 -> SportRepository.table(view.league).let { t -> _state.update { it.copy(table = t) } }
                         1 -> SportRepository.matches(view.league).let { m -> _state.update { it.copy(matches = m) } }
+                        3 -> SportRepository.leaders(view.league).let { l -> _state.update { it.copy(leaders = l) } }
                         else -> SportRepository.teams(view.league).let { t -> _state.update { it.copy(teams = t) } }
                     }
+                    is SportView.F1 -> when (view.tab) {
+                        0 -> MoreSportsRepository.f1Weekends().let { (w, c) -> _state.update { it.copy(f1Weekends = w, f1Calendar = c) } }
+                        1, 2 -> MoreSportsRepository.f1Standings().let { (d, t) -> _state.update { it.copy(f1Drivers = d, f1Teams = t) } }
+                        else -> loadListings("f1", SportSourceFinder.F1_PATTERN)
+                    }
+                    is SportView.Tennis -> when (view.tab) {
+                        0 -> MoreSportsRepository.tennisTournaments(view.tour).let { t -> _state.update { it.copy(tennis = t) } }
+                        1 -> MoreSportsRepository.tennisRanking(view.tour).let { r -> _state.update { it.copy(tennisRanking = r) } }
+                        else -> loadListings("tennis", SportSourceFinder.TENNIS_PATTERN)
+                    }
+                    is SportView.Wrestling -> when (view.tab) {
+                        0 -> MoreSportsRepository.wrestlingShows().let { w -> _state.update { it.copy(wrestling = w) } }
+                        1 -> loadListings("wrestling", SportSourceFinder.WRESTLING_PATTERN)
+                        else -> {
+                            if (!com.arflix.tv.fiptv.youtube.YouTubeRepository.isConfigured) error("YouTube ist in dieser App-Version nicht eingerichtet")
+                            val vids = listOf(MoreSportsRepository.WWE_YOUTUBE, MoreSportsRepository.AEW_YOUTUBE).map { id ->
+                                async { runCatching { com.arflix.tv.fiptv.youtube.YouTubeRepository.channelVideos(id, max = 20).second.items }.getOrDefault(emptyList()) }
+                            }.awaitAll().flatten().sortedByDescending { it.publishedAt }
+                            _state.update { it.copy(videos = vids) }
+                        }
+                    }
                     is SportView.Team -> {
-                        val m = async { SportRepository.teamMatches(view.team.id) }
-                        val t = async { runCatching { SportRepository.table(SportLeague.BUNDESLIGA) }.getOrDefault(emptyList()) }
+                        val m = async { SportRepository.teamMatches(view.team) }
+                        val t = async { runCatching { SportRepository.table(SportLeague.byCode(view.team.league) ?: SportLeague.BUNDESLIGA) }.getOrDefault(emptyList()) }
                         _state.update { it.copy(matches = m.await(), table = t.await()) }
                     }
                     is SportView.Match -> {
@@ -200,6 +263,12 @@ class SportViewModel @Inject constructor(
                 if (!quiet) _state.update { it.copy(loading = false, error = e.message ?: "Sportdaten nicht erreichbar") }
             }
         }
+    }
+
+    private suspend fun loadListings(key: String, pattern: Regex) {
+        _state.update { it.copy(tvListings = emptyList()) }
+        val list = sourceFinder.tvListings(key, pattern)
+        _state.update { it.copy(tvListings = list) }
     }
 
     // ---------- Quellen ----------

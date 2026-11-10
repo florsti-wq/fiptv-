@@ -15,18 +15,59 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-/** Wettbewerbe, die fIPTV anzeigt (ESPN-Kürzel). */
-enum class SportLeague(val code: String, val label: String, val short: String) {
-    BUNDESLIGA("ger.1", "Bundesliga", "BL"),
-    CHAMPIONS_LEAGUE("uefa.champions", "Champions League", "CL"),
+/** Gruppen der Fußball-Wettbewerbe */
+enum class LeagueGroup(val label: String) {
+    TOP("🏆 Top-Ligen Europas"),
+    GERMANY("🇩🇪 Deutschland"),
+    EUROPE("⭐ Europapokal"),
+    NATIONAL("🌍 Nationalmannschaften"),
+    FRIENDLY("🤝 Freundschaftsspiele"),
 }
+
+/** Wettbewerbe, die fIPTV anzeigt (ESPN-Kürzel). */
+enum class SportLeague(
+    val code: String,
+    val label: String,
+    val short: String,
+    val group: LeagueGroup,
+    val hasTable: Boolean = true,
+    val hasStats: Boolean = true,
+    /** Nationalmannschaften statt Vereine */
+    val national: Boolean = false,
+) {
+    BUNDESLIGA("ger.1", "Bundesliga", "BL", LeagueGroup.TOP),
+    PREMIER_LEAGUE("eng.1", "Premier League", "PL", LeagueGroup.TOP),
+    LA_LIGA("esp.1", "LaLiga", "LL", LeagueGroup.TOP),
+    SERIE_A("ita.1", "Serie A", "SA", LeagueGroup.TOP),
+    LIGUE_1("fra.1", "Ligue 1", "L1", LeagueGroup.TOP),
+    BUNDESLIGA_2("ger.2", "2. Bundesliga", "BL2", LeagueGroup.GERMANY),
+    DFB_POKAL("ger.dfb_pokal", "DFB-Pokal", "DFB", LeagueGroup.GERMANY, hasTable = false),
+    CHAMPIONS_LEAGUE("uefa.champions", "Champions League", "CL", LeagueGroup.EUROPE),
+    EUROPA_LEAGUE("uefa.europa", "Europa League", "EL", LeagueGroup.EUROPE),
+    CONFERENCE_LEAGUE("uefa.europa.conf", "Conference League", "ECL", LeagueGroup.EUROPE),
+    WORLD_CUP("fifa.world", "Weltmeisterschaft", "WM", LeagueGroup.NATIONAL, national = true),
+    EURO("uefa.euro", "Europameisterschaft", "EM", LeagueGroup.NATIONAL, national = true),
+    NATIONS_LEAGUE("uefa.nations", "UEFA Nations League", "UNL", LeagueGroup.NATIONAL, national = true),
+    WC_QUALI_EUROPE("fifa.worldq.uefa", "WM-Qualifikation Europa", "WMQ", LeagueGroup.NATIONAL, national = true),
+    EURO_QUALI("uefa.euroq", "EM-Qualifikation", "EMQ", LeagueGroup.NATIONAL, national = true),
+    FRIENDLIES("fifa.friendly", "Länderspiele (Freundschaft)", "LS", LeagueGroup.FRIENDLY, hasTable = false, hasStats = false, national = true),
+    CLUB_FRIENDLIES("club.friendly", "Vereins-Testspiele", "TS", LeagueGroup.FRIENDLY, hasTable = false, hasStats = false);
+
+    companion object {
+        fun byCode(code: String?): SportLeague? = entries.firstOrNull { it.code == code }
+    }
+}
+
+/** Bestenliste einer Liga (Torjäger, Vorlagen) */
+data class StatLeader(val rank: Int, val name: String, val team: String, val teamLogo: String?, val value: String, val detail: String)
+data class StatCategory(val title: String, val leaders: List<StatLeader>)
 
 data class SportTeam(
     val id: String,
     val name: String,
     val logo: String?,
     /** Liga, über die das Team gefunden wurde (für Abfragen) */
-    val league: String = SportLeague.BUNDESLIGA.code,
+    val league: String = "ger.1",
     /** vollständiger Name laut ESPN (für die Suche nach Sendern) */
     val fullName: String = "",
 )
@@ -126,15 +167,53 @@ object SportRepository {
         return list.ifEmpty { parseEvents(get("$SITE/${league.code}/scoreboard"), league) }.sortedBy { it.startMs }
     }
 
-    /** Alle Spiele eines Teams in Bundesliga und Champions League (vergangene und kommende). */
-    suspend fun teamMatches(teamId: String): List<SportMatch> = coroutineScope {
-        SportLeague.entries.flatMap { lg ->
+    /** Wettbewerbe, in denen ein Team spielen kann (Liga, Pokal, Europapokal bzw. Länderspiele). */
+    fun competitionsOf(team: SportTeam): List<SportLeague> {
+        val own = SportLeague.byCode(team.league) ?: SportLeague.BUNDESLIGA
+        if (own.national) return SportLeague.entries.filter { it.national }
+        val country = own.code.substringBefore('.')
+        val domestic = SportLeague.entries.filter { !it.national && it.code.startsWith("$country.") }
+        val europe = SportLeague.entries.filter { it.group == LeagueGroup.EUROPE }
+        return (listOf(own) + domestic + europe + SportLeague.CLUB_FRIENDLIES).distinct()
+    }
+
+    /** Alle Spiele eines Teams in seinen Wettbewerben (vergangene und kommende). */
+    suspend fun teamMatches(team: SportTeam): List<SportMatch> = teamMatches(team.id, competitionsOf(team))
+
+    suspend fun teamMatches(teamId: String, leagues: List<SportLeague> = SportLeague.entries.filter { it.group == LeagueGroup.TOP || it.group == LeagueGroup.EUROPE }): List<SportMatch> = coroutineScope {
+        leagues.flatMap { lg ->
             listOf("", "?fixture=true").map { q ->
                 async {
                     runCatching { parseEvents(get("$SITE/${lg.code}/teams/$teamId/schedule$q"), lg) }.getOrDefault(emptyList())
                 }
             }
         }.awaitAll().flatten().distinctBy { it.id }.sortedBy { it.startMs }
+    }
+
+    /** Torjäger und Vorlagengeber einer Liga. */
+    suspend fun leaders(league: SportLeague): List<StatCategory> {
+        val j = get("$SITE/${league.code}/statistics")
+        return j.optJSONArray("stats").objects().mapNotNull { cat ->
+            val title = when (cat.optString("name")) {
+                "goalsLeaders" -> "⚽ Torjäger"
+                "assistsLeaders" -> "🅰 Vorlagen"
+                else -> cat.optString("displayName").ifBlank { return@mapNotNull null }
+            }
+            val leaders = cat.optJSONArray("leaders").objects().take(20).mapIndexedNotNull { i, l ->
+                val a = l.optJSONObject("athlete") ?: return@mapIndexedNotNull null
+                val t = a.optJSONObject("team")
+                val stats = a.optJSONArray("statistics").objects().associate { it.optString("name") to it.optString("displayValue") }
+                StatLeader(
+                    rank = i + 1,
+                    name = a.optString("displayName"),
+                    team = t?.let { germanName(it.optString("shortDisplayName", it.optString("name")), it.optString("displayName")) }.orEmpty(),
+                    teamLogo = t?.optJSONArray("logos")?.optJSONObject(0)?.optString("href")?.takeIf { it.isNotBlank() },
+                    value = l.optDouble("value").takeIf { !it.isNaN() }?.let { v -> if (v % 1.0 == 0.0) v.toInt().toString() else v.toString() } ?: l.optString("displayValue"),
+                    detail = stats["appearances"]?.let { "$it Spiele" } ?: l.optString("displayValue").replace("Matches", "Spiele").replace("Goals", "Tore").replace("Assists", "Vorlagen"),
+                )
+            }
+            StatCategory(title, leaders).takeIf { leaders.isNotEmpty() }
+        }
     }
 
     suspend fun matchDetail(league: SportLeague, eventId: String): SportMatchDetail {
@@ -261,6 +340,17 @@ object SportRepository {
             "Barcelona" to "FC Barcelona", "Juventus" to "Juventus Turin", "Sporting CP" to "Sporting Lissabon",
             "Benfica" to "Benfica Lissabon", "Club Brugge" to "Club Brügge", "Napoli" to "SSC Neapel",
             "Atletico Madrid" to "Atlético Madrid", "Red Bull Salzburg" to "RB Salzburg",
+            // Nationalmannschaften
+            "Germany" to "Deutschland", "Austria" to "Österreich", "Switzerland" to "Schweiz", "Netherlands" to "Niederlande",
+            "France" to "Frankreich", "Spain" to "Spanien", "Italy" to "Italien", "Belgium" to "Belgien", "Croatia" to "Kroatien",
+            "Denmark" to "Dänemark", "Poland" to "Polen", "Czechia" to "Tschechien", "Czech Republic" to "Tschechien",
+            "Hungary" to "Ungarn", "Scotland" to "Schottland", "Turkey" to "Türkei", "Türkiye" to "Türkei", "Sweden" to "Schweden",
+            "Norway" to "Norwegen", "Luxembourg" to "Luxemburg", "Brazil" to "Brasilien", "Argentina" to "Argentinien",
+            "United States" to "USA", "Greece" to "Griechenland", "Serbia" to "Serbien", "Slovakia" to "Slowakei",
+            "Slovenia" to "Slowenien", "Romania" to "Rumänien", "Ukraine" to "Ukraine", "Ireland" to "Irland",
+            "Republic of Ireland" to "Irland", "Northern Ireland" to "Nordirland", "Iceland" to "Island", "Finland" to "Finnland",
+            "Albania" to "Albanien", "Georgia" to "Georgien", "Bosnia-Herzegovina" to "Bosnien-Herzegowina", "Japan" to "Japan",
+            "Mexico" to "Mexiko", "Morocco" to "Marokko", "South Korea" to "Südkorea", "Colombia" to "Kolumbien",
         )
         return map[short] ?: map[full] ?: short.ifBlank { full }
     }
