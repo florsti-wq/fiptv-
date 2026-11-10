@@ -2144,6 +2144,9 @@ private fun PlayerScreenContent(args: PlayerScreenArgs, viewModel: PlayerViewMod
         }
     }
 
+    // fIPTV: Tageslimit im Kinderprofil
+    com.arflix.tv.fiptv.kids.KidsGuard(player = exoPlayer, onBack = args.onBack)
+
     // BroadcastReceiver for PiP control actions (rewind, play/pause, forward) — touch devices only
     // Which text track the player has ACTUALLY selected, as (groupIndex, trackIndex) in
     // currentTracks.groups. Auto-match reads its reference from the text renderer's buffer, and a

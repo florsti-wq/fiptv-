@@ -83,6 +83,8 @@ private val TileHeight = 135.dp
 fun MediathekScreen(
     /** Abspielen; zweiter Wert = Startposition (Weiterschauen) */
     onPlay: (entry: FiptvResume.Entry, startPositionMs: Long?) -> Unit,
+    /** Kinderprofil: Kinder-Sender live abspielen */
+    onPlayChannel: (com.arflix.tv.data.model.IptvChannel) -> Unit = {},
     viewModel: MediathekViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -122,7 +124,7 @@ fun MediathekScreen(
         Column(Modifier.fillMaxSize().padding(top = 20.dp)) {
             // Kopfzeile
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 40.dp, end = 40.dp)) {
-                Text("Mediathek", color = Color.White, fontSize = 26.sp, fontWeight = FontWeight.Bold)
+                Text(if (state.kids) "Kinder-Mediathek" else "Mediathek", color = Color.White, fontSize = 26.sp, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.width(20.dp))
                 Pill(
                     label = if (state.search.isBlank()) "🔍 Suchen" else "🔍 ${state.search}",
@@ -151,6 +153,11 @@ fun MediathekScreen(
                     contentPadding = PaddingValues(bottom = 40.dp),
                     verticalArrangement = Arrangement.spacedBy(14.dp),
                 ) {
+                    if (state.kidsChannels.isNotEmpty()) {
+                        item(key = "kids_live") {
+                            KidsChannelRow(state.kidsChannels, onPlayChannel)
+                        }
+                    }
                     if (resume.isNotEmpty()) {
                         item(key = "resume") {
                             ResumeRow(
@@ -565,5 +572,55 @@ private fun Pill(label: String, selected: Boolean, onClick: () -> Unit, modifier
             maxLines = 1,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
         )
+    }
+}
+
+
+/** fIPTV: Kinder-Sender live (nur im Kinderprofil) */
+@OptIn(ExperimentalTvMaterial3Api::class)
+@Composable
+private fun KidsChannelRow(channels: List<com.arflix.tv.data.model.IptvChannel>, onPlay: (com.arflix.tv.data.model.IptvChannel) -> Unit) {
+    Column {
+        Text(
+            "📺 Kinder-Sender live",
+            color = Color.White,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(start = 40.dp, bottom = 6.dp),
+        )
+        LazyRow(
+            contentPadding = PaddingValues(horizontal = 40.dp, vertical = 6.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            items(channels, key = { it.id }) { ch ->
+                Surface(
+                    onClick = { onPlay(ch) },
+                    modifier = Modifier.width(170.dp).height(110.dp),
+                    shape = ClickableSurfaceDefaults.shape(shape = RoundedCornerShape(12.dp)),
+                    colors = ClickableSurfaceDefaults.colors(
+                        containerColor = Color(0xFF1E2230),
+                        contentColor = Color.White,
+                        focusedContainerColor = Color(0xFF2B3145),
+                        focusedContentColor = Color.White,
+                    ),
+                    scale = ClickableSurfaceDefaults.scale(focusedScale = 1.08f),
+                    border = ClickableSurfaceDefaults.border(
+                        focusedBorder = Border(border = BorderStroke(3.dp, Color(0xFFFFD54F)), shape = RoundedCornerShape(12.dp)),
+                    ),
+                ) {
+                    Column(
+                        Modifier.fillMaxSize().padding(10.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                    ) {
+                        if (!ch.logo.isNullOrBlank()) {
+                            AsyncImage(model = ch.logo, contentDescription = null, contentScale = ContentScale.Fit, modifier = Modifier.height(54.dp).fillMaxWidth())
+                            Spacer(Modifier.height(6.dp))
+                        }
+                        Text(ch.name, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    }
+                }
+            }
+        }
     }
 }

@@ -266,7 +266,9 @@ fun AppBottomBar(
         modifier.background(Color(0xCC000000))
     }
 
-    val items = bottomBarItems.filter { it.route != "tv" || !KidsNavigation.hideLiveTv }
+    // fIPTV: Kinderprofile sehen nur Start, Suche, Merkliste, Mediathek (Kinder) und Einstellungen
+    val kidsHidden = setOf("tv", com.arflix.tv.navigation.FiptvNav.VOD, com.arflix.tv.navigation.FiptvNav.SPORT, com.arflix.tv.navigation.FiptvNav.YOUTUBE)
+    val items = bottomBarItems.filter { it.route !in kidsHidden || !KidsNavigation.hideLiveTv }
     if (isRail) {
         Column(
             modifier = baseModifier

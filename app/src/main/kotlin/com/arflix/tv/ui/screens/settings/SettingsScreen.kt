@@ -342,7 +342,7 @@ internal fun tvGeneralRowsForSection(section: String): List<Int> {
         "ai_subtitles" -> listOf(28, 29, 30, 31, 32, 33) + LIVE_AI_SUBS_ROWS
         "playback" -> listOf(10, 11, 12, 43, 44, 13, 14, 34, 37, 16, 15, 40, 27, 53, 54)
         "appearance" -> listOf(17, 49, 50, 18, 20, 60, 21, 24, 23, 22, 41, 46, 36, 47)
-        "profiles" -> listOf(19)
+        "profiles" -> listOf(19, 61)
         "network" -> listOf(25, 26, 35)
         else -> emptyList()
     }
@@ -563,6 +563,8 @@ fun SettingsScreen(
     onSubPageChanged: (Boolean) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    // fIPTV: Dialog „Kinder-Zeitlimit“
+    com.arflix.tv.fiptv.kids.KidsLimitDialogHost()
     var showCredits by remember { mutableStateOf(false) }
     if (showCredits) {
         com.arflix.tv.ui.components.AboutCreditsDialog { showCredits = false }
@@ -1464,6 +1466,7 @@ fun SettingsScreen(
                                                 17 -> viewModel.toggleCardLayoutMode()
                                                 18 -> openUiModeWarningDialog()
                                                 19 -> viewModel.setSkipProfileSelection(!uiState.skipProfileSelection)
+                                                61 -> com.arflix.tv.fiptv.kids.KidsLimitBus.open()
                                                 20 -> viewModel.setOledBlackBackground(!uiState.oledBlackBackground)
                                                 21 -> viewModel.cycleClockFormat()
                                                 22 -> viewModel.setShowBudget(!uiState.showBudget)
@@ -5373,6 +5376,14 @@ private fun MobileSettingsSubPage(
                         onClick = { viewModel.setSkipProfileSelection(!uiState.skipProfileSelection) }
                     )
                     MobileSettingsRow(
+                        icon = Icons.Default.Schedule,
+                        title = "Kinder-Zeitlimit",
+                        subtitle = "Tägliche Fernsehzeit für Kinderprofile",
+                        value = "Einstellen",
+                        isFocused = false,
+                        onClick = { com.arflix.tv.fiptv.kids.KidsLimitBus.open() }
+                    )
+                    MobileSettingsRow(
                         icon = Icons.Default.Language,
                         title = stringResource(R.string.dns_provider),
                         value = uiState.dnsProvider,
@@ -6954,6 +6965,8 @@ private fun TvGeneralSettingsRows(
                     modifier = Modifier.settingsFocusSlot(localIndex)
                 )
                 19 -> SettingsToggleRow(stringResource(R.string.skip_profile), stringResource(R.string.skip_profile_desc), skipProfileSelection, focusedIndex == localIndex, onSkipProfileSelectionToggle, Modifier.settingsFocusSlot(localIndex))
+                // fIPTV: Tageslimit für Kinderprofile
+                61 -> SettingsRow(Icons.Default.Schedule, "Kinder-Zeitlimit", "Tägliche Fernsehzeit für Kinderprofile (Eltern-PIN)", "Einstellen", focusedIndex == localIndex, { com.arflix.tv.fiptv.kids.KidsLimitBus.open() }, Modifier.settingsFocusSlot(localIndex))
                 20 -> SettingsToggleRow(stringResource(R.string.oled_black_background), stringResource(R.string.oled_black_background_desc), oledBlackBackground, focusedIndex == localIndex, onOledBlackBackgroundToggle, Modifier.settingsFocusSlot(localIndex))
                 21 -> SettingsRow(Icons.Default.Schedule, stringResource(R.string.clock_format), stringResource(R.string.clock_format_desc), if (clockFormat == "12h") "12-hour" else "24-hour", focusedIndex == localIndex, onClockFormatClick, Modifier.settingsFocusSlot(localIndex))
                 22 -> SettingsToggleRow(stringResource(R.string.show_budget), stringResource(R.string.show_budget_desc), showBudget, focusedIndex == localIndex, onShowBudgetToggle, Modifier.settingsFocusSlot(localIndex))

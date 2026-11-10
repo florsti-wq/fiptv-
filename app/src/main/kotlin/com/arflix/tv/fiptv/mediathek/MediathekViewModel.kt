@@ -13,6 +13,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -45,6 +46,9 @@ data class MediathekDetail(
 
 data class MediathekUiState(
     val rows: List<MediathekRow> = emptyList(),
+    /** Kinderprofil: nur Kinder-Inhalte und Kinder-Sender */
+    val kids: Boolean = false,
+    val kidsChannels: List<com.arflix.tv.data.model.IptvChannel> = emptyList(),
     val search: String = "",
     /** nur längere Beiträge (ab 20 Min.) – blendet Clips und Trailer aus */
     val longOnly: Boolean = true,
@@ -63,10 +67,23 @@ class MediathekViewModel @Inject constructor(
     private val profileManager: ProfileManager,
     private val cloudSyncRepository: com.arflix.tv.data.repository.CloudSyncRepository,
     tmdbApi: TmdbApi,
+    private val profileRepository: com.arflix.tv.data.repository.ProfileRepository,
+    private val iptvRepository: com.arflix.tv.data.repository.IptvRepository,
 ) : ViewModel() {
     private val artCache = MediathekArtCache(context, tmdbApi)
 
-    private val defs: List<MediathekRowDef> = buildList {
+    /** fIPTV: Reihen im Kinderprofil – KiKA und bekannte Kindersendungen */
+    private val kidsDefs: List<MediathekRowDef> = listOf(
+        MediathekRowDef("k_kika", "Neu bei KiKA", channel = "kika", minMinutes = 5),
+        MediathekRowDef("k_maus", "Die Sendung mit der Maus", topic = "Die Sendung mit der Maus", minMinutes = 5, onePerShow = false),
+        MediathekRowDef("k_loewenzahn", "Löwenzahn", topic = "Löwenzahn", minMinutes = 5, onePerShow = false),
+        MediathekRowDef("k_sesam", "Sesamstraße", topic = "Sesamstraße", minMinutes = 5, onePerShow = false),
+        MediathekRowDef("k_checker", "Checker Tobi", topic = "Checker Tobi", minMinutes = 5, onePerShow = false),
+        MediathekRowDef("k_wissen", "Wissen macht Ah!", topic = "Wissen macht Ah!", minMinutes = 5, onePerShow = false),
+        MediathekRowDef("k_logo", "logo! Nachrichten für Kinder", topic = "logo!", minMinutes = 3, onePerShow = false),
+    )
+
+    private val adultDefs: List<MediathekRowDef> = buildList {
         add(MediathekRowDef("new", "Neu in den Mediatheken"))
         add(MediathekRowDef("long", "Filme & lange Dokus", minMinutes = 80))
         add(MediathekRowDef("tatort", "Tatort", topic = "Tatort", minMinutes = 60, onePerShow = false))
@@ -79,15 +96,40 @@ class MediathekViewModel @Inject constructor(
         }
     }
 
-    private val _state = MutableStateFlow(MediathekUiState(rows = defs.map { MediathekRow(it) }))
+    private var defs: List<MediathekRowDef> = emptyList()
+    private val _state = MutableStateFlow(MediathekUiState())
     val state: StateFlow<MediathekUiState> = _state.asStateFlow()
     private val rowJobs = mutableMapOf<String, Job>()
     private var searchJob: Job? = null
     private var detailJob: Job? = null
 
     init {
-        // die ersten Reihen sofort, der Rest wenn sie ins Bild kommen
-        defs.take(3).forEach { ensureRow(it.key) }
+        viewModelScope.launch {
+            val kids = runCatching { profileRepository.activeProfile.first()?.isKidsProfile == true }.getOrDefault(false)
+            defs = if (kids) kidsDefs else adultDefs
+            _state.update { it.copy(kids = kids, rows = defs.map { d -> MediathekRow(d) }) }
+            // die ersten Reihen sofort, der Rest wenn sie ins Bild kommen
+            defs.take(3).forEach { ensureRow(it.key) }
+            if (kids) loadKidsChannels()
+        }
+    }
+
+    /** Kinder-Sender aus der eigenen IPTV-Liste (KiKA, Super RTL, Toggo, Disney, Nick …) */
+    private suspend fun loadKidsChannels() {
+        val channels = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            runCatching {
+                val ids = LinkedHashSet<String>()
+                iptvRepository.visitStoredChannelLabels(null) { id, name, group ->
+                    if (ids.size < 400 && com.arflix.tv.fiptv.kids.FiptvKids.isKidsChannel(name, group)) ids.add(id)
+                }
+                ids.chunked(200).flatMap { iptvRepository.pagedChannelsByIds(it) }
+                    .distinctBy { it.streamUrl }
+                    .distinctBy { it.name.lowercase().replace(Regex("\\s*(hd|fhd|uhd|4k|sd|\\|.*)$"), "").trim() }
+                    .sortedWith(compareBy({ !it.name.contains("kika", ignoreCase = true) }, { it.name.lowercase() }))
+                    .take(40)
+            }.getOrDefault(emptyList())
+        }
+        _state.update { it.copy(kidsChannels = channels) }
     }
 
     private fun minDuration(def: MediathekRowDef, longOnly: Boolean): Int? =
@@ -107,7 +149,12 @@ class MediathekViewModel @Inject constructor(
                     minDurationSec = minDuration(def, _state.value.longOnly),
                     size = if (def.onePerShow) 60 else 30,
                 )
-                val items = if (def.onePerShow) page.items.distinctBy { MediathekRepository.showKey(it) } else page.items
+                val items = when {
+                    def.onePerShow -> page.items.distinctBy { MediathekRepository.showKey(it) }
+                    // Sendungsreihen: nur genau diese Sendung (z. B. nicht „Maus-Spezial“ fremder Themen)
+                    def.topic != null -> page.items.filter { it.topic.startsWith(def.topic, ignoreCase = true) }
+                    else -> page.items
+                }
                 updateRow(key) { it.copy(items = items.take(30), loading = false, loaded = true) }
             } catch (e: kotlinx.coroutines.CancellationException) {
                 throw e
@@ -158,7 +205,8 @@ class MediathekViewModel @Inject constructor(
             try {
                 val page = MediathekRepository.query(
                     search = s.search,
-                    channel = null,
+                    // Kinderprofil: nur KiKA durchsuchen
+                    channel = if (s.kids) "kika" else null,
                     minDurationSec = if (s.longOnly) 20 * 60 else null,
                     offset = if (append) s.searchItems.size else 0,
                 )

@@ -272,7 +272,7 @@ fun AppNavigation(
     // fIPTV: zusätzliche Bereiche (Mediathek …) aus allen Bildschirmen erreichbar machen
     SideEffect {
         FiptvNav.navigator = { route ->
-            if (!(isKidsProfile && (route == FiptvNav.MEDIATHEK || route == FiptvNav.VOD || route == FiptvNav.YOUTUBE || route == FiptvNav.SPORT))) navigateTopLevel(route)
+            if (!(isKidsProfile && (route == FiptvNav.VOD || route == FiptvNav.YOUTUBE || route == FiptvNav.SPORT))) navigateTopLevel(route)
         }
     }
 
@@ -370,7 +370,20 @@ fun AppNavigation(
         composable(FiptvNav.MEDIATHEK) {
             NavigationRailScreen(navigationRailInset, bottomInset = navigationRailBottomInset) {
                 com.arflix.tv.fiptv.mediathek.MediathekScreen(
-                    onPlay = { entry, start -> navController.navigate(fiptvPlayerRoute(entry, start)) }
+                    onPlay = { entry, start -> navController.navigate(fiptvPlayerRoute(entry, start)) },
+                    // fIPTV: Kinder-Sender live (nur im Kinderprofil sichtbar)
+                    onPlayChannel = { ch ->
+                        navController.navigate(
+                            Screen.Player.createRoute(
+                                mediaType = MediaType.MOVIE,
+                                mediaId = 0,
+                                streamUrl = ch.streamUrl,
+                                preferredSourceName = ch.name,
+                                isLiveStream = true,
+                                iptvSourceId = com.arflix.tv.ui.screens.tv.live.channelPlaylistId(ch.id),
+                            )
+                        )
+                    },
                 )
             }
         }

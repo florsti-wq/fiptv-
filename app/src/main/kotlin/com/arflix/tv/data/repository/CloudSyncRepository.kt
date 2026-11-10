@@ -343,7 +343,9 @@ class CloudSyncRepository @Inject constructor(
         // fIPTV: Weiterschauen (Anbieter-VOD/Mediathek) und gemerkte YouTube-Kanäle, je als JSON
         val fiptvResumeJson: String? = null,
         val fiptvYtChannelsJson: String? = null,
-        val fiptvSportTeamsJson: String? = null
+        val fiptvSportTeamsJson: String? = null,
+        // fIPTV: Tageslimit im Kinderprofil (Minuten als Text, "0" = keins)
+        val fiptvKidsLimit: String? = null
     )
 
     // ── DataStore key helpers ──
@@ -723,6 +725,7 @@ class CloudSyncRepository @Inject constructor(
                         fiptvResumeJson = runCatching { com.arflix.tv.fiptv.FiptvResume.exportJson(context, profile.id) }.getOrNull(),
                         fiptvYtChannelsJson = prefs[profileManager.profileStringKeyFor(profile.id, "fiptv_yt_channels")],
                         fiptvSportTeamsJson = prefs[profileManager.profileStringKeyFor(profile.id, "fiptv_sport_teams")],
+                        fiptvKidsLimit = prefs[profileManager.profileStringKeyFor(profile.id, com.arflix.tv.fiptv.kids.FiptvKids.LIMIT_PREF)],
                         guideRowCount = prefs[guideRowCountKeyFor(profile.id)]?.toIntOrNull()
                             ?.takeIf { it in 6..10 } ?: 0,
                         showBudget = prefs[showBudgetKeyFor(profile.id)] ?: true,
@@ -1696,6 +1699,9 @@ class CloudSyncRepository @Inject constructor(
                         }
                         state.fiptvSportTeamsJson?.let {
                             prefs[profileManager.profileStringKeyFor(profileId, "fiptv_sport_teams")] = it
+                        }
+                        state.fiptvKidsLimit?.let {
+                            prefs[profileManager.profileStringKeyFor(profileId, com.arflix.tv.fiptv.kids.FiptvKids.LIMIT_PREF)] = it
                         }
                         state.fiptvYtChannelsJson?.let {
                             prefs[profileManager.profileStringKeyFor(profileId, "fiptv_yt_channels")] = it
