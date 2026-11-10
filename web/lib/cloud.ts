@@ -1,4 +1,5 @@
 import { repairIptvPlaylistIds } from "./iptvPlaylistIdentity";
+import { exportResumeJson, mergeResumeJson, mergeResumeLists } from "./fiptvResume";
 import type { AuthClient } from "./auth";
 import { mergeAddonChanges, recordAddonChanges, type AddonChanges } from "./addonChanges";
 import { mergeWatchlistChanges, mergeWatchlistItems, watchlistChangesStorageKey, watchlistKey, type CloudWatchlistItem as AndroidWatchlistItem, type WatchlistChanges } from "./watchlistChanges";
@@ -875,6 +876,23 @@ async function runInMutationQueue<T>(userId: string, run: () => Promise<T>): Pro
   finally { if (mutationQueues.get(userId) === settled) mutationQueues.delete(userId); }
 }
 
+/**
+ * fIPTV: lokalen „Weiterschauen“-Stand (Anbieter-VOD/Mediathek) mit der Cloud abgleichen –
+ * beide Seiten werden je Titel zusammengeführt (neuerer Stand gewinnt), wie in der Android-App.
+ */
+export async function syncFiptvResume(auth: AuthClient, profileId: string) {
+  if (!auth.session || !profileId) return;
+  await mutateCloudPayload(auth, (root) => {
+    const existing = (scopedValue<Record<string, unknown>>(root, "profileSettingsById", profileId) ?? {}) as Record<string, unknown>;
+    const cloudJson = typeof existing.fiptvResumeJson === "string" ? existing.fiptvResumeJson : null;
+    mergeResumeJson(profileId, cloudJson);
+    const merged = mergeResumeLists(cloudJson, exportResumeJson(profileId));
+    if (!merged || merged === cloudJson) return;
+    setScopedValue(root, "profileSettingsById", profileId, { ...existing, fiptvResumeJson: merged });
+    bumpFieldTs(root, `p:${profileId}:fiptvResumeJson`);
+  });
+}
+
 export async function mutateCloudPayload(auth: AuthClient, mutator: (root: RawPayload) => void) {
   if (!auth.session) return;
   const userId = auth.session.userId;
@@ -896,6 +914,11 @@ export async function mutateCloudPayload(auth: AuthClient, mutator: (root: RawPa
 
 export async function pullCloudPayload(auth: AuthClient, profileId?: string | null): Promise<CloudPayload> {
   const root = await pullRawPayload(auth);
+  // fIPTV: „Weiterschauen“ für Anbieter-VOD/Mediathek der anderen Geräte übernehmen
+  if (profileId) {
+    const fiptvProfile = scopedValue<Record<string, unknown>>(root, "profileSettingsById", profileId);
+    if (typeof fiptvProfile?.fiptvResumeJson === "string") mergeResumeJson(profileId, fiptvProfile.fiptvResumeJson);
+  }
   const profileSettings = settingsFromAndroidProfile(scopedValue(root, "profileSettingsById", profileId));
   const iptvSettings = iptvFromAndroid(scopedValue(root, "iptvByProfile", profileId), root);
   const profileCatalogs = scopedValue<AppSettings["catalogs"]>(root, "catalogsByProfile", profileId);

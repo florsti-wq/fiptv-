@@ -31,6 +31,7 @@ import { PlayerPanel, qualityBadges, defaultSubtitleIndex, SKIP_SECONDS } from "
 import { useAiSubtitleTranslation, useSubtitleTracks } from "./subtitles";
 import { usePlaybackEngine } from "./usePlaybackEngine";
 import { useProgressTracking } from "./useProgressTracking";
+import { useFiptvResume } from "./useFiptvResume";
 import { usePlatformControls } from "./usePlatformControls";
 import { usePlayerKeys } from "./usePlayerKeys";
 import { useSkipAndUpNext, PlayerSkipUpNext } from "./skipUpNext";
@@ -629,6 +630,7 @@ export function VideoPlayer({
   }, [stream.url, stream.remuxAudioIndex]);
 
   useProgressTracking({ activeProfileId, addons, canAdvance, item, lastSavedRef, liveTv, nextDismissed, onAdvanceRef, onToast, selectedEpisode, setEnded, setNextCountdown, setShowControls, settings, stream, upNextShownRef, videoRef });
+  useFiptvResume({ activeProfileId, stream, videoRef });
 
   // Controls hide ~3 s after playback starts, after a tap, a key or a mouse
   // move — not only after mouse movement — and never while paused, with a

@@ -3,6 +3,7 @@
 import { buildXtreamPlayerApiUrl, fetchXtreamJson, playlistProxyHeaders, type XtreamInfo } from "./iptv";
 import { inferQuality, movieVodUrl, seriesVodUrl, toSource, xtreamProviders } from "./xtreamVod";
 import type { IptvPlaylistEntry, StreamSource } from "./types";
+import { registerResume, resumeStartSeconds } from "./fiptvResume";
 
 export type VodKind = "movies" | "series";
 
@@ -167,11 +168,20 @@ export async function loadSeriesDetail(provider: VodProvider, seriesId: string, 
   };
 }
 
-export function movieSource(provider: VodProvider, item: VodItem, userAgent?: string): StreamSource {
-  return { ...toSource(item.name, movieVodUrl(provider.info, item.id, item.ext), inferQuality(item.name), provider.name, userAgent), resumePositionSeconds: 0 };
+export function movieSource(provider: VodProvider, item: VodItem, userAgent?: string, profileId = "", fromStart = false): StreamSource {
+  const url = movieVodUrl(provider.info, item.id, item.ext);
+  const fiptvResume = { url, kind: "MOVIE" as const, title: item.name, subtitle: provider.name, image: item.poster };
+  registerResume(profileId, fiptvResume);
+  return { ...toSource(item.name, url, inferQuality(item.name), provider.name, userAgent), fiptvResume, resumePositionSeconds: fromStart ? 0 : resumeStartSeconds(profileId, url) };
 }
 
-export function episodeSource(provider: VodProvider, series: VodItem, episode: VodEpisode, userAgent?: string): StreamSource {
+export function episodeSource(provider: VodProvider, series: VodItem, episode: VodEpisode, userAgent?: string, profileId = "", fromStart = false): StreamSource {
   const label = `${series.name} – S${episode.season}E${episode.episode}${episode.title && !/^Folge \d+$/.test(episode.title) ? ` · ${episode.title}` : ""}`;
-  return { ...toSource(label, seriesVodUrl(provider.info, episode.id, episode.ext), inferQuality(`${series.name} ${episode.title}`), provider.name, userAgent), resumePositionSeconds: 0 };
+  const url = seriesVodUrl(provider.info, episode.id, episode.ext);
+  const fiptvResume = {
+    url, kind: "EPISODE" as const, title: `S${episode.season} E${episode.episode} · ${episode.title}`, subtitle: series.name,
+    image: episode.image ?? series.poster, season: episode.season, episode: episode.episode
+  };
+  registerResume(profileId, fiptvResume);
+  return { ...toSource(label, url, inferQuality(`${series.name} ${episode.title}`), provider.name, userAgent), fiptvResume, resumePositionSeconds: fromStart ? 0 : resumeStartSeconds(profileId, url) };
 }

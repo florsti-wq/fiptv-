@@ -3,11 +3,13 @@
 // gewählten Sendung, darunter Reihen; Klick öffnet die Detailseite mit weiteren Folgen.
 import "./mediathek.css";
 
-import { ArrowLeft, ChevronLeft, ChevronRight, Loader2, Play, Search, X } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Loader2, Play, RotateCcw, Search, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useAppPick } from "@/lib/store";
+import { ProgressLine, ResumeRow, resumeProgress, sourceFromResume, useResumeSync, useResumeVersion } from "@/components/fiptv/ResumeRow";
+import { isResumable, remainingMin } from "@/lib/fiptvResume";
 import {
-  MEDIATHEK_CHANNELS, artHero, artTile, cachedArt, channelColor, channelLabel, formatDuration,
+  MEDIATHEK_CHANNELS, artHero, artTile, bestVideo, cachedArt, channelColor, channelLabel, formatDuration,
   isContainerTopic, lookupArt, mediathekSource, queryMediathek, showKey,
   type MediathekArt, type MediathekItem, type MediathekQuery
 } from "@/lib/fiptvMediathek";
@@ -56,8 +58,10 @@ function ChannelBadge({ channel }: { channel: string }) {
   return <span className="fmt-badge" style={{ background: channelColor(channel) }}>{channelLabel(channel)}</span>;
 }
 
-function Tile({ item, onOpen, onFocus, wide }: { item: MediathekItem; onOpen: (i: MediathekItem) => void; onFocus?: (i: MediathekItem) => void; wide?: boolean }) {
+function Tile({ item, onOpen, onFocus, wide, profileId }: { item: MediathekItem; onOpen: (i: MediathekItem) => void; onFocus?: (i: MediathekItem) => void; wide?: boolean; profileId: string }) {
   const art = useArt(item);
+  useResumeVersion();
+  const progress = resumeProgress(profileId, bestVideo(item));
   const image = artTile(art);
   const color = channelColor(item.channel);
   return (
@@ -79,14 +83,15 @@ function Tile({ item, onOpen, onFocus, wide }: { item: MediathekItem; onOpen: (i
       <span className="fmt-tile-badge"><ChannelBadge channel={item.channel} /></span>
       <span className="fmt-tile-caption">
         <strong>{item.title}</strong>
-        <small>{meta(item)}</small>
+        <small>{progress?.finished ? "✓ gesehen" : progress && isResumable(progress) ? `noch ${remainingMin(progress)} Min.` : meta(item)}</small>
       </span>
+      <ProgressLine entry={progress} />
     </button>
   );
 }
 
-function Row({ def, state, onVisible, onOpen, onFocus, onRetry }: {
-  def: RowDef; state?: RowState; onVisible: () => void; onOpen: (i: MediathekItem) => void; onFocus: (i: MediathekItem) => void; onRetry: () => void;
+function Row({ def, state, onVisible, onOpen, onFocus, onRetry, profileId }: {
+  profileId: string; def: RowDef; state?: RowState; onVisible: () => void; onOpen: (i: MediathekItem) => void; onFocus: (i: MediathekItem) => void; onRetry: () => void;
 }) {
   const ref = useRef<HTMLElement>(null);
   const scroller = useRef<HTMLDivElement>(null);
@@ -109,7 +114,7 @@ function Row({ def, state, onVisible, onOpen, onFocus, onRetry }: {
           <button type="button" className="fmt-arrow left" onClick={() => scroll(-1)} aria-label="Zurück" tabIndex={-1}><ChevronLeft /></button>
           <div className="fmt-row-scroller" ref={scroller}>
             {state?.items.length
-              ? state.items.map((item) => <Tile key={item.id} item={item} onOpen={onOpen} onFocus={onFocus} />)
+              ? state.items.map((item) => <Tile key={item.id} item={item} onOpen={onOpen} onFocus={onFocus} profileId={profileId} />)
               : Array.from({ length: 6 }, (_, i) => <span key={i} className="fmt-tile fmt-skeleton" />)}
           </div>
           <button type="button" className="fmt-arrow right" onClick={() => scroll(1)} aria-label="Weiter" tabIndex={-1}><ChevronRight /></button>
@@ -150,7 +155,10 @@ function Hero({ item, art, children }: { item?: MediathekItem | null; art?: Medi
 }
 
 export function MediathekScreen() {
-  const { playStream } = useAppPick("playStream");
+  const { playStream, activeProfile } = useAppPick("playStream", "activeProfile");
+  const profileId = activeProfile?.id ?? "";
+  useResumeSync(profileId);
+  useResumeVersion();
   const [longOnly, setLongOnly] = useState(true);
   const [rows, setRows] = useState<Record<string, RowState>>({});
   const [focused, setFocused] = useState<MediathekItem | null>(null);
@@ -230,17 +238,22 @@ export function MediathekScreen() {
   const heroArt = useArt(heroItem);
   const detailArt = useArt(detail);
 
-  const play = (item: MediathekItem) => {
-    const source = mediathekSource(item);
+  const play = (item: MediathekItem, fromStart = false) => {
+    const source = mediathekSource(item, profileId, fromStart, artTile(cachedArt(item)));
     if (source) playStream(source);
   };
+  const detailProgress = detail ? resumeProgress(profileId, bestVideo(detail)) : null;
+  const detailResumable = detailProgress ? isResumable(detailProgress) : false;
 
   if (detail) {
     return (
       <div className="fmt">
         <Hero item={detail} art={detailArt}>
           <div className="fmt-actions">
-            <button type="button" className="fmt-btn primary" onClick={() => play(detail)} autoFocus><Play size={20} fill="currentColor" /> Abspielen</button>
+            <button type="button" className="fmt-btn primary" onClick={() => play(detail)} autoFocus>
+              <Play size={20} fill="currentColor" /> {detailResumable && detailProgress ? `Weiterschauen (noch ${remainingMin(detailProgress)} Min.)` : "Abspielen"}
+            </button>
+            {(detailResumable || detailProgress?.finished) && <button type="button" className="fmt-btn" onClick={() => play(detail, true)}><RotateCcw size={18} /> Von vorn</button>}
             <button type="button" className="fmt-btn" onClick={() => setDetail(null)}><ArrowLeft size={18} /> Zurück</button>
           </div>
         </Hero>
@@ -248,7 +261,7 @@ export function MediathekScreen() {
           <section className="fmt-row">
             <h2>{episodes === null ? "Weitere Folgen werden geladen …" : `Weitere Folgen: ${detail.topic}`}</h2>
             <div className="fmt-grid">
-              {(episodes ?? []).map((ep) => <Tile key={ep.id} item={ep} onOpen={setDetail} />)}
+              {(episodes ?? []).map((ep) => <Tile key={ep.id} item={ep} onOpen={setDetail} profileId={profileId} />)}
             </div>
           </section>
         )}
@@ -276,7 +289,7 @@ export function MediathekScreen() {
             {searchError ? `⚠ ${searchError}` : searching && !results.length ? "Wird gesucht …" : !results.length ? "Keine Sendungen gefunden." : resultTotal !== undefined ? `${resultTotal} Treffer` : ""}
           </p>
           <div className="fmt-grid">
-            {results.map((item) => <Tile key={item.id} item={item} onOpen={setDetail} />)}
+            {results.map((item) => <Tile key={item.id} item={item} onOpen={setDetail} profileId={profileId} />)}
           </div>
           {resultTotal !== undefined && results.length < resultTotal && (
             <button type="button" className="fmt-btn more" onClick={loadMoreResults} disabled={searching}>{searching ? "Lädt …" : "Mehr laden"}</button>
@@ -293,6 +306,7 @@ export function MediathekScreen() {
             )}
           </Hero>
           <div className="fmt-rows">
+            <ResumeRow profileId={profileId} kinds={["MEDIATHEK"]} onPlay={(e) => playStream(sourceFromResume(e))} />
             {ROWS.map((def) => (
               <Row
                 key={def.key}
@@ -302,6 +316,7 @@ export function MediathekScreen() {
                 onOpen={setDetail}
                 onFocus={setFocused}
                 onRetry={() => loadRow(def, true)}
+                profileId={profileId}
               />
             ))}
           </div>

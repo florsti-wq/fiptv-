@@ -97,3 +97,10 @@
   .fvod-episode { grid-template-columns: 32px 1fr 22px; }
   .fvod-episode-dur { display: none; }
 }
+
+/* fIPTV: Weiterschauen */
+.fvod .fres h2, .fvod .fres-scroller { padding-left: 0; padding-right: 0; }
+.fvod-poster-wrap { position: relative; display: block; border-radius: 10px; overflow: hidden; }
+.fvod-poster-wrap .fvod-poster { display: block; }
+.fvod-episode { position: relative; overflow: hidden; }
+.fvod-resume { color: #ffb74d; }

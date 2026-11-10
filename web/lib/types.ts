@@ -228,6 +228,8 @@ export interface SubtitleTrack {
 }
 
 export interface StreamSource {
+  /** fIPTV: Anbieter-VOD/Mediathek – Fortschritt für „Weiterschauen“ (lib/fiptvResume.ts) */
+  fiptvResume?: { url: string; kind: "MOVIE" | "EPISODE" | "MEDIATHEK"; title: string; subtitle?: string; image?: string; season?: number; episode?: number };
   transport?: "file" | "hls" | "dash" | "mpegts";
   media?: { container?: string; videoCodec?: string; audioCodec?: string; hdr?: string };
   homeServer?: { serverId: string; itemId: string; mediaSourceId?: string; mediaIndex?: number; partIndex?: number };

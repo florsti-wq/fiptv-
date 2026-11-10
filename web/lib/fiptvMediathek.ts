@@ -3,6 +3,7 @@
 // deshalb sucht fIPTV passende Sendungs-/Filmbilder bei TMDB (nur bei gleichem Namen).
 import { tmdb } from "./tmdb";
 import type { StreamSource } from "./types";
+import { registerResume, resumeStartSeconds } from "./fiptvResume";
 
 export type MediathekItem = {
   id: string;
@@ -224,17 +225,24 @@ export function lookupArt(item: MediathekItem): Promise<MediathekArt | null> {
 }
 
 // ---------- Abspielen ----------
-export function mediathekSource(item: MediathekItem): StreamSource | null {
+export function mediathekSource(item: MediathekItem, profileId = "", fromStart = false, image?: string): StreamSource | null {
   const url = bestVideo(item);
   if (!url) return null;
+  const sender = channelLabel(item.channel);
+  const fiptvResume = {
+    url, kind: "MEDIATHEK" as const, title: item.title,
+    subtitle: [sender, item.topic !== item.title ? item.topic : ""].filter(Boolean).join(" · "), image
+  };
+  registerResume(profileId, fiptvResume);
   return {
-    source: `${channelLabel(item.channel)} · ${item.title}`,
+    source: `${sender} · ${item.title}`,
     addonName: "Mediathek",
     addonId: "fiptv_mediathek",
     quality: item.videoHd ? "HD" : "SD",
     size: "",
     url,
     description: item.description ?? null,
-    resumePositionSeconds: 0
+    fiptvResume,
+    resumePositionSeconds: fromStart ? 0 : resumeStartSeconds(profileId, url)
   };
 }

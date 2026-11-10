@@ -5,6 +5,9 @@ import "./providerVod.css";
 import { ArrowLeft, Film, Loader2, Play, RefreshCw, Search, Star, Tv } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAppPick } from "@/lib/store";
+import { ProgressLine, ResumeRow, resumeProgress, sourceFromResume, useResumeSync, useResumeVersion } from "@/components/fiptv/ResumeRow";
+import { isResumable, remainingMin } from "@/lib/fiptvResume";
+import { movieVodUrl, seriesVodUrl } from "@/lib/xtreamVod";
 import {
   episodeSource, loadSeriesDetail, loadVodCategories, loadVodItems, movieSource, vodProviders,
   type VodCategory, type VodItem, type VodKind, type VodSeriesDetail
@@ -37,7 +40,10 @@ function Poster({ src, name }: { src?: string; name: string }) {
 }
 
 export function ProviderVodScreen() {
-  const { settings, playStream } = useAppPick("settings", "playStream");
+  const { settings, playStream, activeProfile } = useAppPick("settings", "playStream", "activeProfile");
+  const profileId = activeProfile?.id ?? "";
+  useResumeSync(profileId);
+  useResumeVersion();
   const userAgent = settings.customUserAgent;
   const saved = useMemo(loadSaved, []);
   const [kind, setKind] = useState<VodKind>(saved.kind ?? "movies");
@@ -111,7 +117,7 @@ export function ProviderVodScreen() {
 
   const activate = (item: VodItem) => {
     if (!provider) return;
-    if (item.kind === "movies") playStream(movieSource(provider, item, userAgent));
+    if (item.kind === "movies") playStream(movieSource(provider, item, userAgent, profileId));
     else openSeries(item);
   };
 
@@ -158,19 +164,25 @@ export function ProviderVodScreen() {
               </div>
             )}
             <ol className="fvod-episodes">
-              {episodes.map((ep) => (
+              {episodes.map((ep) => {
+                const epProgress = provider ? resumeProgress(profileId, seriesVodUrl(provider.info, ep.id, ep.ext)) : null;
+                return (
                 <li key={ep.id}>
-                  <button type="button" className="fvod-episode" onClick={() => provider && playStream(episodeSource(provider, series, ep, userAgent))}>
+                  <button type="button" className="fvod-episode" onClick={() => provider && playStream(episodeSource(provider, series, ep, userAgent, profileId))}>
                     <span className="fvod-episode-num">{ep.episode}</span>
                     <span className="fvod-episode-text">
                       <strong>{ep.title}</strong>
                       {ep.plot && <span className="fvod-muted">{ep.plot}</span>}
                     </span>
-                    {ep.duration && <span className="fvod-muted fvod-episode-dur">{ep.duration}</span>}
+                    <span className="fvod-muted fvod-episode-dur">
+                      {epProgress?.finished ? "✓ gesehen" : epProgress && isResumable(epProgress) ? `noch ${remainingMin(epProgress)} Min.` : ep.duration ?? ""}
+                    </span>
                     <Play size={18} aria-hidden />
+                    <ProgressLine entry={epProgress} />
                   </button>
                 </li>
-              ))}
+                );
+              })}
               {!episodes.length && <li className="fvod-muted">Keine Folgen gefunden.</li>}
             </ol>
           </>
@@ -199,6 +211,8 @@ export function ProviderVodScreen() {
         <button type="button" className="fvod-icon" onClick={() => setReloadKey((k) => k + 1)} aria-label="Neu laden" title="Neu laden"><RefreshCw size={16} aria-hidden /></button>
       </div>
 
+      <ResumeRow profileId={profileId} kinds={["MOVIE", "EPISODE"]} onPlay={(e) => playStream(sourceFromResume(e, userAgent))} />
+
       <div className="fvod-body">
         <nav className="fvod-categories" aria-label="Kategorien">
           <button type="button" className={`fvod-cat ${categoryId === ALL ? "active" : ""}`} onClick={() => setCategoryId(ALL)}>Alle</button>
@@ -220,16 +234,21 @@ export function ProviderVodScreen() {
             <button type="button" className="fvod-hint" onClick={() => setCategoryId(ALL)}>Nicht gefunden? In allen Kategorien suchen</button>
           )}
           <div className="fvod-grid">
-            {filtered.slice(0, limit).map((item) => (
+            {filtered.slice(0, limit).map((item) => {
+              const cardProgress = provider && item.kind === "movies" ? resumeProgress(profileId, movieVodUrl(provider.info, item.id, item.ext)) : null;
+              return (
               <button key={`${item.kind}-${item.id}`} type="button" className="fvod-card" onClick={() => activate(item)} title={item.name}>
-                <Poster src={item.poster} name={item.name} />
+                <span className="fvod-poster-wrap"><Poster src={item.poster} name={item.name} /><ProgressLine entry={cardProgress} /></span>
                 <span className="fvod-card-name">{item.name}</span>
                 <span className="fvod-card-meta">
                   {item.year && <span>{item.year}</span>}
                   {item.rating && <span><Star size={11} aria-hidden /> {item.rating}</span>}
+                  {cardProgress?.finished && <span>✓ gesehen</span>}
+                  {cardProgress && isResumable(cardProgress) && <span className="fvod-resume">noch {remainingMin(cardProgress)} Min.</span>}
                 </span>
               </button>
-            ))}
+              );
+            })}
           </div>
           {!loading && !error && !filtered.length && items.length > 0 && <p className="fvod-muted">Keine Treffer.</p>}
           {!loading && !error && !items.length && categories.length > 0 && <p className="fvod-muted">Diese Kategorie ist leer.</p>}
