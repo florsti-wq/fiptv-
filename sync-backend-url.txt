@@ -2,3 +2,4 @@
 # Leer = bisherige Netlify-Adresse (https://fipsite.netlify.app/.netlify/functions).
 # Nach dem Umzug auf Cloudflare hier eintragen:
 # https://fiptv-sync.florsti.workers.dev/.netlify/functions
+https://fiptv-sync.florsti.workers.dev/.netlify/functions
