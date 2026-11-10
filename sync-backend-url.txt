@@ -1,0 +1,4 @@
+# fIPTV: Adresse des Sync-Servers für neue App-Builds (APK, Windows, Weiterleiter).
+# Leer = bisherige Netlify-Adresse (https://fipsite.netlify.app/.netlify/functions).
+# Nach dem Umzug auf Cloudflare hier eintragen:
+# https://fiptv-sync.florsti.workers.dev/.netlify/functions

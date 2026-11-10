@@ -40,6 +40,11 @@ jobs:
       - name: Code holen
         uses: actions/checkout@v5
 
+      - name: Sync-Server-Adresse lesen (Datei sync-backend-url.txt, sonst bisherige)
+        run: |
+          url=$(grep -v '^#' sync-backend-url.txt 2>/dev/null | tr -d ' \r' | grep -m1 . || true)
+          echo "FIPTV_BACKEND=$url" >> "$GITHUB_ENV"
+          echo "Sync-Server: ${url:-(bisherige Adresse)}"
       - name: Java 17
         uses: actions/setup-java@v5
         with:
@@ -53,7 +58,8 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
           APP_ANON_KEY: ${{ secrets.APP_ANON_KEY }}
-          NETLIFY_BACKEND_URL: ${{ secrets.NETLIFY_BACKEND_URL }}
+          # fIPTV: Datei sync-backend-url.txt (Cloudflare-Sync-Server) hat Vorrang
+          NETLIFY_BACKEND_URL: ${{ env.FIPTV_BACKEND || secrets.NETLIFY_BACKEND_URL }}
           GOOGLE_WEB_CLIENT_ID: ${{ secrets.GOOGLE_WEB_CLIENT_ID }}
           TRAKT_CLIENT_ID: ${{ secrets.TRAKT_CLIENT_ID }}
           TRAKT_CLIENT_SECRET: ${{ secrets.TRAKT_CLIENT_SECRET }}

@@ -31,7 +31,8 @@
       "preload.js",
       "setup.html",
       "build/icon.png",
-      "package.json"
+      "package.json",
+      "backend.json"
     ],
     "extraResources": [
       {

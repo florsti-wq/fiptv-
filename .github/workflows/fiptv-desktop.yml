@@ -9,6 +9,7 @@ on:
     branches: [main]
     paths:
       - "desktop/**"
+      - "sync-backend-url.txt"
       - "web/**"
       - ".github/workflows/fiptv-desktop.yml"
 
@@ -31,6 +32,11 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - name: Sync-Server-Adresse lesen (Datei sync-backend-url.txt, sonst bisherige)
+        run: |
+          url=$(grep -v '^#' sync-backend-url.txt 2>/dev/null | tr -d ' \r' | grep -m1 . || true)
+          echo "FIPTV_BACKEND=$url" >> "$GITHUB_ENV"
+          echo "Sync-Server: ${url:-(bisherige Adresse)}"
       - uses: actions/setup-node@v5
         with:
           node-version: "22"
@@ -46,8 +52,8 @@ jobs:
         env:
           ARVIO_STANDALONE: "true"
           APP_ANON_KEY: ${{ secrets.APP_ANON_KEY }}
-          NEXT_PUBLIC_NETLIFY_BACKEND_URL: https://fipsite.netlify.app/.netlify/functions
-          NETLIFY_BACKEND_URL: https://fipsite.netlify.app/.netlify/functions
+          NEXT_PUBLIC_NETLIFY_BACKEND_URL: ${{ env.FIPTV_BACKEND || 'https://fipsite.netlify.app/.netlify/functions' }}
+          NETLIFY_BACKEND_URL: ${{ env.FIPTV_BACKEND || 'https://fipsite.netlify.app/.netlify/functions' }}
           NEXT_PUBLIC_PAYWALL_ENABLED: "false"
           NEXT_PUBLIC_TELEGRAM_ENABLED: "false"
           NEXT_PUBLIC_ALLOW_NETLIFY_MEDIA_PROXY: "true"
@@ -80,6 +86,11 @@ jobs:
         run: |
           tar -czf desktop/server.tgz -C desktop/server .
           ls -la desktop/server.tgz
+
+      - name: Sync-Server-Adresse für die App
+        env:
+          BACKEND: ${{ env.FIPTV_BACKEND || 'https://fipsite.netlify.app/.netlify/functions' }}
+        run: node -e 'require("fs").writeFileSync("desktop/backend.json", JSON.stringify({ url: process.env.BACKEND }))'
 
       - name: Electron – Abhängigkeiten
         working-directory: desktop

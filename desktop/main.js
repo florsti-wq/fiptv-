@@ -10,7 +10,10 @@ const path = require("node:path");
 // Fester Port: Profile/Anmeldung liegen pro Adresse im Browser-Speicher.
 const PORT = 38917;
 const APP_URL = `http://localhost:${PORT}/`;
-const BACKEND = "https://fipsite.netlify.app/.netlify/functions";
+// Sync-Server-Adresse kommt aus dem Build (backend.json), sonst die bisherige Netlify-Adresse
+const BACKEND = (() => {
+  try { return require("./backend.json").url || "https://fipsite.netlify.app/.netlify/functions"; } catch { return "https://fipsite.netlify.app/.netlify/functions"; }
+})();
 
 let server = null;
 let mainWindow = null;

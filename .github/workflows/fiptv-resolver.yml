@@ -7,6 +7,7 @@ on:
     branches: [main]
     paths:
       - "resolver-worker/**"
+      - "sync-backend-url.txt"
       - ".github/workflows/fiptv-resolver.yml"
 
 jobs:
@@ -15,6 +16,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+      - name: Sync-Server-Adresse lesen (Datei sync-backend-url.txt, sonst bisherige)
+        run: |
+          url=$(grep -v '^#' sync-backend-url.txt 2>/dev/null | tr -d ' \r' | grep -m1 . || true)
+          echo "FIPTV_BACKEND=$url" >> "$GITHUB_ENV"
+          echo "Sync-Server: ${url:-(bisherige Adresse)}"
       - uses: actions/setup-node@v5
         with:
           node-version: "22"
@@ -35,4 +41,10 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: npx wrangler deploy
+          BACKEND: ${{ env.FIPTV_BACKEND }}
+        run: |
+          if [ -n "$BACKEND" ]; then
+            npx wrangler deploy --var "STREAM_TICKET_KEYS_URL:${BACKEND%/}/stream-ticket-key"
+          else
+            npx wrangler deploy
+          fi
