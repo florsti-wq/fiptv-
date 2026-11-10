@@ -1,5 +1,12 @@
 "use client";
 
+import { fiptvBackgroundColor, lighten } from "@/lib/fiptvBackgrounds";
+import type { CSSProperties } from "react";
+
+function fiptvBackgroundStyle(id: string): CSSProperties {
+  const bg = fiptvBackgroundColor(id);
+  return { "--bg": bg, "--bg-card": lighten(bg, 0.04), "--bg-elevated": lighten(bg, 0.09), background: bg } as CSSProperties;
+}
 import { memo, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useAppPick } from "@/lib/store";
@@ -214,6 +221,7 @@ export function AppShell() {
     {view === "app" && <DetailsPrefetch />}
     {view === "profiles" ? <ScreenBoundary screen="profiles"><ProfileSelectionScreen /></ScreenBoundary> :
     <main
+      style={!settings.oledBlack && settings.fiptvBackground && settings.fiptvBackground !== "default" ? fiptvBackgroundStyle(settings.fiptvBackground) : undefined}
       className={`app-shell ${settings.oledBlack ? "oled" : ""} ${settings.spoilerBlur ? "spoiler-blur" : ""}`}
       style={{ ["--accent" as string]: accent }}
     >

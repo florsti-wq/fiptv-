@@ -498,6 +498,7 @@ function androidProfileSettings(settings: AppSettings) {
     iptvFavoritesOnHome: settings.iptvFavoritesOnHome,
     showLoadingStats: settings.showLoadingStats,
     spoilerBlurEnabled: settings.spoilerBlur,
+    ...(settings.fiptvBackground ? { fiptvBackground: settings.fiptvBackground } : {}),
     volumeBoostDb: Math.max(0, Math.min(15, Number(settings.volumeBoostDb) || 0)),
     dnsProvider: settings.dnsProvider,
     subtitleUsageJson: "",
@@ -552,6 +553,7 @@ function settingsFromAndroidProfile(value: unknown): Partial<AppSettings> {
   if ("iptvFavoritesOnHome" in state) partial.iptvFavoritesOnHome = state.iptvFavoritesOnHome !== false;
   if ("showLoadingStats" in state) partial.showLoadingStats = Boolean(state.showLoadingStats);
   if ("spoilerBlurEnabled" in state) partial.spoilerBlur = Boolean(state.spoilerBlurEnabled);
+  if (typeof state.fiptvBackground === "string" && state.fiptvBackground) partial.fiptvBackground = state.fiptvBackground;
   if ("volumeBoostDb" in state) partial.volumeBoostDb = Math.max(0, Math.min(15, Number(state.volumeBoostDb) || 0));
   if ("includeSpecials" in state) partial.includeSpecials = Boolean(state.includeSpecials);
   if ("dnsProvider" in state) partial.dnsProvider = normalizedDns(state.dnsProvider);

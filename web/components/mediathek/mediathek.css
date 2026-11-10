@@ -30,8 +30,8 @@
 .fmt-hero-shade {
   position: absolute; inset: 0;
   background:
-    linear-gradient(90deg, var(--background, #08090c) 0%, rgba(8, 9, 12, 0.92) 28%, rgba(8, 9, 12, 0.35) 62%, transparent 100%),
-    linear-gradient(0deg, var(--background, #08090c) 0%, rgba(8, 9, 12, 0.4) 30%, transparent 60%);
+    linear-gradient(90deg, var(--bg, #08090c) 0%, color-mix(in srgb, var(--bg, #08090c) 92%, transparent) 28%, color-mix(in srgb, var(--bg, #08090c) 35%, transparent) 62%, transparent 100%),
+    linear-gradient(0deg, var(--bg, #08090c) 0%, color-mix(in srgb, var(--bg, #08090c) 40%, transparent) 30%, transparent 60%);
 }
 .fmt-hero-info { position: relative; z-index: 2; max-width: min(640px, 55%); padding: 120px clamp(16px, 3.2vw, 56px) 28px; }
 .fmt-hero-kicker { display: flex; align-items: center; gap: 10px; color: rgba(255, 255, 255, 0.75); font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }

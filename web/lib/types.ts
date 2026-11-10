@@ -566,6 +566,8 @@ export interface AppSettings {
   cardLayoutMode: "landscape" | "poster";
   deviceModeOverride: "auto" | "tv" | "tablet" | "phone" | "desktop";
   oledBlack: boolean;
+  /** fIPTV: Hintergrundfarbe des Profils (wie Android, z. B. "midnight") */
+  fiptvBackground?: string;
   clockFormat: "12h" | "24h";
   showBudget: boolean;
   /** Android/TV home layout. Undefined = keep the app's value. */

@@ -1,4 +1,5 @@
 "use client";
+import { FIPTV_BACKGROUNDS } from "@/lib/fiptvBackgrounds";
 import { CheckCircle, Download, RefreshCw, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "@/lib/i18n";
@@ -21,6 +22,10 @@ export function AppearanceSection() {
         <Row id="accent" label="Accent color" scope="all">
           <Swatches label="Accent color" value={ACCENTS[settings.accentColor] ? settings.accentColor : "arctic"} onChange={(v) => set({ accentColor: v })}
             options={ACCENT_NAMES.map(([id, name]) => [id, name, ACCENTS[id]])} />
+        </Row>
+        <Row id="fiptv-background" label="Hintergrundfarbe" hint="Gilt für dieses Profil – auch auf Fire TV und Handy." scope="all">
+          <Swatches label="Hintergrundfarbe" value={settings.fiptvBackground ?? "default"} onChange={(v) => set({ fiptvBackground: v })}
+            options={FIPTV_BACKGROUNDS.map(([id, name, color]) => [id, name, color])} />
         </Row>
         <Row id="oled" label="Pure black background" hint="Saves power on OLED screens." scope="all">
           <Toggle label="Pure black background" value={settings.oledBlack} onChange={(v) => set({ oledBlack: v })} />
