@@ -17,6 +17,8 @@ on:
       - "supabase/**"
       - "resolver-worker/**"
       - "desktop/**"
+      - "sync-worker/**"
+      - ".github/workflows/fiptv-sync.yml"
       - ".github/workflows/fiptv-desktop.yml"
       - ".github/workflows/fiptv-resolver.yml"
       - ".github/workflows/fiptv-web-check.yml"

@@ -1,0 +1,25 @@
+# fIPTV Sync-Server (Ersatz für die Netlify-Seite „fipsite“, unabhängig von Netlify-Credits)
+name = "fiptv-sync"
+main = "src/index.mjs"
+compatibility_date = "2025-09-01"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+
+[alias]
+"@netlify/blobs" = "./src/blobs-d1.js"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "fiptv-sync"
+database_id = "D1_DATABASE_ID"
+
+[assets]
+directory = "../netlify-auth-site/public-build"
+binding = "ASSETS"
+run_worker_first = true
+
+[triggers]
+crons = ["*/5 * * * *", "17 3 * * *"]
+
+[vars]
+NODE_VERSION = "22"
