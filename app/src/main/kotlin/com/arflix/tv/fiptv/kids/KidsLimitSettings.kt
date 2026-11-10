@@ -1,5 +1,7 @@
 package com.arflix.tv.fiptv.kids
 
+import com.arflix.tv.fiptv.fiptvTap
+
 import android.content.Context
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -164,7 +166,7 @@ fun KidsLimitDialogHost(viewModel: KidsLimitViewModel = hiltViewModel()) {
                         state.rows.forEachIndexed { index, row ->
                             Surface(
                                 onClick = { viewModel.cycle(row) },
-                                modifier = Modifier.fillMaxWidth().then(if (index == 0) Modifier.focusRequester(firstFocus) else Modifier),
+                                modifier = (Modifier.fillMaxWidth().then(if (index == 0) Modifier.focusRequester(firstFocus) else Modifier)).then(Modifier.fiptvTap({ viewModel.cycle(row) })),
                                 shape = ClickableSurfaceDefaults.shape(shape = RoundedCornerShape(10.dp)),
                                 colors = ClickableSurfaceDefaults.colors(
                                     containerColor = Color.White.copy(alpha = 0.06f),

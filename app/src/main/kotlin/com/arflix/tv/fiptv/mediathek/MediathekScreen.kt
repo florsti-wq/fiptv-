@@ -1,5 +1,7 @@
 package com.arflix.tv.fiptv.mediathek
 
+import com.arflix.tv.fiptv.fiptvTap
+
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
@@ -342,10 +344,10 @@ private fun MediathekTile(
     val color = Color(MediathekRepository.channelColor(item.channel))
     Surface(
         onClick = onClick,
-        modifier = modifier
+        modifier = (modifier
             .width(width)
             .height(width * 9f / 16f)
-            .onFocusChanged { if (it.isFocused) onFocus(item) },
+            .onFocusChanged { if (it.isFocused) onFocus(item) }).then(Modifier.fiptvTap(onClick)),
         shape = ClickableSurfaceDefaults.shape(shape = RoundedCornerShape(8.dp)),
         colors = ClickableSurfaceDefaults.colors(
             containerColor = Panel,
@@ -533,7 +535,7 @@ private fun MediathekDetailView(
 private fun BigButton(label: String, primary: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Surface(
         onClick = onClick,
-        modifier = modifier,
+        modifier = (modifier).then(Modifier.fiptvTap(onClick)),
         shape = ClickableSurfaceDefaults.shape(shape = RoundedCornerShape(6.dp)),
         colors = ClickableSurfaceDefaults.colors(
             containerColor = if (primary) Color.White else Color.White.copy(alpha = 0.18f),
@@ -555,7 +557,7 @@ private fun BigButton(label: String, primary: Boolean, onClick: () -> Unit, modi
 private fun Pill(label: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Surface(
         onClick = onClick,
-        modifier = modifier,
+        modifier = (modifier).then(Modifier.fiptvTap(onClick)),
         shape = ClickableSurfaceDefaults.shape(shape = RoundedCornerShape(50)),
         colors = ClickableSurfaceDefaults.colors(
             containerColor = if (selected) Color.White.copy(alpha = 0.22f) else Color.Black.copy(alpha = 0.45f),
@@ -595,7 +597,7 @@ private fun KidsChannelRow(channels: List<com.arflix.tv.data.model.IptvChannel>,
             items(channels, key = { it.id }) { ch ->
                 Surface(
                     onClick = { onPlay(ch) },
-                    modifier = Modifier.width(170.dp).height(110.dp),
+                    modifier = (Modifier.width(170.dp).height(110.dp)).then(Modifier.fiptvTap({ onPlay(ch) })),
                     shape = ClickableSurfaceDefaults.shape(shape = RoundedCornerShape(12.dp)),
                     colors = ClickableSurfaceDefaults.colors(
                         containerColor = Color(0xFF1E2230),

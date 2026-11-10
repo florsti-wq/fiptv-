@@ -1,5 +1,7 @@
 package com.arflix.tv.fiptv.vod
 
+import com.arflix.tv.fiptv.fiptvTap
+
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -170,7 +172,7 @@ private fun PosterGrid(items: List<PosterData>, onClick: (Int) -> Unit) {
             Column {
                 Surface(
                     onClick = { onClick(i) },
-                    modifier = Modifier.fillMaxWidth().aspectRatio(2f / 3f),
+                    modifier = (Modifier.fillMaxWidth().aspectRatio(2f / 3f)).then(Modifier.fiptvTap({ onClick(i) })),
                     shape = ClickableSurfaceDefaults.shape(shape = RoundedCornerShape(8.dp)),
                     colors = ClickableSurfaceDefaults.colors(containerColor = Panel, focusedContainerColor = Panel),
                     scale = ClickableSurfaceDefaults.scale(focusedScale = 1.06f),
@@ -248,7 +250,7 @@ private fun EpisodesPanel(
                     val progress = remember(ep.id, resumeChanges) { progressOf(ep) }
                     Surface(
                         onClick = { onPlay(ep) },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = (Modifier.fillMaxWidth()).then(Modifier.fiptvTap({ onPlay(ep) })),
                         shape = ClickableSurfaceDefaults.shape(shape = RoundedCornerShape(10.dp)),
                         colors = ClickableSurfaceDefaults.colors(
                             containerColor = Panel,
@@ -289,7 +291,7 @@ private fun EpisodesPanel(
 private fun CategoryRow(label: String, selected: Boolean, onClick: () -> Unit) {
     Surface(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = (Modifier.fillMaxWidth()).then(Modifier.fiptvTap(onClick)),
         shape = ClickableSurfaceDefaults.shape(shape = RoundedCornerShape(8.dp)),
         colors = ClickableSurfaceDefaults.colors(
             containerColor = if (selected) Accent.copy(alpha = 0.3f) else Color.Transparent,
@@ -315,7 +317,7 @@ private fun CategoryRow(label: String, selected: Boolean, onClick: () -> Unit) {
 private fun Pill(label: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Surface(
         onClick = onClick,
-        modifier = modifier,
+        modifier = (modifier).then(Modifier.fiptvTap(onClick)),
         shape = ClickableSurfaceDefaults.shape(shape = RoundedCornerShape(50)),
         colors = ClickableSurfaceDefaults.colors(
             containerColor = if (selected) Accent.copy(alpha = 0.35f) else Panel,

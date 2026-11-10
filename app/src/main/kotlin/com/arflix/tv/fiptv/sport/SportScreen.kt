@@ -1,5 +1,7 @@
 package com.arflix.tv.fiptv.sport
 
+import com.arflix.tv.fiptv.fiptvTap
+
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -191,7 +193,7 @@ private fun LazyListScope.hubItems(state: SportUiState, onOpen: (SportMatch) -> 
 private fun GameCard(m: SportMatch, sources: GameSources?, searching: Boolean, followed: Boolean, onClick: () -> Unit) {
     Surface(
         onClick = onClick,
-        modifier = Modifier.width(250.dp).height(150.dp),
+        modifier = (Modifier.width(250.dp).height(150.dp)).then(Modifier.fiptvTap(onClick)),
         shape = ClickableSurfaceDefaults.shape(shape = RoundedCornerShape(12.dp)),
         colors = ClickableSurfaceDefaults.colors(
             containerColor = BackgroundCard, contentColor = Color.White,
@@ -454,6 +456,7 @@ private fun TeamGrid(teams: List<SportTeam>, state: SportUiState, onOpen: (Sport
                 val followed = state.isFollowed(t.id)
                 Surface(
                     onClick = { onOpen(t) },
+        modifier = Modifier.fiptvTap({ onOpen(t) }),
                     onLongClick = { onFollow(t) },
                     shape = ClickableSurfaceDefaults.shape(shape = RoundedCornerShape(10.dp)),
                     colors = ClickableSurfaceDefaults.colors(
@@ -625,7 +628,7 @@ private fun FocusCard(onClick: () -> Unit, highlighted: Boolean = false, content
     // Alle Zeilen sind fokussierbar, damit man auf dem Fernseher mit dem Steuerkreuz durch die Liste scrollen kann
     Surface(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = (Modifier.fillMaxWidth()).then(Modifier.fiptvTap(onClick)),
         shape = ClickableSurfaceDefaults.shape(shape = RoundedCornerShape(10.dp)),
         colors = ClickableSurfaceDefaults.colors(
             containerColor = if (highlighted) Highlight else BackgroundCard,
@@ -648,7 +651,7 @@ private fun FocusCard(onClick: () -> Unit, highlighted: Boolean = false, content
 private fun Pill(label: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier, small: Boolean = false) {
     Surface(
         onClick = onClick,
-        modifier = modifier,
+        modifier = (modifier).then(Modifier.fiptvTap(onClick)),
         shape = ClickableSurfaceDefaults.shape(shape = RoundedCornerShape(50)),
         colors = ClickableSurfaceDefaults.colors(
             containerColor = if (selected) Accent.copy(alpha = 0.35f) else BackgroundCard,

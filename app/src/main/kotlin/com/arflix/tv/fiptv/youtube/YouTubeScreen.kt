@@ -1,5 +1,7 @@
 package com.arflix.tv.fiptv.youtube
 
+import com.arflix.tv.fiptv.fiptvTap
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -250,7 +252,7 @@ private fun Pill(
 ) {
     Surface(
         onClick = onClick,
-        modifier = modifier,
+        modifier = (modifier).then(Modifier.fiptvTap(onClick)),
         shape = ClickableSurfaceDefaults.shape(shape = RoundedCornerShape(50)),
         colors = ClickableSurfaceDefaults.colors(
             containerColor = if (selected) YtRed.copy(alpha = 0.35f) else BackgroundCard,
@@ -291,7 +293,7 @@ private fun VideoCard(
     Surface(
         onClick = onClick,
         onLongClick = onLongClick,
-        modifier = modifier.fillMaxWidth(),
+        modifier = (modifier.fillMaxWidth()).then(Modifier.fiptvTap(onClick)),
         shape = ClickableSurfaceDefaults.shape(shape = RoundedCornerShape(10.dp)),
         colors = ClickableSurfaceDefaults.colors(
             containerColor = Color.Transparent,

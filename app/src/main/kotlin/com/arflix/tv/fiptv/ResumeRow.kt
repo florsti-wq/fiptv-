@@ -69,7 +69,7 @@ fun ResumeRow(
                 Surface(
                     onClick = { onPlay(e) },
                     onLongClick = { onRemove(e) },
-                    modifier = Modifier.width(250.dp).height(84.dp),
+                    modifier = (Modifier.width(250.dp).height(84.dp)).then(Modifier.fiptvTap({ onPlay(e) })),
                     shape = ClickableSurfaceDefaults.shape(shape = RoundedCornerShape(10.dp)),
                     colors = ClickableSurfaceDefaults.colors(
                         containerColor = BackgroundCard,

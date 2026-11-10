@@ -1,5 +1,7 @@
 package com.arflix.tv.fiptv.kids
 
+import com.arflix.tv.fiptv.fiptvTap
+
 import android.content.Context
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -182,7 +184,7 @@ private fun KidsTimeUpDialog(hasParentPin: Boolean, onBack: () -> Unit, onUnlock
 internal fun GuardButton(label: String, primary: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Surface(
         onClick = onClick,
-        modifier = modifier,
+        modifier = (modifier).then(Modifier.fiptvTap(onClick)),
         shape = ClickableSurfaceDefaults.shape(shape = RoundedCornerShape(8.dp)),
         colors = ClickableSurfaceDefaults.colors(
             containerColor = if (primary) Color.White else Color.White.copy(alpha = 0.16f),
