@@ -6,6 +6,10 @@ on:
       urls:
         description: "Adressen (mit Leerzeichen getrennt)"
         required: true
+      jq:
+        description: "jq-Filter für die Ausgabe (optional)"
+        required: false
+        default: ""
 jobs:
   probe:
     runs-on: ubuntu-latest
@@ -13,12 +17,15 @@ jobs:
       - name: Abrufen
         env:
           URLS: ${{ inputs.urls }}
+          JQF: ${{ inputs.jq }}
         run: |
           for u in $URLS; do
             echo "=================== $u"
             code=$(curl -sS -L -A "Mozilla/5.0 fIPTV" -o out.json -w '%{http_code}' --max-time 25 "$u" || echo ERR)
             echo "HTTP $code  size $(wc -c < out.json 2>/dev/null)"
-            if jq -e . out.json >/dev/null 2>&1; then
+            if [ -n "$JQF" ] && jq -e . out.json >/dev/null 2>&1; then
+              jq -c "$JQF" out.json | head -c 6000; echo
+            elif jq -e . out.json >/dev/null 2>&1; then
               jq -c 'paths(scalars) | map(tostring) | join(".")' out.json 2>/dev/null | sed -E 's/\.[0-9]+(\.|$)/.N\1/g' | sort -u | head -120
               echo "--- sample"
               head -c 2500 out.json; echo
