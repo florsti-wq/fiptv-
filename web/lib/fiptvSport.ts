@@ -1,11 +1,36 @@
-// fIPTV: Sport (Bundesliga & Champions League) – Port des Android-SportRepository.
+// fIPTV: Sport – Port des Android-SportRepository (Fußball-Wettbewerbe, Statistik).
 // Daten kommen von der öffentlichen ESPN-Schnittstelle über /api/fiptv/espn.
 
-export type League = "ger.1" | "uefa.champions";
-export const LEAGUES: Array<{ id: League; label: string }> = [
-  { id: "ger.1", label: "Bundesliga" },
-  { id: "uefa.champions", label: "Champions League" }
+export type League = string;
+export type LeagueGroup = "top" | "germany" | "europe" | "national" | "friendly";
+export type LeagueInfo = { id: League; label: string; short: string; group: LeagueGroup; table: boolean; stats: boolean; national?: boolean };
+export const LEAGUE_GROUPS: Array<{ id: LeagueGroup; label: string }> = [
+  { id: "top", label: "🏆 Top-Ligen Europas" },
+  { id: "germany", label: "🇩🇪 Deutschland" },
+  { id: "europe", label: "⭐ Europapokal" },
+  { id: "national", label: "🌍 Nationalmannschaften" },
+  { id: "friendly", label: "🤝 Freundschaftsspiele" }
 ];
+export const LEAGUES: LeagueInfo[] = [
+  { id: "ger.1", label: "Bundesliga", short: "BL", group: "top", table: true, stats: true },
+  { id: "eng.1", label: "Premier League", short: "PL", group: "top", table: true, stats: true },
+  { id: "esp.1", label: "LaLiga", short: "LL", group: "top", table: true, stats: true },
+  { id: "ita.1", label: "Serie A", short: "SA", group: "top", table: true, stats: true },
+  { id: "fra.1", label: "Ligue 1", short: "L1", group: "top", table: true, stats: true },
+  { id: "ger.2", label: "2. Bundesliga", short: "BL2", group: "germany", table: true, stats: true },
+  { id: "ger.dfb_pokal", label: "DFB-Pokal", short: "DFB", group: "germany", table: false, stats: true },
+  { id: "uefa.champions", label: "Champions League", short: "CL", group: "europe", table: true, stats: true },
+  { id: "uefa.europa", label: "Europa League", short: "EL", group: "europe", table: true, stats: true },
+  { id: "uefa.europa.conf", label: "Conference League", short: "ECL", group: "europe", table: true, stats: true },
+  { id: "fifa.world", label: "Weltmeisterschaft", short: "WM", group: "national", table: true, stats: true, national: true },
+  { id: "uefa.euro", label: "Europameisterschaft", short: "EM", group: "national", table: true, stats: true, national: true },
+  { id: "uefa.nations", label: "UEFA Nations League", short: "UNL", group: "national", table: true, stats: true, national: true },
+  { id: "fifa.worldq.uefa", label: "WM-Qualifikation Europa", short: "WMQ", group: "national", table: true, stats: true, national: true },
+  { id: "uefa.euroq", label: "EM-Qualifikation", short: "EMQ", group: "national", table: true, stats: true, national: true },
+  { id: "fifa.friendly", label: "Länderspiele (Freundschaft)", short: "LS", group: "friendly", table: false, stats: false, national: true },
+  { id: "club.friendly", label: "Vereins-Testspiele", short: "TS", group: "friendly", table: false, stats: false }
+];
+export const leagueInfo = (id: string) => LEAGUES.find((l) => l.id === id);
 
 export type SportTeam = { id: string; name: string; logo: string; league: string };
 export type MatchSide = { id: string; name: string; logo: string; score: string; winner: boolean };
@@ -39,14 +64,21 @@ const GERMAN: Record<string, string> = {
   "1. FC Köln": "Köln", "FC Cologne": "Köln", "Hamburg SV": "HSV", "Hamburger SV": "HSV",
   "VfL Bochum": "Bochum", "Holstein Kiel": "Kiel", "Real Madrid": "Real Madrid", "Barcelona": "FC Barcelona",
   "Paris Saint-Germain": "Paris SG", "Internazionale": "Inter Mailand", "AC Milan": "AC Mailand",
-  "Juventus": "Juventus Turin", "Bayern München": "FC Bayern"
+  "Juventus": "Juventus Turin", "Bayern München": "FC Bayern",
+  "Germany": "Deutschland", "Austria": "Österreich", "Switzerland": "Schweiz", "Netherlands": "Niederlande", "France": "Frankreich",
+  "Spain": "Spanien", "Italy": "Italien", "Belgium": "Belgien", "Croatia": "Kroatien", "Denmark": "Dänemark", "Poland": "Polen",
+  "Czechia": "Tschechien", "Czech Republic": "Tschechien", "Hungary": "Ungarn", "Scotland": "Schottland", "Turkey": "Türkei",
+  "Türkiye": "Türkei", "Sweden": "Schweden", "Norway": "Norwegen", "Luxembourg": "Luxemburg", "Brazil": "Brasilien",
+  "Argentina": "Argentinien", "United States": "USA", "Greece": "Griechenland", "Serbia": "Serbien", "Slovakia": "Slowakei",
+  "Slovenia": "Slowenien", "Romania": "Rumänien", "Republic of Ireland": "Irland", "Ireland": "Irland", "Northern Ireland": "Nordirland",
+  "Iceland": "Island", "Finland": "Finnland", "Albania": "Albanien", "Georgia": "Georgien", "Mexico": "Mexiko", "Morocco": "Marokko"
 };
 export const germanName = (name: string) => GERMAN[name] ?? name;
 const logoFallback = (id: string) => `https://a.espncdn.com/i/teamlogos/soccer/500/${id}.png`;
 
 type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 
-async function espn(path: string, params: Record<string, string> = {}): Promise<Json> {
+export async function espn(path: string, params: Record<string, string> = {}): Promise<Json> {
   const query = new URLSearchParams({ path, ...params });
   const response = await fetch(`/api/fiptv/espn?${query}`, { cache: "no-store" });
   if (!response.ok) throw new Error(`Sportdaten nicht erreichbar (${response.status})`);
@@ -114,6 +146,21 @@ export async function allMatches(): Promise<SportMatch[]> {
   return all.sort((a, b) => a.date.localeCompare(b.date));
 }
 
+/** Aktueller Spieltag (für Live-Stände) */
+export async function currentScoreboard(league: League): Promise<SportMatch[]> {
+  const data = await espn(`${SITE}/${league}/scoreboard`);
+  return (data.events ?? []).map((e: Json) => parseCompetition(e, e.competitions?.[0], league));
+}
+
+/** Wettbewerbe, in denen ein Team spielen kann */
+export function competitionsOf(team: SportTeam): League[] {
+  const own = leagueInfo(team.league) ?? LEAGUES[0];
+  if (own.national) return LEAGUES.filter((l) => l.national).map((l) => l.id);
+  const country = own.id.split(".")[0];
+  return Array.from(new Set([own.id, ...LEAGUES.filter((l) => !l.national && l.id.startsWith(`${country}.`)).map((l) => l.id),
+    ...LEAGUES.filter((l) => l.group === "europe").map((l) => l.id), "club.friendly"]));
+}
+
 export async function teams(league: League): Promise<SportTeam[]> {
   const data = await espn(`${SITE}/${league}/teams`);
   const list: Json[] = data.sports?.[0]?.leagues?.[0]?.teams ?? [];
@@ -147,7 +194,7 @@ export async function table(league: League): Promise<TableRow[]> {
 
 export async function teamMatches(team: SportTeam): Promise<SportMatch[]> {
   const found = new Map<string, SportMatch>();
-  const leagues = Array.from(new Set([team.league as League, ...LEAGUES.map((l) => l.id)]));
+  const leagues = competitionsOf(team);
   await Promise.allSettled(leagues.flatMap((league) => [false, true].map(async (fixture) => {
     const data = await espn(`${SITE}/${league}/teams/${team.id}/schedule`, fixture ? { fixture: "true" } : {});
     for (const e of data.events ?? []) {
@@ -156,6 +203,22 @@ export async function teamMatches(team: SportTeam): Promise<SportMatch[]> {
     }
   })));
   return [...found.values()].sort((a, b) => a.date.localeCompare(b.date));
+}
+
+export type StatLeader = { rank: number; name: string; team: string; logo: string; value: string; detail: string };
+export async function leaders(league: League): Promise<Array<{ title: string; leaders: StatLeader[] }>> {
+  const data = await espn(`${SITE}/${league}/statistics`);
+  return (data.stats ?? []).map((cat: Json) => ({
+    title: cat.name === "goalsLeaders" ? "⚽ Torjäger" : cat.name === "assistsLeaders" ? "🅰 Vorlagen" : String(cat.displayName ?? ""),
+    leaders: (cat.leaders ?? []).slice(0, 20).map((l: Json, i: number) => ({
+      rank: i + 1,
+      name: String(l.athlete?.displayName ?? ""),
+      team: germanName(String(l.athlete?.team?.shortDisplayName ?? l.athlete?.team?.displayName ?? "")),
+      logo: String(l.athlete?.team?.logos?.[0]?.href ?? ""),
+      value: Number.isFinite(Number(l.value)) ? String(Math.round(Number(l.value))) : String(l.displayValue ?? ""),
+      detail: String(l.displayValue ?? "").replace("Matches", "Spiele").replace("Goals", "Tore").replace("Assists", "Vorlagen")
+    }))
+  })).filter((c: { leaders: StatLeader[] }) => c.leaders.length);
 }
 
 const STAT_LABELS: Array<[string, string]> = [
@@ -208,4 +271,4 @@ export const kickoff = (m: SportMatch) => {
   return d.toLocaleString("de-DE", { weekday: "short", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
 };
 export const isToday = (m: SportMatch) => new Date(m.date).toDateString() === new Date().toDateString();
-export const leagueLabel = (id: string) => LEAGUES.find((l) => l.id === id)?.label ?? id;
+export const leagueLabel = (id: string) => leagueInfo(id)?.label ?? id;

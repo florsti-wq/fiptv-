@@ -1,0 +1,8 @@
+.goal-alert{position:fixed;top:24px;right:24px;z-index:200;min-width:320px;max-width:480px;background:rgba(16,22,32,.96);border:2px solid rgba(255,255,255,.25);border-radius:14px;padding:14px 18px;color:#fff;box-shadow:0 12px 40px rgba(0,0,0,.5);animation:goal-in .3s ease-out;cursor:pointer}
+.goal-alert.mine{border-color:#22c55e}
+.goal-alert.mine .goal-title{color:#4ade80}
+.goal-title{display:block;font-size:18px;margin-bottom:6px}
+.goal-score{display:flex;align-items:center;gap:8px;font-size:16px}
+.goal-score img{width:26px;height:26px;object-fit:contain}
+.goal-alert small{display:block;opacity:.75;margin-top:4px}
+@keyframes goal-in{from{transform:translateY(-20px);opacity:0}to{transform:none;opacity:1}}

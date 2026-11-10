@@ -1,18 +1,20 @@
 "use client";
-// fIPTV: Sport wie am Fire TV – Übersicht (live, heute, nächste Spiele, Ergebnisse),
-// Tabellen, Meine Teams (pro Profil abgeglichen) und Spieldetails.
+// fIPTV: Sport wie am Fire TV – Übersicht, Meine Teams (pro Profil abgeglichen), Fußball (Top-Ligen,
+// Pokal, Europapokal, Nationalteams, Testspiele) mit Tabellen und Statistik, Formel 1, Tennis, Wrestling.
 import "./sport.css";
 
 import { ArrowLeft, Loader2, RefreshCw, Star } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAppPick } from "@/lib/store";
 import {
-  LEAGUES, allMatches, decodeTeams, encodeTeams, isToday, kickoff, leagueLabel, matchDetail, matches, table, teamMatches, teams,
+  LEAGUES, LEAGUE_GROUPS, allMatches, decodeTeams, encodeTeams, isToday, kickoff, leagueInfo, leagueLabel, leaders, matchDetail, matches, table, teamMatches, teams,
   type League, type MatchDetail, type SportMatch, type SportTeam, type TableRow
 } from "@/lib/fiptvSport";
+import { F1View, TennisView, WrestlingView } from "./MoreSports";
+import { GoalAlertToggle } from "@/components/fiptv/GoalAlerts";
 
-type Tab = "hub" | "mine" | League;
-type Page = { kind: "team"; team: SportTeam } | { kind: "match"; match: SportMatch } | null;
+type Tab = "hub" | "mine" | "football" | "f1" | "tennis" | "wrestling";
+type Page = { kind: "team"; team: SportTeam } | { kind: "match"; match: SportMatch } | { kind: "league"; league: League } | null;
 
 function useLoad<T>(load: () => Promise<T>, deps: unknown[]) {
   const [data, setData] = useState<T | null>(null);
@@ -77,11 +79,12 @@ function Hub({ myTeams, onOpen }: { myTeams: SportTeam[]; onOpen: (m: SportMatch
   if (!data) return <Status loading={loading} error={error} reload={reload} />;
   const mine = new Set(myTeams.map((t) => t.id));
   const isMine = (m: SportMatch) => mine.has(m.home.id) || mine.has(m.away.id);
-  const live = data.filter((m) => m.state === "in");
-  const today = data.filter((m) => m.state === "pre" && isToday(m));
-  const next = data.filter((m) => m.state === "pre" && !isToday(m));
-  const results = data.filter((m) => m.state === "post").reverse();
-  const myNext = data.filter((m) => isMine(m) && m.state !== "post");
+  const games = data.filter((m) => m.league !== "club.friendly" || isMine(m));
+  const live = games.filter((m) => m.state === "in");
+  const today = games.filter((m) => m.state === "pre" && isToday(m));
+  const next = games.filter((m) => m.state === "pre" && !isToday(m));
+  const results = games.filter((m) => m.state === "post").reverse();
+  const myNext = games.filter((m) => isMine(m) && m.state !== "post");
   return (
     <>
       <MatchList title="🔴 Jetzt live" list={live} onOpen={onOpen} />
@@ -89,7 +92,7 @@ function Hub({ myTeams, onOpen }: { myTeams: SportTeam[]; onOpen: (m: SportMatch
       <MatchList title="Heute" list={today} onOpen={onOpen} />
       <MatchList title="Nächste Spiele" list={next.slice(0, 30)} onOpen={onOpen} />
       <MatchList title="Ergebnisse" list={results.slice(0, 30)} onOpen={onOpen} />
-      {!data.length && <div className="sp-empty">Gerade keine Spiele in den nächsten Tagen.</div>}
+      {!games.length && <div className="sp-empty">Gerade keine Spiele in den nächsten Tagen.</div>}
     </>
   );
 }
@@ -97,7 +100,61 @@ function Hub({ myTeams, onOpen }: { myTeams: SportTeam[]; onOpen: (m: SportMatch
 function LeagueView({ league, myTeams, toggle, onOpen, onTeam }: {
   league: League; myTeams: SportTeam[]; toggle: (t: SportTeam) => void; onOpen: (m: SportMatch) => void; onTeam: (t: SportTeam) => void;
 }) {
+  const info = leagueInfo(league);
+  const [sub, setSub] = useState<"table" | "games" | "stats">(info?.table === false ? "games" : "table");
+  return (
+    <>
+      <div className="sp-head"><h1 style={{ fontSize: 24 }}>{info?.label ?? league}</h1>
+        <div className="sp-tabs small">
+          {info?.table !== false && <button type="button" className={sub === "table" ? "active" : ""} onClick={() => setSub("table")}>Tabelle</button>}
+          <button type="button" className={sub === "games" ? "active" : ""} onClick={() => setSub("games")}>Spiele</button>
+          {info?.stats !== false && <button type="button" className={sub === "stats" ? "active" : ""} onClick={() => setSub("stats")}>Torjäger & Vorlagen</button>}
+        </div>
+      </div>
+      {sub === "games" ? <LeagueGames league={league} onOpen={onOpen} />
+        : sub === "stats" ? <LeadersView league={league} />
+        : <LeagueTable league={league} myTeams={myTeams} toggle={toggle} onTeam={onTeam} />}
+    </>
+  );
+}
+
+function LeagueGames({ league, onOpen }: { league: League; onOpen: (m: SportMatch) => void }) {
   const games = useLoad(() => matches(league), [league]);
+  if (!games.data) return <Status {...games} />;
+  return (
+    <>
+      <MatchList title="Live & demnächst" list={games.data.filter((m) => m.state !== "post")} onOpen={onOpen} />
+      <MatchList title="Ergebnisse" list={games.data.filter((m) => m.state === "post").reverse()} onOpen={onOpen} />
+      {!games.data.length && <div className="sp-empty">Gerade keine Spiele (bei Turnieren erst, wenn sie laufen).</div>}
+    </>
+  );
+}
+
+function LeadersView({ league }: { league: League }) {
+  const data = useLoad(() => leaders(league), [league]);
+  if (!data.data) return <Status {...data} />;
+  if (!data.data.length) return <div className="sp-empty">Für diesen Wettbewerb gibt es (noch) keine Statistik.</div>;
+  return (
+    <div className="sp-detail">
+      {data.data.map((cat) => (
+        <section key={cat.title} className="sp-section"><h2>{cat.title}</h2>
+          <table className="sp-table"><tbody>
+            {cat.leaders.map((l) => (
+              <tr key={`${l.rank}-${l.name}`}>
+                <td>{l.rank}</td>
+                <td className="l"><Logo src={l.logo} size={20} /> <b>{l.name}</b> <small style={{ opacity: 0.6 }}>{l.team}</small></td>
+                <td><b style={{ fontSize: 18 }}>{l.value}</b></td>
+                <td style={{ opacity: 0.6 }}>{l.detail}</td>
+              </tr>
+            ))}
+          </tbody></table>
+        </section>
+      ))}
+    </div>
+  );
+}
+
+function LeagueTable({ league, myTeams, toggle, onTeam }: { league: League; myTeams: SportTeam[]; toggle: (t: SportTeam) => void; onTeam: (t: SportTeam) => void }) {
   const tab = useLoad(() => table(league), [league]);
   const mine = new Set(myTeams.map((t) => t.id));
   const groups = useMemo(() => {
@@ -105,46 +162,59 @@ function LeagueView({ league, myTeams, toggle, onOpen, onTeam }: {
     for (const row of tab.data ?? []) map.set(row.group ?? "", [...(map.get(row.group ?? "") ?? []), row]);
     return [...map.entries()];
   }, [tab.data]);
+  if (!tab.data) return <Status {...tab} />;
+  if (!tab.data.length) return <div className="sp-empty">Keine Tabelle verfügbar (bei Turnieren erst, wenn sie laufen).</div>;
+  return (
+    <section className="sp-section">
+      {groups.map(([group, rows]) => (
+        <div key={group} className="sp-table-wrap">
+          {group && <h3>{group}</h3>}
+          <table className="sp-table">
+            <thead><tr><th>#</th><th className="l">Team</th><th>Sp</th><th>S</th><th>U</th><th>N</th><th>Tore</th><th>Diff</th><th>Pkt</th><th /></tr></thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.team.id}>
+                  <td>{r.rank || ""}</td>
+                  <td className="l"><button type="button" className="sp-teamlink" onClick={() => onTeam(r.team)}><Logo src={r.team.logo} size={22} /> {r.team.name}</button></td>
+                  <td>{r.played}</td><td>{r.wins}</td><td>{r.draws}</td><td>{r.losses}</td>
+                  <td>{r.goalsFor}:{r.goalsAgainst}</td><td>{r.diff > 0 ? `+${r.diff}` : r.diff}</td><td><b>{r.points}</b></td>
+                  <td><button type="button" className={`sp-star ${mine.has(r.team.id) ? "on" : ""}`} onClick={() => toggle(r.team)} aria-label="Lieblingsteam"><Star size={16} /></button></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ))}
+    </section>
+  );
+}
+
+function FootballView({ onLeague }: { onLeague: (l: League) => void }) {
   return (
     <>
-      {games.data ? (
-        <>
-          <MatchList title="Live & demnächst" list={games.data.filter((m) => m.state !== "post")} onOpen={onOpen} />
-          <MatchList title="Ergebnisse" list={games.data.filter((m) => m.state === "post").reverse()} onOpen={onOpen} />
-        </>
-      ) : <Status {...games} />}
-      <section className="sp-section">
-        <h2>Tabelle</h2>
-        {tab.data ? groups.map(([group, rows]) => (
-          <div key={group} className="sp-table-wrap">
-            {group && <h3>{group}</h3>}
-            <table className="sp-table">
-              <thead><tr><th>#</th><th className="l">Team</th><th>Sp</th><th>S</th><th>U</th><th>N</th><th>Tore</th><th>Diff</th><th>Pkt</th><th /></tr></thead>
-              <tbody>
-                {rows.map((r) => (
-                  <tr key={r.team.id}>
-                    <td>{r.rank || ""}</td>
-                    <td className="l"><button type="button" className="sp-teamlink" onClick={() => onTeam(r.team)}><Logo src={r.team.logo} size={22} /> {r.team.name}</button></td>
-                    <td>{r.played}</td><td>{r.wins}</td><td>{r.draws}</td><td>{r.losses}</td>
-                    <td>{r.goalsFor}:{r.goalsAgainst}</td><td>{r.diff > 0 ? `+${r.diff}` : r.diff}</td><td><b>{r.points}</b></td>
-                    <td><button type="button" className={`sp-star ${mine.has(r.team.id) ? "on" : ""}`} onClick={() => toggle(r.team)} aria-label="Lieblingsteam"><Star size={16} /></button></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      {LEAGUE_GROUPS.map((g) => (
+        <section key={g.id} className="sp-section"><h2>{g.label}</h2>
+          <div className="sp-teams">
+            {LEAGUES.filter((l) => l.group === g.id).map((l) => (
+              <button key={l.id} type="button" className="sp-team sp-league" onClick={() => onLeague(l.id)}>
+                <span className="sp-short">{l.short}</span> <b>{l.label}</b>
+              </button>
+            ))}
           </div>
-        )) : <Status {...tab} />}
-      </section>
+        </section>
+      ))}
+      <div className="sp-empty">WM und EM zeigen Spiele und Tabellen, sobald das Turnier läuft.</div>
     </>
   );
 }
 
 function MineView({ myTeams, toggle, onTeam }: { myTeams: SportTeam[]; toggle: (t: SportTeam) => void; onTeam: (t: SportTeam) => void }) {
-  const [league, setLeague] = useState<League>("ger.1");
+  const [league, setLeague] = useState<string>("ger.1");
   const all = useLoad(() => teams(league), [league]);
   const mine = new Set(myTeams.map((t) => t.id));
   return (
     <>
+      <GoalAlertToggle />
       <section className="sp-section">
         <h2>Meine Teams</h2>
         {myTeams.length ? (
@@ -160,7 +230,11 @@ function MineView({ myTeams, toggle, onTeam }: { myTeams: SportTeam[]; toggle: (
       </section>
       <section className="sp-section">
         <h2>Teams hinzufügen</h2>
-        <div className="sp-tabs small">{LEAGUES.map((l) => <button key={l.id} type="button" className={league === l.id ? "active" : ""} onClick={() => setLeague(l.id)}>{l.label}</button>)}</div>
+        <div className="sp-tabs small">
+          <select className="sp-select" value={league} onChange={(e) => setLeague(e.target.value)} aria-label="Wettbewerb">
+            {LEAGUES.filter((l) => l.id !== "club.friendly").map((l) => <option key={l.id} value={l.id}>{l.label}</option>)}
+          </select>
+        </div>
         {all.data ? (
           <div className="sp-teams">
             {all.data.map((t) => (
@@ -300,7 +374,10 @@ export function SportScreen() {
           <div className="sp-tabs">
             <button type="button" className={tab === "hub" ? "active" : ""} onClick={() => setTab("hub")}>Übersicht</button>
             <button type="button" className={tab === "mine" ? "active" : ""} onClick={() => setTab("mine")}>Meine Teams</button>
-            {LEAGUES.map((l) => <button key={l.id} type="button" className={tab === l.id ? "active" : ""} onClick={() => setTab(l.id)}>{l.label}</button>)}
+            <button type="button" className={tab === "football" ? "active" : ""} onClick={() => setTab("football")}>⚽ Fußball</button>
+            <button type="button" className={tab === "f1" ? "active" : ""} onClick={() => setTab("f1")}>🏎 Formel 1</button>
+            <button type="button" className={tab === "tennis" ? "active" : ""} onClick={() => setTab("tennis")}>🎾 Tennis</button>
+            <button type="button" className={tab === "wrestling" ? "active" : ""} onClick={() => setTab("wrestling")}>🤼 Wrestling</button>
           </div>
         )}
         <button type="button" className="sp-btn" onClick={() => setKey((k) => k + 1)} title="Neu laden"><RefreshCw size={16} /></button>
@@ -309,8 +386,12 @@ export function SportScreen() {
         {page?.kind === "match" ? <MatchPage match={page.match} />
           : page?.kind === "team" ? <TeamPage team={page.team} myTeams={myTeams} toggle={toggle} onOpen={openMatch} />
           : tab === "hub" ? <Hub myTeams={myTeams} onOpen={openMatch} />
+          : page?.kind === "league" ? <LeagueView league={page.league} myTeams={myTeams} toggle={toggle} onOpen={openMatch} onTeam={openTeam} />
           : tab === "mine" ? <MineView myTeams={myTeams} toggle={toggle} onTeam={openTeam} />
-          : <LeagueView league={tab} myTeams={myTeams} toggle={toggle} onOpen={openMatch} onTeam={openTeam} />}
+          : tab === "football" ? <FootballView onLeague={(l) => push({ kind: "league", league: l })} />
+          : tab === "f1" ? <F1View />
+          : tab === "tennis" ? <TennisView />
+          : <WrestlingView />}
       </div>
     </div>
   );
