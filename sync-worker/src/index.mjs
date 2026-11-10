@@ -3,7 +3,7 @@
 // unter denselben Pfaden (/.netlify/functions/<name>) – Apps müssen nur die Adresse wechseln.
 // Daten (Netlify Blobs) liegen in D1, die Postgres-Datenbank (DATABASE_URL) bleibt dieselbe.
 import { functions } from "./functions.generated.mjs";
-import * as blobsModule from "./blobs-d1.js";
+import * as blobsModule from "./blobs-d1.cjs";
 import * as sportsWarm from "../../netlify-auth-site/netlify/functions/sports-metadata-warm.mjs";
 
 function pick(mod) {

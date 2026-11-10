@@ -6,7 +6,7 @@ compatibility_flags = ["nodejs_compat"]
 workers_dev = true
 
 [alias]
-"@netlify/blobs" = "./src/blobs-d1.js"
+"@netlify/blobs" = "./src/blobs-d1.cjs"
 
 [[d1_databases]]
 binding = "DB"
