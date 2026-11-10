@@ -167,6 +167,10 @@ object SportRepository {
         return list.ifEmpty { parseEvents(get("$SITE/${league.code}/scoreboard"), league) }.sortedBy { it.startMs }
     }
 
+    /** Aktueller Spieltag eines Wettbewerbs (für Live-Stände). */
+    suspend fun currentScoreboard(league: SportLeague): List<SportMatch> =
+        parseEvents(get("$SITE/${league.code}/scoreboard"), league)
+
     /** Wettbewerbe, in denen ein Team spielen kann (Liga, Pokal, Europapokal bzw. Länderspiele). */
     fun competitionsOf(team: SportTeam): List<SportLeague> {
         val own = SportLeague.byCode(team.league) ?: SportLeague.BUNDESLIGA

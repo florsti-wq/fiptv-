@@ -28,6 +28,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -374,10 +375,11 @@ private fun LazyListScope.sourceItems(
 // ---------- Meine Teams ----------
 
 private fun LazyListScope.myTeams(state: SportUiState, vm: SportViewModel) {
+    item(key = "goal_toggle") { GoalAlertToggle() }
     if (state.followed.isEmpty()) {
         item {
             Text(
-                "Du folgst noch keinem Team. Öffne „Bundesliga“ oder „Champions League“ → „Teams“ und wähle „Folgen“.",
+                "Du folgst noch keinem Team. Öffne „⚽ Fußball“ → einen Wettbewerb → „Teams“ und wähle „Folgen“.",
                 color = Muted, fontSize = 15.sp,
             )
         }
@@ -713,5 +715,19 @@ internal fun Pill(label: String, selected: Boolean, onClick: () -> Unit, modifie
             maxLines = 1,
             modifier = Modifier.padding(horizontal = if (small) 14.dp else 16.dp, vertical = if (small) 6.dp else 8.dp),
         )
+    }
+}
+
+@Composable
+private fun GoalAlertToggle() {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var on by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(FiptvGoalAlerts.enabled(context)) }
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 6.dp)) {
+        Pill(if (on) "🔔 Tor-Hinweise: an" else "🔕 Tor-Hinweise: aus", on, {
+            on = !on
+            FiptvGoalAlerts.setEnabled(context, on)
+        }, small = true)
+        Spacer(Modifier.width(12.dp))
+        Text("Tore, Anpfiff und Abpfiff deiner Teams als kurzer Hinweis – auch während du etwas anderes schaust.", color = Muted, fontSize = 13.sp)
     }
 }

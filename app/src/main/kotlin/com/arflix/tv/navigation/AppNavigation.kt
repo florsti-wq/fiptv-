@@ -955,6 +955,9 @@ fun AppNavigation(
         }
     }
 
+    // fIPTV: Tor-Hinweise für gefolgte Teams (nicht im Kinderprofil)
+    com.arflix.tv.fiptv.sport.FiptvGoalAlertHost(enabled = !isKidsProfile)
+
     // fIPTV: Hinweis kurz vor gemerkten Sendungen (nicht im Kinderprofil)
     com.arflix.tv.fiptv.reminders.FiptvReminderHost(enabled = !isKidsProfile) { channelId ->
         val onTv = navController.currentDestination?.route?.substringBefore('?') == "tv"
