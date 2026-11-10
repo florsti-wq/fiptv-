@@ -55,6 +55,23 @@ jobs:
         working-directory: sync-worker
         run: npx wrangler deploy --dry-run --outdir dist
 
+      - name: Lokaler Test (Miniflare, lokale D1, ohne Postgres)
+        working-directory: sync-worker
+        run: |
+          printf 'ARVIO_AUTH_SECRET=test-secret-0123456789abcdef0123456789abcdef\nAPP_ANON_KEY=test-anon-key-0123456789012345678901234567890123456789\n' > .dev.vars
+          npx wrangler d1 execute fiptv-sync --local --file schema.sql
+          (npx wrangler dev --local --port 8787 > ../wrangler-dev.log 2>&1 &)
+          for i in $(seq 1 60); do curl -fs http://127.0.0.1:8787/fiptv-health > /dev/null && break; sleep 1; done
+          echo "--- health"; curl -s http://127.0.0.1:8787/fiptv-health; echo
+          echo "--- config"; curl -s -w " [%{http_code}]" http://127.0.0.1:8787/.netlify/functions/config; echo
+          echo "--- Startseite"; curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:8787/
+          AK="test-anon-key-0123456789012345678901234567890123456789"
+          echo "--- tv-auth-start"; curl -s -w " [%{http_code}]" -X POST -H "content-type: application/json" -H "apikey: $AK" -H "x-arvio-app-key: $AK" -d '{"deviceName":"CI"}' http://127.0.0.1:8787/.netlify/functions/tv-auth-start | tee start.json; echo
+          echo "--- stream-ticket-key"; curl -s -w " [%{http_code}]" http://127.0.0.1:8787/.netlify/functions/stream-ticket-key | head -c 400; echo
+          echo "--- auth-login (ohne Postgres, Fehler erwartet)"; curl -s -w " [%{http_code}]" -X POST -H "content-type: application/json" -H "apikey: $AK" -d '{"email":"ci@example.com","password":"x"}' http://127.0.0.1:8787/.netlify/functions/auth-login | head -c 400; echo
+          echo "--- D1-Inhalt"; npx wrangler d1 execute fiptv-sync --local --command "SELECT store, key, parts FROM blobs LIMIT 20"
+          echo "--- Worker-Protokoll"; tail -n 60 ../wrangler-dev.log
+
       - name: D1-Datenbank anlegen bzw. finden
         if: inputs.deploy == true
         working-directory: sync-worker
