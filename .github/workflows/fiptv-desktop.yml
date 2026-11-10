@@ -90,7 +90,9 @@ jobs:
       - name: Sync-Server-Adresse für die App
         env:
           BACKEND: ${{ env.FIPTV_BACKEND || 'https://fipsite.netlify.app/.netlify/functions' }}
-        run: node -e 'require("fs").writeFileSync("desktop/backend.json", JSON.stringify({ url: process.env.BACKEND }))'
+        run: |
+          node -e 'require("fs").writeFileSync("desktop/backend.json", JSON.stringify({ url: process.env.BACKEND }))'
+          cat desktop/backend.json
 
       - name: Electron – Abhängigkeiten
         working-directory: desktop
