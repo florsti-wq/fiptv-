@@ -149,6 +149,17 @@ class VodViewModel @Inject constructor(
         val url = movieUrl(m) ?: return null
         val entry = FiptvResume.Entry(url = url, kind = FiptvResume.Kind.MOVIE, title = m.name, image = m.poster, tmdbId = m.tmdbId)
         FiptvResume.register(context, profileId, entry)
+        return entry to FiptvResume.startPosition(context, profileId, url)
+    }
+
+    fun prepareEpisode(s: VodSeries, e: VodEpisode): Pair<FiptvResume.Entry, Long?>? {
+        val url = episodeUrl(e) ?: return null
+        val entry = FiptvResume.Entry(
+            url = url, kind = FiptvResume.Kind.EPISODE,
+            title = e.title.ifBlank { "Folge ${e.episode}" }, subtitle = s.name,
+            image = s.poster, tmdbId = s.tmdbId, season = e.season, episode = e.episode,
+        )
+        FiptvResume.register(context, profileId, entry)
         // fIPTV: folgende Folgen für „Nächste Folge automatisch“
         val following = _state.value.episodes
             .sortedWith(compareBy({ it.season }, { it.episode }))
@@ -165,17 +176,6 @@ class VodViewModel @Inject constructor(
                 }
             }
         com.arflix.tv.fiptv.FiptvNextUp.set(profileId, entry, following)
-        return entry to FiptvResume.startPosition(context, profileId, url)
-    }
-
-    fun prepareEpisode(s: VodSeries, e: VodEpisode): Pair<FiptvResume.Entry, Long?>? {
-        val url = episodeUrl(e) ?: return null
-        val entry = FiptvResume.Entry(
-            url = url, kind = FiptvResume.Kind.EPISODE,
-            title = e.title.ifBlank { "Folge ${e.episode}" }, subtitle = s.name,
-            image = s.poster, tmdbId = s.tmdbId, season = e.season, episode = e.episode,
-        )
-        FiptvResume.register(context, profileId, entry)
         return entry to FiptvResume.startPosition(context, profileId, url)
     }
 
