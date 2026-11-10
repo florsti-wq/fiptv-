@@ -2301,10 +2301,15 @@ private fun PlayerScreenContent(args: PlayerScreenArgs, viewModel: PlayerViewMod
             onExitPlayer()
         }
     }
+    // fIPTV: nächste Folge (Anbieter-Serien/Mediathek) übernimmt das Ende selbst
+    val fiptvHasNextEpisode = remember(args.streamUrl) { com.arflix.tv.fiptv.fiptvHasNext(args.streamUrl) }
+    if (fiptvHasNextEpisode) {
+        com.arflix.tv.fiptv.FiptvNextUpOverlay(player = exoPlayer, streamUrl = args.streamUrl, onFinish = finishPlayback)
+    }
     PlayerCompletionEffect(
         ended = currentPlaybackState == Player.STATE_ENDED,
         enabled = hasPlaybackStarted && !args.isLiveStream && !isCasting,
-        blocked = exitTransition.isExiting || nextEpisodeTransitionInProgress ||
+        blocked = fiptvHasNextEpisode || exitTransition.isExiting || nextEpisodeTransitionInProgress ||
             showNextEpisodePrompt || showSourceMenu || showSubtitleMenu || showSubtitleSettings || uiState.error != null ||
             !playingCheckedRealSource(),
         waitingForNextEpisode = uiState.autoPlayNext && playbackEpisodeKey != null &&

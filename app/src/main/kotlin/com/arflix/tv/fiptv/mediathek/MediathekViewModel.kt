@@ -273,6 +273,24 @@ class MediathekViewModel @Inject constructor(
             image = artCache.cached(item)?.tile,
         )
         FiptvResume.register(context, profileId, entry)
+        // fIPTV: nächste (neuere) Folgen derselben Sendung für „Nächste Folge automatisch“
+        val detail = _state.value.detail
+        val following = if (detail != null && !MediathekRepository.isContainerTopic(item.topic)) {
+            detail.episodes
+                .filter { it.topic.equals(item.topic, ignoreCase = true) && it.startMs > item.startMs && it.id != item.id }
+                .sortedBy { it.startMs }
+                .take(20)
+                .mapNotNull { n ->
+                    n.bestVideo?.let { u ->
+                        FiptvResume.Entry(
+                            url = u, kind = FiptvResume.Kind.MEDIATHEK, title = n.title,
+                            subtitle = listOf(sender, n.topic.takeIf { it != n.title }.orEmpty()).filter { it.isNotBlank() }.joinToString(" · "),
+                            image = artCache.cached(n)?.tile,
+                        )
+                    }
+                }
+        } else emptyList()
+        com.arflix.tv.fiptv.FiptvNextUp.set(profileId, entry, following)
         return entry to (if (fromStart) null else FiptvResume.startPosition(context, profileId, url))
     }
 

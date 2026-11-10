@@ -553,8 +553,14 @@ private fun catchupPlaybackVariant(
 }
 
 @Composable
-private fun LiveTvRenderBoundary(groupNames: Map<String, String> = emptyMap(), content: @Composable () -> Unit) {
-    androidx.compose.runtime.CompositionLocalProvider(LocalLiveGroupNames provides groupNames, content = content)
+private fun LiveTvRenderBoundary(groupNames: Map<String, String> = emptyMap(), favoriteNumbers: Map<String, Int> = emptyMap(), content: @Composable () -> Unit) {
+    val reminderKeys by com.arflix.tv.fiptv.reminders.FiptvReminders.keys.collectAsState()
+    androidx.compose.runtime.CompositionLocalProvider(
+        LocalLiveGroupNames provides groupNames,
+        LocalFiptvFavoriteNumbers provides favoriteNumbers,
+        LocalFiptvReminderKeys provides reminderKeys,
+        content = content
+    )
 }
 
 @Composable
@@ -622,6 +628,7 @@ fun LiveTvScreen(
     // so anything keyed on favSet alone never notices "move up/down" and the favourites
     // rail keeps its old order.
     val favoriteOrderIds = state.snapshot.favoriteChannels
+    val fiptvFavoriteNumbers = remember(favoriteOrderIds) { FiptvFavoriteNumbers.numbers(favoriteOrderIds) }
     val favoriteRank = remember(favoriteOrderIds) {
         favoriteOrderIds.withIndex().associate { (index, id) -> id to index }
     }
@@ -2983,7 +2990,27 @@ fun LiveTvScreen(
             EpgInteractionAction.ResolveVodOrPlayFullscreen -> resolveVodOrPlayFullscreen(channel, program)
             EpgInteractionAction.PlayLiveFullscreen -> playLiveFullscreen(channel)
             EpgInteractionAction.NoOp,
-            EpgInteractionAction.ShowVodDialog -> Unit
+            EpgInteractionAction.ShowVodDialog -> {
+                // fIPTV: künftige Sendung anklicken = merken / nicht mehr merken
+                if (temporalState == EpgTemporalState.Future) {
+                    val nowSet = com.arflix.tv.fiptv.reminders.FiptvReminders.toggle(
+                        context,
+                        com.arflix.tv.fiptv.reminders.FiptvReminder(
+                            channelId = channel.id,
+                            channelName = channel.name,
+                            title = program.title,
+                            startUtcMillis = program.startUtcMillis,
+                            endUtcMillis = program.endUtcMillis,
+                        )
+                    )
+                    val time = java.text.SimpleDateFormat("EEE HH:mm", java.util.Locale.GERMANY).format(java.util.Date(program.startUtcMillis))
+                    android.widget.Toast.makeText(
+                        context,
+                        if (nowSet) "🔔 Gemerkt: ${program.title} ($time) – Hinweis kommt kurz vorher" else "Erinnerung entfernt: ${program.title}",
+                        android.widget.Toast.LENGTH_LONG,
+                    ).show()
+                }
+            }
         }
     }
     fun playProgramInFullscreen(program: IptvProgram?, targetChannel: EnrichedChannel? = null) {
@@ -3029,13 +3056,21 @@ fun LiveTvScreen(
         hudPokeSignal++
     }
 
+    LaunchedEffect(Unit) {
+        com.arflix.tv.fiptv.reminders.FiptvReminders.tuneRequests.collect { id ->
+            visibleEnrichedState.value.all.firstOrNull { it.id == id }?.let {
+                tuneChannelNumber(it)
+                isFullScreen = true
+            }
+        }
+    }
+
     fun handleChannelNumberDigit(digit: Int): Boolean {
         val now = System.currentTimeMillis()
         val prefix = if (now - lastChannelDigitAt > 1_500L) "" else channelNumberBuffer
         channelNumberBuffer = (prefix + digit.toString()).takeLast(4)
         lastChannelDigitAt = now
-        visibleEnrichedState.value.all
-            .firstOrNull { it.number.toString() == channelNumberBuffer }
+        FiptvFavoriteNumbers.exact(channelNumberBuffer, favoriteOrderIds, visibleEnrichedState.value.all)
             ?.let {
                 tuneChannelNumber(it)
                 channelNumberBuffer = ""
@@ -3048,10 +3083,7 @@ fun LiveTvScreen(
         if (query.isBlank()) return@LaunchedEffect
         delay(1_200L)
         if (channelNumberBuffer != query) return@LaunchedEffect
-        val target = visibleEnrichedState.value.all
-            .filter { it.number.toString().startsWith(query) }
-            .take(2)
-            .singleOrNull()
+        val target = FiptvFavoriteNumbers.settle(query, favoriteOrderIds, visibleEnrichedState.value.all)
         if (target != null) {
             tuneChannelNumber(target)
         }
@@ -4114,15 +4146,11 @@ fun LiveTvScreen(
         }
     }
 
-    val channelNumberExactName = remember(channelNumberBuffer, allDisplayChannels) {
-        allDisplayChannels.firstOrNull { it.number.toString() == channelNumberBuffer }?.name
+    val channelNumberExactName = remember(channelNumberBuffer, allDisplayChannels, favoriteOrderIds) {
+        FiptvFavoriteNumbers.previewName(channelNumberBuffer, favoriteOrderIds, allDisplayChannels)
     }
-    val channelNumberMatchCount = remember(channelNumberBuffer, allDisplayChannels) {
-        if (channelNumberBuffer.isBlank()) {
-            0
-        } else {
-            allDisplayChannels.count { it.number.toString().startsWith(channelNumberBuffer) }
-        }
+    val channelNumberMatchCount = remember(channelNumberBuffer, allDisplayChannels, favoriteOrderIds) {
+        FiptvFavoriteNumbers.matchCount(channelNumberBuffer, favoriteOrderIds, allDisplayChannels)
     }
 
     BoxWithConstraints(
@@ -4313,7 +4341,7 @@ fun LiveTvScreen(
         val compactTouchLayout = isTouchDevice && maxWidth < 900.dp
         val landscapeCompactMiniPlayer =
             miniPlayerLayout == LiveTvMiniPlayerLayout.LANDSCAPE_COMPACT
-        LiveTvRenderBoundary(liveGroupNames) {
+        LiveTvRenderBoundary(liveGroupNames, fiptvFavoriteNumbers) {
             // Content area starts below the translucent top bar so it doesn't get
             // overwritten.
             if (isFullScreen) {

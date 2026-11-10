@@ -72,6 +72,10 @@ fun VodScreen(
     val resumeChanges by FiptvResume.changes.collectAsStateWithLifecycle()
     val resume = remember(resumeChanges, state.accountIndex) { viewModel.resumeEntries() }
     val isTouch = LocalDeviceType.current.isTouchDevice()
+    // fIPTV: aus der „Suche über alles“ gewählte Serie öffnen, sobald der Anbieter geladen ist
+    LaunchedEffect(state.categories.isNotEmpty()) {
+        if (state.categories.isNotEmpty()) com.arflix.tv.fiptv.search.FiptvSearchBridge.takeSeries()?.let { viewModel.openSeries(it) }
+    }
     val firstFocus = remember { FocusRequester() }
     LaunchedEffect(Unit) { runCatching { firstFocus.requestFocus() } }
 

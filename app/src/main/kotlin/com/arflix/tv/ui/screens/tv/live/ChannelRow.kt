@@ -216,7 +216,8 @@ fun ChannelRow(
                 contentAlignment = Alignment.CenterStart,
             ) {
                 Text(
-                    text = channel.number.toString(),
+                    // fIPTV: Lieblingssender zeigen ihren Programmplatz (1, 2, 3 …)
+                    text = (LocalFiptvFavoriteNumbers.current[channel.id] ?: channel.number).toString(),
                     style = LiveType.NumberMono.copy(
                         color = secondary,
                     ),

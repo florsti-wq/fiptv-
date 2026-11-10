@@ -72,6 +72,8 @@ fun YouTubeScreen(
     val isTouch = LocalDeviceType.current.isTouchDevice()
     var searchOpen by remember { mutableStateOf(false) }
     var playing by remember { mutableStateOf<YtVideo?>(null) }
+    // fIPTV: aus der „Suche über alles“ gewähltes Video abspielen
+    LaunchedEffect(Unit) { com.arflix.tv.fiptv.search.FiptvSearchBridge.takeYoutube()?.let { playing = it } }
     var lastPlayedId by remember { mutableStateOf<String?>(null) }
     val firstFocus = remember { FocusRequester() }
     val returnFocus = remember { FocusRequester() }

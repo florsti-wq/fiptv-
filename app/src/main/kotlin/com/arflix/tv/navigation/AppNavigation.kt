@@ -186,6 +186,8 @@ internal fun NavHostController.navigateToProfileSelection() {
 }
 
 /** fIPTV: Player-Adresse für Anbieter-VOD und Mediathek (mit Startposition fürs Weiterschauen). */
+private const val FIPTV_CATALOG_SEARCH = "fiptv_catalog_search"
+
 private fun fiptvPlayerRoute(entry: com.arflix.tv.fiptv.FiptvResume.Entry, startPositionMs: Long?): String {
     val start = startPositionMs?.takeIf { it > 0 }
     val tmdb = entry.tmdbId
@@ -266,6 +268,15 @@ fun AppNavigation(
             popUpTo(Screen.Home.route) { saveState = true }
             launchSingleTop = true
             restoreState = true
+        }
+    }
+
+    // fIPTV: nächste Folge ersetzt den laufenden Player
+    SideEffect {
+        com.arflix.tv.fiptv.FiptvNextUp.playNext = { entry, start ->
+            navController.navigate(fiptvPlayerRoute(entry, start)) {
+                popUpTo(Screen.Player.route) { inclusive = true }
+            }
         }
     }
 
@@ -450,6 +461,42 @@ fun AppNavigation(
 
         // Search screen
         composable(Screen.Search.route) {
+            NavigationRailScreen(navigationRailInset, bottomInset = navigationRailBottomInset) {
+                if (isKidsProfile) {
+                    SearchScreen(
+                        currentProfile = currentProfile,
+                        onNavigateToDetails = { mediaType, mediaId ->
+                            navController.navigate(Screen.Details.createRoute(mediaType, mediaId))
+                        },
+                        onNavigateToHome = { navigateHome() },
+                        onNavigateToWatchlist = { navigateTopLevel(Screen.Watchlist.route) },
+                        onNavigateToTv = { navigateTopLevel(Screen.Tv.createRoute()) },
+                        onNavigateToSettings = { navigateTopLevel(Screen.Settings.route) },
+                        onSwitchProfile = {
+                            onSwitchProfile()
+                            navController.navigateToProfileSelection()
+                        },
+                        onBack = { navigateHome() }
+                    )
+                } else {
+                    // fIPTV: Suche über alles (TV-Programm, Sender, Anbieter-VOD, Mediathek, YouTube)
+                    com.arflix.tv.fiptv.search.FiptvSearchScreen(
+                        onTuneChannel = { channelId ->
+                            navController.navigate(Screen.Tv.createRoute(channelId)) {
+                                popUpTo(Screen.Home.route) { saveState = false }
+                                launchSingleTop = true
+                                restoreState = false
+                            }
+                        },
+                        onPlay = { entry, start -> navController.navigate(fiptvPlayerRoute(entry, start)) },
+                        onOpenCatalogSearch = { navController.navigate(FIPTV_CATALOG_SEARCH) },
+                    )
+                }
+            }
+        }
+
+        // fIPTV: bisherige Katalogsuche (Filme & Serien über Streaming-Kataloge)
+        composable(FIPTV_CATALOG_SEARCH) {
             NavigationRailScreen(navigationRailInset, bottomInset = navigationRailBottomInset) {
                 SearchScreen(
                     currentProfile = currentProfile,
@@ -905,6 +952,20 @@ fun AppNavigation(
                     }
                 }
             )
+        }
+    }
+
+    // fIPTV: Hinweis kurz vor gemerkten Sendungen (nicht im Kinderprofil)
+    com.arflix.tv.fiptv.reminders.FiptvReminderHost(enabled = !isKidsProfile) { channelId ->
+        val onTv = navController.currentDestination?.route?.substringBefore('?') == "tv"
+        if (onTv) {
+            com.arflix.tv.fiptv.reminders.FiptvReminders.requestTune(channelId)
+        } else {
+            navController.navigate(Screen.Tv.createRoute(channelId)) {
+                popUpTo(Screen.Home.route) { saveState = false }
+                launchSingleTop = true
+                restoreState = false
+            }
         }
     }
 }

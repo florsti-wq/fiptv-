@@ -91,6 +91,8 @@ fun MediathekScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val resumeChanges by FiptvResume.changes.collectAsStateWithLifecycle()
+    // fIPTV: aus der „Suche über alles“ gewählte Sendung öffnen
+    LaunchedEffect(Unit) { com.arflix.tv.fiptv.search.FiptvSearchBridge.takeMediathek()?.let { viewModel.openDetail(it) } }
     val resume = remember(resumeChanges) { viewModel.resumeEntries() }
     val isTouch = LocalDeviceType.current.isTouchDevice()
     var searchOpen by remember { mutableStateOf(false) }
