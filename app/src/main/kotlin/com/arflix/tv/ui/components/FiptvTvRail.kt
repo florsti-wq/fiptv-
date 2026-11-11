@@ -46,8 +46,7 @@ import java.util.Date
 import java.util.Locale
 
 /**
- * fIPTV: Hauptmenü als schmale Leiste links (nur Icons). Mit der Fernbedienung angesteuert klappt sie
- * auf und zeigt die Namen. Die Bildschirme steuern den Fokus weiter wie bei der oberen Leiste;
+ * fIPTV: Hauptmenü als schmale Leiste links (nur Icons, klappt nicht auf). Die Bildschirme steuern den Fokus weiter wie bei der oberen Leiste;
  * [MainActivity] dreht dafür die Pfeiltasten, solange das Menü den Fokus hat (hoch/runter = vorher
  * links/rechts, rechts = zurück zum Inhalt).
  */
@@ -127,100 +126,85 @@ object FiptvTvRail {
 @Composable
 fun FiptvTvRailView(modifier: Modifier = Modifier) {
     val st = FiptvTvRail.state ?: return
-    val expanded = st.focused
     val accent = resolveAccentColor(fallback = Color(0xFF4F8CFF))
     val hasProfile = st.profile != null
     val items = topBarNavItems
-    var clock by remember { mutableStateOf("") }
-    LaunchedEffect(Unit) {
-        while (true) {
-            clock = SimpleDateFormat("HH:mm", Locale.GERMANY).format(Date())
-            delay(15_000)
-        }
-    }
-    Column(
+    // fIPTV: nur Icons; Größe passt sich der Bildschirmhöhe an, damit alles (auch TV und Einstellungen) sichtbar bleibt
+    val count = items.size + 1 + (if (hasProfile) 1 else 0)
+    androidx.compose.foundation.layout.BoxWithConstraints(
         modifier = modifier
             .fillMaxHeight()
-            .width(if (expanded) FiptvTvRail.EXPANDED else FiptvTvRail.COLLAPSED)
-            .animateContentSize()
-            .then(if (expanded) Modifier.shadow(24.dp) else Modifier)
-            .background(if (expanded) Color(0xF2121621) else Color(0xE60E1118))
-            .padding(horizontal = if (expanded) 18.dp else 18.dp, vertical = 22.dp),
-        horizontalAlignment = if (expanded) Alignment.Start else Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(6.dp),
+            .width(FiptvTvRail.COLLAPSED)
+            .background(if (st.focused) Color(0xF2121621) else Color(0xE60E1118)),
     ) {
-        if (hasProfile) {
-            val p = st.profile!!
-            val focusedHere = st.focused && st.focusedIndex == 0
-            RailRow(expanded = expanded, focused = focusedHere, selected = false, accent = accent, label = p.name) {
-                Box(
-                    Modifier.size(36.dp).clip(CircleShape).background(Color(p.avatarColor)),
-                    contentAlignment = Alignment.Center,
-                ) { Text(p.name.take(1).uppercase(), color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold) }
+        val gap = 4.dp
+        val extra = if (hasProfile) 10.dp else 0.dp
+        val avail = maxHeight - 32.dp - extra - gap * (count - 1)
+        val cell = (avail / count).coerceIn(34.dp, 52.dp)
+        val iconSize = (cell * 0.5f).coerceIn(20.dp, 26.dp)
+        Column(
+            modifier = Modifier.fillMaxHeight().fillMaxWidth().padding(vertical = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(gap),
+        ) {
+            if (hasProfile) {
+                val p = st.profile!!
+                RailIcon(cell, focused = st.focused && st.focusedIndex == 0, selected = false, accent = accent) {
+                    Box(
+                        Modifier.size(cell * 0.7f).clip(CircleShape).background(Color(p.avatarColor)),
+                        contentAlignment = Alignment.Center,
+                    ) { Text(p.name.take(1).uppercase(), color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold) }
+                }
+                Spacer(Modifier.height(extra))
             }
-            Spacer(Modifier.height(10.dp))
-        }
-        items.forEachIndexed { i, item ->
-            val idx = if (hasProfile) i + 1 else i
-            RailRow(
-                expanded = expanded,
-                focused = st.focused && st.focusedIndex == idx,
-                selected = st.selected == item,
+            items.forEachIndexed { i, item ->
+                val idx = if (hasProfile) i + 1 else i
+                val label = if (item == SidebarItem.TV) stringResource(com.arflix.tv.R.string.topbar_tv) else stringResource(item.labelRes)
+                RailIcon(cell, focused = st.focused && st.focusedIndex == idx, selected = st.selected == item, accent = accent) {
+                    Icon(item.icon, contentDescription = label, modifier = Modifier.size(iconSize))
+                }
+            }
+            Spacer(Modifier.weight(1f))
+            val settingsIdx = topBarMaxIndex(hasProfile)
+            RailIcon(
+                cell,
+                focused = st.focused && st.focusedIndex == settingsIdx,
+                selected = st.selected == SidebarItem.SETTINGS,
                 accent = accent,
-                label = stringResource(item.labelRes),
-            ) { Icon(item.icon, contentDescription = null, modifier = Modifier.size(26.dp)) }
+                badge = st.hasBadge,
+            ) { Icon(SidebarItem.SETTINGS.icon, contentDescription = stringResource(SidebarItem.SETTINGS.labelRes), modifier = Modifier.size(iconSize)) }
         }
-        Spacer(Modifier.weight(1f))
-        val settingsIdx = topBarMaxIndex(hasProfile)
-        RailRow(
-            expanded = expanded,
-            focused = st.focused && st.focusedIndex == settingsIdx,
-            selected = st.selected == SidebarItem.SETTINGS,
-            accent = accent,
-            label = stringResource(SidebarItem.SETTINGS.labelRes),
-            badge = st.hasBadge,
-        ) { Icon(SidebarItem.SETTINGS.icon, contentDescription = null, modifier = Modifier.size(26.dp)) }
-        Text(clock, color = Color.White.copy(alpha = 0.55f), fontSize = 14.sp,
-            modifier = Modifier.padding(top = 8.dp).then(if (expanded) Modifier.padding(start = 14.dp) else Modifier))
     }
 }
 
 @Composable
-private fun RailRow(
-    expanded: Boolean,
+private fun RailIcon(
+    cell: Dp,
     focused: Boolean,
     selected: Boolean,
     accent: Color,
-    label: String,
     badge: Boolean = false,
     icon: @Composable () -> Unit,
 ) {
     val bg = when {
         selected -> accent
-        focused -> Color.White.copy(alpha = 0.14f)
+        focused -> Color.White.copy(alpha = 0.16f)
         else -> Color.Transparent
     }
     val fg = if (selected || focused) Color.White else Color(0xFFAEB6C4)
-    Row(
+    Box(
         modifier = Modifier
-            .then(if (expanded) Modifier.fillMaxWidth() else Modifier.size(52.dp))
-            .height(52.dp)
+            .size(cell)
             .clip(RoundedCornerShape(14.dp))
             .background(bg)
-            .then(if (focused) Modifier.border(3.dp, Color.White, RoundedCornerShape(14.dp)) else Modifier)
-            .padding(horizontal = if (expanded) 14.dp else 0.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = if (expanded) Arrangement.Start else Arrangement.Center,
+            .then(if (focused) Modifier.border(3.dp, Color.White, RoundedCornerShape(14.dp)) else Modifier),
+        contentAlignment = Alignment.Center,
     ) {
         androidx.compose.runtime.CompositionLocalProvider(androidx.tv.material3.LocalContentColor provides fg) {
             Box(contentAlignment = Alignment.TopEnd) {
                 icon()
                 if (badge) Box(Modifier.size(8.dp).clip(CircleShape).background(Color(0xFFF97316)))
             }
-        }
-        if (expanded) {
-            Spacer(Modifier.width(16.dp))
-            Text(label, color = fg, fontSize = 17.sp, fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium, maxLines = 1)
         }
     }
 }
