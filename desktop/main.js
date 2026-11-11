@@ -11,6 +11,10 @@ const path = require("node:path");
 const PORT = 38917;
 const APP_URL = `http://localhost:${PORT}/`;
 // Sync-Server-Adresse kommt aus dem Build (backend.json), sonst die bisherige Netlify-Adresse
+// fIPTV: Google-Anmeldung für YouTube (Zugang vom Typ „TVs and Limited Input devices“)
+const YT_OAUTH = (() => {
+  try { const b = require("./backend.json"); return { id: b.ytClientId || "", secret: b.ytClientSecret || "" }; } catch { return { id: "", secret: "" }; }
+})();
 const BACKEND = (() => {
   try { return require("./backend.json").url || "https://fipsite.netlify.app/.netlify/functions"; } catch { return "https://fipsite.netlify.app/.netlify/functions"; }
 })();
@@ -85,6 +89,8 @@ function startServer(config) {
       FIPTV_HOME_PROXY: "true",
       ALLOW_NETLIFY_MEDIA_PROXY: "true",
       NETLIFY_BACKEND_URL: BACKEND,
+      FIPTV_YT_CLIENT_ID: YT_OAUTH.id,
+      FIPTV_YT_CLIENT_SECRET: YT_OAUTH.secret,
       NEXT_TELEMETRY_DISABLED: "1"
     }
   });

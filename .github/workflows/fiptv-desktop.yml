@@ -90,9 +90,11 @@ jobs:
       - name: Sync-Server-Adresse für die App
         env:
           BACKEND: ${{ env.FIPTV_BACKEND || 'https://fipsite.netlify.app/.netlify/functions' }}
+          YT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
+          YT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
         run: |
-          node -e 'require("fs").writeFileSync("desktop/backend.json", JSON.stringify({ url: process.env.BACKEND }))'
-          cat desktop/backend.json
+          node -e 'const t=(v)=>String(v||"").trim(); require("fs").writeFileSync("desktop/backend.json", JSON.stringify({ url: process.env.BACKEND, ytClientId: t(process.env.YT_ID), ytClientSecret: t(process.env.YT_SECRET) }))'
+          node -e 'const b=require("./desktop/backend.json"); console.log("Sync:", b.url, "| Google-Anmeldung:", b.ytClientId ? "eingerichtet" : "fehlt")'
 
       - name: Electron – Abhängigkeiten
         working-directory: desktop
