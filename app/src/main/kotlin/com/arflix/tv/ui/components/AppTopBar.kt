@@ -56,7 +56,9 @@ import kotlinx.coroutines.flow.first
 
 val AppTopBarHeight = 82.dp
 val AppTopBarTopPadding = 0.dp
-val AppTopBarContentTopInset = 98.dp
+/** fIPTV: mit dem Menü links braucht der Inhalt oben kaum Platz */
+val AppTopBarContentTopInset: androidx.compose.ui.unit.Dp
+    get() = if (FiptvTvRail.visible) 36.dp else 98.dp
 /** On mobile/tablet where the topbar is hidden, use a small status-bar-like inset instead. */
 val MobileContentTopInset = 16.dp
 val AppTopBarHorizontalPadding = 28.dp
@@ -67,6 +69,8 @@ private val ALL_NAV_ITEMS = SidebarItem.entries.filter { it != SidebarItem.SETTI
 private val KIDS_NAV_ITEMS = ALL_NAV_ITEMS.filter { it != SidebarItem.TV && it != SidebarItem.VOD && it != SidebarItem.YOUTUBE && it != SidebarItem.SPORT }
 private val NAV_ITEMS: List<SidebarItem>
     get() = if (KidsNavigation.hideLiveTv) KIDS_NAV_ITEMS else ALL_NAV_ITEMS
+/** fIPTV: dieselbe Reihenfolge für die Leiste links */
+internal val topBarNavItems: List<SidebarItem> get() = NAV_ITEMS
 
 fun topBarMaxIndex(hasProfile: Boolean): Int {
     // Profile (0 if shown) + nav items + settings gear (last index)
@@ -105,6 +109,11 @@ fun AppTopBar(
     hasUpdateBadge: Boolean = false,
     modifier: Modifier = Modifier
 ) {
+    // fIPTV: Menü links statt oben (Fire TV)
+    if (FiptvTvRail.enabled) {
+        FiptvTvRail.Publish(selectedItem, isFocused, focusedIndex, profile, hasUpdateBadge)
+        return
+    }
     val showProfile = profile != null
     val hasProfile = showProfile
     val currentTime = rememberTopBarTime(clockFormat)
@@ -316,7 +325,7 @@ private fun TopBarSettingsGear(
         contentAlignment = Alignment.Center
     ) {
         Icon(
-            imageVector = Icons.Outlined.Settings,
+            imageVector = com.arflix.tv.fiptv.FiptvIcons.Settings,
             contentDescription = stringResource(R.string.settings),
             tint = iconColor,
             modifier = Modifier.size(20.dp)

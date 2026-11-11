@@ -150,18 +150,18 @@ class FiptvGoalWatcherViewModel @Inject constructor(
                     }
                     queue += GoalAlert(
                         key = "${g.id}:$h:$a",
-                        title = "⚽ TOR für ${scorerSide.name}!",
+                        title = "TOR für ${scorerSide.name}!",
                         match = g,
                         line = scorer ?: g.detail,
                         forFollowed = scorerSide.id in followedIds,
                     )
                 } else if (h < hOld || a < aOld) {
-                    queue += GoalAlert("${g.id}:var:$h:$a", "🖥 Tor zurückgenommen (VAR)", g, g.detail, false)
+                    queue += GoalAlert("${g.id}:var:$h:$a", "Tor zurückgenommen (VAR)", g, g.detail, false)
                 }
                 if (s0 != "post" && g.state == "post") {
-                    queue += GoalAlert("${g.id}:end", "🏁 Abpfiff", g, g.league.label, false)
+                    queue += GoalAlert("${g.id}:end", "Abpfiff", g, g.league.label, false)
                 } else if (s0 == "pre" && g.state == "in") {
-                    queue += GoalAlert("${g.id}:start", "▶ Anpfiff", g, g.league.label, false)
+                    queue += GoalAlert("${g.id}:start", "Anpfiff", g, g.league.label, false)
                 }
             }
         }
@@ -192,7 +192,16 @@ fun FiptvGoalAlertHost(enabled: Boolean, viewModel: FiptvGoalWatcherViewModel = 
                     .padding(horizontal = 18.dp, vertical = 14.dp),
                 verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
-                Text(a.title, color = if (a.forFollowed) Color(0xFF4ADE80) else Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    androidx.tv.material3.Icon(
+                        if (a.title.startsWith("TOR")) com.arflix.tv.fiptv.FiptvIcons.Goal else if (a.title.contains("Abpfiff") || a.title.contains("Anpfiff")) com.arflix.tv.fiptv.FiptvIcons.Football else com.arflix.tv.fiptv.FiptvIcons.Stats,
+                        contentDescription = null,
+                        tint = if (a.forFollowed) Color(0xFF4ADE80) else Color.White,
+                        modifier = Modifier.size(22.dp),
+                    )
+                    Spacer(Modifier.width(10.dp))
+                    Text(a.title, color = if (a.forFollowed) Color(0xFF4ADE80) else Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     TeamLogo(a.match.home.team.logo)
                     Spacer(Modifier.width(8.dp))

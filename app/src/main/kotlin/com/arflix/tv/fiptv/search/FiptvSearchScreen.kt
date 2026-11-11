@@ -109,7 +109,7 @@ fun FiptvSearchScreen(
                         contentAlignment = Alignment.CenterStart,
                     ) {
                         if (state.query.isEmpty()) {
-                            Text("🔍  Sender, Sendung, Film, Serie, YouTube …", color = Color.White.copy(alpha = 0.45f), fontSize = 18.sp)
+                            Text(" Sender, Sendung, Film, Serie, YouTube …", color = Color.White.copy(alpha = 0.45f), fontSize = 18.sp)
                         }
                         BasicTextField(
                             value = state.query,
@@ -123,7 +123,7 @@ fun FiptvSearchScreen(
                         )
                     }
                     if (voice.isAvailable) {
-                        Chip(if (voice.isListening) "🎙 Höre zu …" else "🎙 Sprechen", selected = voice.isListening) { voice.toggle() }
+                        Chip(if (voice.isListening) "Höre zu …" else "Sprechen", selected = voice.isListening) { voice.toggle() }
                     }
                     if (state.query.isNotEmpty()) Chip("✕", selected = false) { viewModel.setQuery("") }
                 }
@@ -142,17 +142,17 @@ fun FiptvSearchScreen(
                         "Durchsucht gleichzeitig: TV-Programm (jetzt und demnächst), Sender, Filme und Serien deines Anbieters, ARD/ZDF-Mediathek und YouTube.",
                         color = Color.White.copy(alpha = 0.75f), fontSize = 16.sp,
                     )
-                    Chip("🎬 Film- & Serienkatalog durchsuchen (Streaming)", selected = false, onClick = onOpenCatalogSearch)
+                    Chip("Film- & Serienkatalog durchsuchen (Streaming)", selected = false, onClick = onOpenCatalogSearch)
                 }
             }
             return@LazyColumn
         }
 
-        section("📺 Im TV-Programm", state.epg) { hits ->
+        section("Im TV-Programm", state.epg, com.arflix.tv.fiptv.FiptvIcons.OnTv) { hits ->
             items(hits, key = { "${it.channel.id}|${it.program.startUtcMillis}" }) { hit ->
                 val reminded = FiptvReminder.keyOf(hit.program.title, hit.program.startUtcMillis) in reminderKeys
                 TextCard(
-                    title = (if (reminded) "🔔 " else "") + hit.program.title,
+                    title = (if (reminded) "◉ " else "") + hit.program.title,
                     line1 = hit.channel.name,
                     line2 = if (hit.live) "● Läuft gerade – ansehen" else "${when_(hit.program.startUtcMillis)} · merken",
                     accent = if (hit.live) Color(0xFFE53935) else null,
@@ -166,22 +166,22 @@ fun FiptvSearchScreen(
                         )
                         Toast.makeText(
                             context,
-                            if (set) "🔔 Gemerkt: ${hit.program.title} – Hinweis kommt kurz vorher" else "Erinnerung entfernt",
+                            if (set) "Gemerkt: ${hit.program.title} – Hinweis kommt kurz vorher" else "Erinnerung entfernt",
                             Toast.LENGTH_SHORT,
                         ).show()
                     }
                 }
             }
         }
-        section("📡 Sender", state.channels) { list ->
+        section("Sender", state.channels, com.arflix.tv.fiptv.FiptvIcons.LiveTv) { list ->
             items(list, key = { it.id }) { ch -> ChannelCard(ch) { onTuneChannel(ch.id) } }
         }
-        section("🎬 Filme beim Anbieter", state.movies) { list ->
+        section("Filme beim Anbieter", state.movies, com.arflix.tv.fiptv.FiptvIcons.Film) { list ->
             items(list, key = { "m${it.id}" }) { m ->
                 PosterCard(m.name, m.poster) { viewModel.prepareMovie(m)?.let { (e, start) -> onPlay(e, start) } }
             }
         }
-        section("📚 Serien beim Anbieter", state.series) { list ->
+        section("Serien beim Anbieter", state.series, com.arflix.tv.fiptv.FiptvIcons.Film) { list ->
             items(list, key = { "s${it.id}" }) { s ->
                 PosterCard(s.name, s.poster) {
                     FiptvSearchBridge.series = s
@@ -189,7 +189,7 @@ fun FiptvSearchScreen(
                 }
             }
         }
-        section("🏛 Mediathek", state.mediathek) { list ->
+        section("Mediathek", state.mediathek, com.arflix.tv.fiptv.FiptvIcons.Mediathek) { list ->
             items(list, key = { "mt${it.id}" }) { item ->
                 TextCard(
                     title = item.title,
@@ -204,7 +204,7 @@ fun FiptvSearchScreen(
                 }
             }
         }
-        section("▶ YouTube", state.youtube) { list ->
+        section("YouTube", state.youtube, com.arflix.tv.fiptv.FiptvIcons.VideoScreen) { list ->
             items(list, key = { "yt${it.id}" }) { v ->
                 VideoCard(v.title, v.channelTitle, v.thumbnail) {
                     FiptvSearchBridge.youtube = v
@@ -214,7 +214,7 @@ fun FiptvSearchScreen(
         }
         item(key = "catalog") {
             Box(Modifier.padding(horizontal = 40.dp)) {
-                Chip("🎬 „${state.query.trim()}“ im Film- & Serienkatalog suchen", selected = false, onClick = onOpenCatalogSearch)
+                Chip("„${state.query.trim()}“ im Film- & Serienkatalog suchen", selected = false, onClick = onOpenCatalogSearch)
             }
         }
     }
@@ -234,12 +234,17 @@ private fun when_(start: Long): String {
 private fun <T> androidx.compose.foundation.lazy.LazyListScope.section(
     title: String,
     section: Section<T>,
+    icon: androidx.compose.ui.graphics.vector.ImageVector? = null,
     content: androidx.compose.foundation.lazy.LazyListScope.(List<T>) -> Unit,
 ) {
     val items = section.items
     if (items != null && items.isEmpty() && section.error == null) return
     item(key = "h_$title") {
         Row(Modifier.padding(horizontal = 40.dp), verticalAlignment = Alignment.CenterVertically) {
+            if (icon != null) {
+                androidx.tv.material3.Icon(icon, contentDescription = null, tint = Color.White, modifier = Modifier.size(22.dp))
+                Spacer(Modifier.width(10.dp))
+            }
             Text(title, color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
             Spacer(Modifier.width(10.dp))
             when {

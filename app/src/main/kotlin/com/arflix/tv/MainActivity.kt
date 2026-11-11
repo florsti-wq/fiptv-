@@ -267,6 +267,7 @@ class MainActivity : ComponentActivity() {
         }
 
         super.onCreate(savedInstanceState)
+        com.arflix.tv.ui.components.FiptvTvRail.load(this)
         if (BuildConfig.PARTNER_MANAGEMENT_ENABLED) {
             lifecycleScope.launch {
                 repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
@@ -524,6 +525,15 @@ class MainActivity : ComponentActivity() {
                 swallowedIdleKeys.add(event.keyCode)
                 return true
             }
+        }
+        // fIPTV: Menü links – solange es den Fokus hat, Pfeiltasten senkrecht bedienen
+        com.arflix.tv.ui.components.FiptvTvRail.remapKey(event.keyCode)?.let { mapped ->
+            if (mapped < 0) return true
+            val remapped = android.view.KeyEvent(
+                event.downTime, event.eventTime, event.action, mapped, event.repeatCount,
+                event.metaState, event.deviceId, event.scanCode, event.flags, event.source,
+            )
+            return super.dispatchKeyEvent(remapped)
         }
         return super.dispatchKeyEvent(event)
     }
@@ -1084,7 +1094,8 @@ fun ArflixApp(
                 AppNavigation(
                     navController = navController,
                     startDestination = startDestination,
-                    navigationRailInset = if (isLandscapeRail) LANDSCAPE_RAIL_WIDTH_DP.dp + railCutoutInset else 0.dp,
+                    navigationRailInset = if (isLandscapeRail) LANDSCAPE_RAIL_WIDTH_DP.dp + railCutoutInset
+                        else if (!isMobile && com.arflix.tv.ui.components.FiptvTvRail.visible) com.arflix.tv.ui.components.FiptvTvRail.COLLAPSED else 0.dp,
                     navigationRailBottomInset = navigationInset,
                     preloadedCategories = preloadedCategories,
                     preloadedHeroItem = preloadedHeroItem,
@@ -1110,6 +1121,11 @@ fun ArflixApp(
                 )
             }
 
+        }
+
+        // fIPTV: Hauptmenü links (Fire TV)
+        if (!isMobile && com.arflix.tv.ui.components.FiptvTvRail.visible) {
+            com.arflix.tv.ui.components.FiptvTvRailView(Modifier.align(Alignment.TopStart))
         }
 
         androidx.compose.animation.AnimatedVisibility(

@@ -138,7 +138,7 @@ fun VodScreen(
                     progressOf = { ep -> viewModel.episodeProgress(ep) },
                     resumeChanges = resumeChanges,
                 )
-                state.error != null -> Message("⚠ ${state.error}")
+                state.error != null -> Message("${state.error}")
                 state.loading -> Message("Wird geladen …")
                 state.series && state.seriesList.isEmpty() -> Message("Keine Serien in dieser Kategorie.")
                 !state.series && state.movies.isEmpty() -> Message("Keine Filme in dieser Kategorie.")

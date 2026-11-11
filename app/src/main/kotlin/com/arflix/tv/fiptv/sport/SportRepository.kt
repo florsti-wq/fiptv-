@@ -17,11 +17,11 @@ import java.util.Locale
 
 /** Gruppen der Fußball-Wettbewerbe */
 enum class LeagueGroup(val label: String) {
-    TOP("🏆 Top-Ligen Europas"),
+    TOP("Top-Ligen Europas"),
     GERMANY("🇩🇪 Deutschland"),
-    EUROPE("⭐ Europapokal"),
-    NATIONAL("🌍 Nationalmannschaften"),
-    FRIENDLY("🤝 Freundschaftsspiele"),
+    EUROPE("Europapokal"),
+    NATIONAL("Nationalmannschaften"),
+    FRIENDLY("Freundschaftsspiele"),
 }
 
 /** Wettbewerbe, die fIPTV anzeigt (ESPN-Kürzel). */
@@ -199,7 +199,7 @@ object SportRepository {
         val j = get("$SITE/${league.code}/statistics")
         return j.optJSONArray("stats").objects().mapNotNull { cat ->
             val title = when (cat.optString("name")) {
-                "goalsLeaders" -> "⚽ Torjäger"
+                "goalsLeaders" -> "Torjäger"
                 "assistsLeaders" -> "🅰 Vorlagen"
                 else -> cat.optString("displayName").ifBlank { return@mapNotNull null }
             }

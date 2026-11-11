@@ -131,7 +131,7 @@ fun MediathekScreen(
                 Text(if (state.kids) "Kinder-Mediathek" else "Mediathek", color = Color.White, fontSize = 26.sp, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.width(20.dp))
                 Pill(
-                    label = if (state.search.isBlank()) "🔍 Suchen" else "🔍 ${state.search}",
+                    label = if (state.search.isBlank()) "Suchen" else "${state.search}",
                     selected = state.search.isNotBlank(),
                     onClick = { searchOpen = true },
                     modifier = Modifier.focusRequester(searchPill),
@@ -299,7 +299,7 @@ private fun MediathekRowView(
         )
         when {
             row.error != null -> Row(Modifier.padding(start = 40.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text("⚠ ${row.error}", color = Color(0xFFFF8A80), fontSize = 13.sp)
+                Text("${row.error}", color = Color(0xFFFF8A80), fontSize = 13.sp)
                 Spacer(Modifier.width(10.dp))
                 Pill("Erneut versuchen", selected = false, onClick = { viewModel.retryRow(row.def.key) })
             }
@@ -423,7 +423,7 @@ private fun SearchGrid(
         val total = state.searchTotal
         Text(
             when {
-                state.searchError != null -> "⚠ ${state.searchError}"
+                state.searchError != null -> "${state.searchError}"
                 state.searchLoading && state.searchItems.isEmpty() -> "Wird gesucht …"
                 state.searchItems.isEmpty() -> "Keine Sendungen gefunden."
                 total != null -> "$total Treffer"
@@ -586,7 +586,7 @@ private fun Pill(label: String, selected: Boolean, onClick: () -> Unit, modifier
 private fun KidsChannelRow(channels: List<com.arflix.tv.data.model.IptvChannel>, onPlay: (com.arflix.tv.data.model.IptvChannel) -> Unit) {
     Column {
         Text(
-            "📺 Kinder-Sender live",
+            "Kinder-Sender live",
             color = Color.White,
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,

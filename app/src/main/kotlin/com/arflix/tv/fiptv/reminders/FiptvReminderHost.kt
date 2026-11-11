@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -14,6 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -73,7 +75,11 @@ fun FiptvReminderHost(enabled: Boolean, onTune: (channelId: String) -> Unit) {
         ) {
             val minutes = ((reminder.startUtcMillis - System.currentTimeMillis()) / 60_000L)
             val time = SimpleDateFormat("HH:mm", Locale.GERMANY).format(Date(reminder.startUtcMillis))
-            Text("🔔 Gemerkte Sendung", color = Color.White.copy(alpha = 0.7f), fontSize = 16.sp)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                androidx.tv.material3.Icon(com.arflix.tv.fiptv.FiptvIcons.Bell, contentDescription = null, tint = Color.White.copy(alpha = 0.7f), modifier = Modifier.size(20.dp))
+                androidx.compose.foundation.layout.Spacer(Modifier.width(8.dp))
+                Text("Gemerkte Sendung", color = Color.White.copy(alpha = 0.7f), fontSize = 16.sp)
+            }
             Text(reminder.title, color = Color.White, fontSize = 26.sp, fontWeight = FontWeight.Bold)
             Text(
                 (if (minutes > 0) "Beginnt in $minutes Min. ($time Uhr)" else "Hat um $time Uhr begonnen") +
@@ -81,7 +87,7 @@ fun FiptvReminderHost(enabled: Boolean, onTune: (channelId: String) -> Unit) {
                 color = Color.White.copy(alpha = 0.85f), fontSize = 18.sp,
             )
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.padding(top = 10.dp)) {
-                DialogButton("📺  Umschalten", primary = true, modifier = Modifier.focusRequester(focus)) {
+                DialogButton(" Umschalten", primary = true, modifier = Modifier.focusRequester(focus)) {
                     close()
                     onTune(reminder.channelId)
                 }

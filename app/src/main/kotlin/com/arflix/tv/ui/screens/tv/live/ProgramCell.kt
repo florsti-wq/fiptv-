@@ -88,11 +88,11 @@ fun ProgramCell(
     focusRequester: FocusRequester? = null,
     modifier: Modifier = Modifier,
 ) {
-    // fIPTV: gemerkte Sendungen bekommen ein 🔔 vor dem Titel
+    // fIPTV: gemerkte Sendungen bekommen ein vor dem Titel
     @Suppress("NAME_SHADOWING")
     val program = if (LocalFiptvReminderKeys.current.contains(
             com.arflix.tv.fiptv.reminders.FiptvReminder.keyOf(program.title, program.startUtcMillis)
-        )) program.copy(title = "🔔 ${program.title}") else program
+        )) program.copy(title = "◉ ${program.title}") else program
     val deviceType = LocalDeviceType.current
     val isTouchDevice = deviceType.isTouchDevice()
     // Retain the standard layout for touch, expanded rows and RTL text layout.

@@ -62,19 +62,19 @@ import com.arflix.tv.ui.theme.TextSecondary
  * Ultra slim icon-only bar with animated focus states
  */
 enum class SidebarItem(val icon: ImageVector, @StringRes val labelRes: Int) {
-    SEARCH(Icons.Outlined.Search, R.string.search),
-    HOME(Icons.Outlined.Home, R.string.home),
-    WATCHLIST(Icons.Outlined.Bookmark, R.string.nav_library),
-    TV(Icons.Outlined.LiveTv, R.string.tv_shows),
+    SEARCH(com.arflix.tv.fiptv.FiptvIcons.Search, R.string.search),
+    HOME(com.arflix.tv.fiptv.FiptvIcons.Home, R.string.home),
+    WATCHLIST(com.arflix.tv.fiptv.FiptvIcons.Bookmark, R.string.nav_library),
+    TV(com.arflix.tv.fiptv.FiptvIcons.LiveTv, R.string.tv_shows),
     // fIPTV: Filme und Serien des IPTV-Anbieters (getrennt von TMDB/Addons)
-    VOD(Icons.Outlined.VideoLibrary, R.string.fiptv_nav_vod),
+    VOD(com.arflix.tv.fiptv.FiptvIcons.Film, R.string.fiptv_nav_vod),
     // fIPTV: Sport (Bundesliga, Champions League, Sports-Hub)
-    SPORT(Icons.Outlined.SportsSoccer, R.string.fiptv_nav_sport),
+    SPORT(com.arflix.tv.fiptv.FiptvIcons.Trophy, R.string.fiptv_nav_sport),
     // fIPTV: Mediatheken der öffentlich-rechtlichen Sender
-    MEDIATHEK(Icons.Outlined.Newspaper, R.string.fiptv_nav_mediathek),
+    MEDIATHEK(com.arflix.tv.fiptv.FiptvIcons.Mediathek, R.string.fiptv_nav_mediathek),
     // fIPTV: YouTube
-    YOUTUBE(Icons.Outlined.SmartDisplay, R.string.fiptv_nav_youtube),
-    SETTINGS(Icons.Outlined.Settings, R.string.settings)
+    YOUTUBE(com.arflix.tv.fiptv.FiptvIcons.VideoScreen, R.string.fiptv_nav_youtube),
+    SETTINGS(com.arflix.tv.fiptv.FiptvIcons.Settings, R.string.settings)
 }
 
 @OptIn(ExperimentalTvMaterial3Api::class)

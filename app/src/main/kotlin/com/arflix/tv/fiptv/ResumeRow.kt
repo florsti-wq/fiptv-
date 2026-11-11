@@ -53,7 +53,7 @@ fun ResumeRow(
     if (entries.isEmpty()) return
     Column(modifier) {
         Row(verticalAlignment = Alignment.Bottom) {
-            Text("▶ Weiterschauen", color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+            Text("Weiterschauen", color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.Bold)
             Spacer(Modifier.width(10.dp))
             Text(
                 if (isTouch) "lange tippen: entfernen" else "OK lang: entfernen",

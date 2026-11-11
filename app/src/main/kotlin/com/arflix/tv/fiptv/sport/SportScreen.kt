@@ -89,22 +89,25 @@ fun SportScreen(
         // ---------- obere Leiste ----------
         LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(vertical = 4.dp)) {
             item {
-                Text("⚽ Sport", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(end = 10.dp, top = 2.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                androidx.tv.material3.Icon(com.arflix.tv.fiptv.FiptvIcons.Trophy, contentDescription = null, tint = Color.White, modifier = Modifier.padding(end = 10.dp).size(28.dp))
+                Text("Sport", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(end = 10.dp, top = 2.dp))
+                }
             }
             item {
-                Pill("🏟 Sports-Hub", state.stack.first() == SportView.Hub, { viewModel.showRoot(SportView.Hub) }, Modifier.focusRequester(firstFocus))
+                Pill("Sports-Hub", state.stack.first() == SportView.Hub, { viewModel.showRoot(SportView.Hub) }, icon = com.arflix.tv.fiptv.FiptvIcons.Overview, modifier = Modifier.focusRequester(firstFocus))
             }
             item {
-                Pill("⭐ Meine Teams", state.stack.first() == SportView.MyTeams, { viewModel.showRoot(SportView.MyTeams) })
+                Pill("Meine Teams", state.stack.first() == SportView.MyTeams, { viewModel.showRoot(SportView.MyTeams) }, icon = com.arflix.tv.fiptv.FiptvIcons.Star)
             }
             // fIPTV: Sportarten
             item {
                 val root = state.stack.first()
-                Pill("⚽ Fußball", root is SportView.Football || root is SportView.League, { viewModel.showRoot(SportView.Football) })
+                Pill("Fußball", root is SportView.Football || root is SportView.League, { viewModel.showRoot(SportView.Football) }, icon = com.arflix.tv.fiptv.FiptvIcons.Football)
             }
-            item { Pill("🏎 Formel 1", state.stack.first() is SportView.F1, { viewModel.showRoot(SportView.F1()) }) }
-            item { Pill("🎾 Tennis", state.stack.first() is SportView.Tennis, { viewModel.showRoot(SportView.Tennis()) }) }
-            item { Pill("🤼 Wrestling", state.stack.first() is SportView.Wrestling, { viewModel.showRoot(SportView.Wrestling()) }) }
+            item { Pill("Formel 1", state.stack.first() is SportView.F1, { viewModel.showRoot(SportView.F1()) }, icon = com.arflix.tv.fiptv.FiptvIcons.Formula1) }
+            item { Pill("Tennis", state.stack.first() is SportView.Tennis, { viewModel.showRoot(SportView.Tennis()) }, icon = com.arflix.tv.fiptv.FiptvIcons.Tennis) }
+            item { Pill("Wrestling", state.stack.first() is SportView.Wrestling, { viewModel.showRoot(SportView.Wrestling()) }, icon = com.arflix.tv.fiptv.FiptvIcons.Wrestling) }
         }
         Spacer(Modifier.height(10.dp))
 
@@ -116,9 +119,9 @@ fun SportScreen(
                 add(1 to "Spiele"); add(2 to "Teams")
                 if (view.league.hasStats) add(3 to "Torjäger & Vorlagen")
             }
-            is SportView.F1 -> listOf(0 to "Rennwochenenden", 1 to "Fahrer-WM", 2 to "Team-WM", 3 to "📺 Im TV")
-            is SportView.Tennis -> listOf(0 to "Turniere", 1 to "Weltrangliste", 2 to "📺 Im TV")
-            is SportView.Wrestling -> listOf(0 to "Shows", 1 to "📺 Im TV", 2 to "▶ Videos")
+            is SportView.F1 -> listOf(0 to "Rennwochenenden", 1 to "Fahrer-WM", 2 to "Team-WM", 3 to "Im TV")
+            is SportView.Tennis -> listOf(0 to "Turniere", 1 to "Weltrangliste", 2 to "Im TV")
+            is SportView.Wrestling -> listOf(0 to "Shows", 1 to "Im TV", 2 to "Videos")
             else -> emptyList()
         }
         if (subTabs.isNotEmpty()) {
@@ -135,14 +138,14 @@ fun SportScreen(
                     item { Pill("WTA Damen", view.tour == "wta", { viewModel.setTennisTour("wta") }, small = true) }
                     item { Spacer(Modifier.width(12.dp)) }
                 }
-                items(subTabs) { (i, label) -> Pill(label, current == i, { viewModel.setLeagueTab(i) }, small = true) }
+                items(subTabs) { (i, label) -> Pill(label, current == i, { viewModel.setLeagueTab(i) }, small = true, icon = subTabIcon(label)) }
             }
             Spacer(Modifier.height(10.dp))
         }
 
         when {
             state.error != null -> Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("⚠ ${state.error}", color = Color(0xFFFF8A80), fontSize = 15.sp)
+                Text("${state.error}", color = Color(0xFFFF8A80), fontSize = 15.sp)
                 Spacer(Modifier.width(12.dp))
                 Pill("Erneut versuchen", false, { viewModel.retry() }, small = true)
             }
@@ -269,8 +272,8 @@ private fun GameCard(m: SportMatch, sources: GameSources?, searching: Boolean, f
                 sources == null -> " "
                 sources.count == 0 -> "keine Quelle gefunden"
                 else -> listOfNotNull(
-                    sources.tv.size.takeIf { it > 0 }?.let { "📺 $it Sender" },
-                    sources.addons.size.takeIf { it > 0 }?.let { "🔌 $it Stremio" },
+                    sources.tv.size.takeIf { it > 0 }?.let { "$it Sender" },
+                    sources.addons.size.takeIf { it > 0 }?.let { "$it Stremio" },
                 ).joinToString("  ")
             }
             Text(src, color = if ((sources?.count ?: 0) > 0) Accent else Muted, fontSize = 11.sp, maxLines = 1,
@@ -305,7 +308,7 @@ private fun LazyListScope.sourceItems(
         item { Text(if (state.sourcesLoading) "Suche passende Sender und Streams …" else "Keine Angaben.", color = Muted, fontSize = 15.sp) }
         return
     }
-    item { Section("📺 TV-Sender (${sources.tv.size})") }
+    item { Section("TV-Sender (${sources.tv.size})") }
     if (sources.tv.isEmpty()) {
         item {
             Text("Kein passender Sender gefunden. Sender tauchen auf, sobald dein Anbieter das Spiel im Programmführer hat (meist 1–2 Tage vorher) " +
@@ -330,7 +333,7 @@ private fun LazyListScope.sourceItems(
             }
         }
     }
-    item { Section("🔌 Stremio (${sources.addons.size})") }
+    item { Section("Stremio (${sources.addons.size})") }
     if (sources.addons.isEmpty()) {
         item { Text("Kein Stremio-Sport-Addon mit diesem Spiel gefunden.", color = Muted, fontSize = 14.sp) }
     }
@@ -379,7 +382,7 @@ private fun LazyListScope.myTeams(state: SportUiState, vm: SportViewModel) {
     if (state.followed.isEmpty()) {
         item {
             Text(
-                "Du folgst noch keinem Team. Öffne „⚽ Fußball“ → einen Wettbewerb → „Teams“ und wähle „Folgen“.",
+                "Du folgst noch keinem Team. Öffne „Fußball“ → einen Wettbewerb → „Teams“ und wähle „Folgen“.",
                 color = Muted, fontSize = 15.sp,
             )
         }
@@ -590,7 +593,7 @@ private fun LazyListScope.matchDetailItems(d: SportMatchDetail) {
         items(d.events.size) { i ->
             val e = d.events[i]
             val home = e.teamId == m.home.team.id
-            val icon = when (e.type) { "goal" -> "⚽"; "red" -> "🟥"; "yellow" -> "🟨"; else -> "🔁" }
+            val icon = when (e.type) { "goal" -> "Tor ·"; "red" -> "Rot ·"; "yellow" -> "Gelb ·"; else -> "Wechsel ·" }
             FocusCard(onClick = {}) {
                 Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(if (home) "$icon ${e.text}" else "", color = Color.White, fontSize = 14.sp, textAlign = TextAlign.End,
@@ -650,8 +653,14 @@ private fun playerText(p: SportPlayer): String {
 // ---------- Bausteine ----------
 
 @Composable
-internal fun Section(title: String) {
-    Text(title, color = Accent, fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 12.dp, bottom = 2.dp))
+internal fun Section(title: String, icon: androidx.compose.ui.graphics.vector.ImageVector? = null) {
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 12.dp, bottom = 2.dp)) {
+        if (icon != null) {
+            androidx.tv.material3.Icon(icon, contentDescription = null, tint = Accent, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.width(8.dp))
+        }
+        Text(title, color = Accent, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+    }
 }
 
 @Composable
@@ -695,7 +704,7 @@ internal fun FocusCard(onClick: () -> Unit, highlighted: Boolean = false, conten
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
-internal fun Pill(label: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier, small: Boolean = false) {
+internal fun Pill(label: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier, small: Boolean = false, icon: androidx.compose.ui.graphics.vector.ImageVector? = null) {
     Surface(
         onClick = onClick,
         modifier = (modifier).then(Modifier.fiptvTap(onClick)),
@@ -708,13 +717,18 @@ internal fun Pill(label: String, selected: Boolean, onClick: () -> Unit, modifie
         ),
         scale = ClickableSurfaceDefaults.scale(focusedScale = 1.05f),
     ) {
-        Text(
-            label,
-            fontSize = if (small) 14.sp else 15.sp,
-            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-            maxLines = 1,
-            modifier = Modifier.padding(horizontal = if (small) 14.dp else 16.dp, vertical = if (small) 6.dp else 8.dp),
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (icon != null) {
+                androidx.tv.material3.Icon(icon, contentDescription = null, modifier = Modifier.padding(start = if (small) 12.dp else 14.dp).size(if (small) 18.dp else 20.dp))
+            }
+            Text(
+                label,
+                fontSize = if (small) 14.sp else 15.sp,
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                maxLines = 1,
+                modifier = Modifier.padding(start = if (icon != null) 8.dp else if (small) 14.dp else 16.dp, end = if (small) 14.dp else 16.dp, top = if (small) 6.dp else 8.dp, bottom = if (small) 6.dp else 8.dp),
+            )
+        }
     }
 }
 
@@ -723,11 +737,23 @@ private fun GoalAlertToggle() {
     val context = androidx.compose.ui.platform.LocalContext.current
     var on by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(FiptvGoalAlerts.enabled(context)) }
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 6.dp)) {
-        Pill(if (on) "🔔 Tor-Hinweise: an" else "🔕 Tor-Hinweise: aus", on, {
+        Pill(if (on) "Tor-Hinweise: an" else "Tor-Hinweise: aus", on, icon = com.arflix.tv.fiptv.FiptvIcons.Bell, onClick = {
             on = !on
             FiptvGoalAlerts.setEnabled(context, on)
         }, small = true)
         Spacer(Modifier.width(12.dp))
         Text("Tore, Anpfiff und Abpfiff deiner Teams als kurzer Hinweis – auch während du etwas anderes schaust.", color = Muted, fontSize = 13.sp)
     }
+}
+
+private fun subTabIcon(label: String): androidx.compose.ui.graphics.vector.ImageVector? = when (label) {
+    "Tabelle" -> com.arflix.tv.fiptv.FiptvIcons.Table
+    "Spiele" -> com.arflix.tv.fiptv.FiptvIcons.Calendar
+    "Teams" -> com.arflix.tv.fiptv.FiptvIcons.Star
+    "Torjäger & Vorlagen" -> com.arflix.tv.fiptv.FiptvIcons.Stats
+    "Im TV" -> com.arflix.tv.fiptv.FiptvIcons.OnTv
+    "Videos" -> com.arflix.tv.fiptv.FiptvIcons.PlayCircle
+    "Rennwochenenden", "Turniere", "Shows" -> com.arflix.tv.fiptv.FiptvIcons.Calendar
+    "Fahrer-WM", "Team-WM", "Weltrangliste" -> com.arflix.tv.fiptv.FiptvIcons.Trophy
+    else -> null
 }

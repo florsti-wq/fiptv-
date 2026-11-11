@@ -207,16 +207,16 @@ data class BottomBarItem(
 )
 
 val bottomBarItems = listOf(
-    BottomBarItem(R.string.home, Icons.Default.Home, "home"),
-    BottomBarItem(R.string.search, Icons.Default.Search, "search"),
-    BottomBarItem(R.string.nav_library, Icons.Default.Bookmark, "watchlist"),
-    BottomBarItem(R.string.topbar_tv, Icons.Default.LiveTv, "tv"),
+    BottomBarItem(R.string.home, com.arflix.tv.fiptv.FiptvIcons.Home, "home"),
+    BottomBarItem(R.string.search, com.arflix.tv.fiptv.FiptvIcons.Search, "search"),
+    BottomBarItem(R.string.nav_library, com.arflix.tv.fiptv.FiptvIcons.Bookmark, "watchlist"),
+    BottomBarItem(R.string.topbar_tv, com.arflix.tv.fiptv.FiptvIcons.LiveTv, "tv"),
     // fIPTV
-    BottomBarItem(R.string.fiptv_nav_vod, Icons.Default.VideoLibrary, com.arflix.tv.navigation.FiptvNav.VOD),
-    BottomBarItem(R.string.fiptv_nav_sport, Icons.Default.SportsSoccer, com.arflix.tv.navigation.FiptvNav.SPORT),
-    BottomBarItem(R.string.fiptv_nav_mediathek, Icons.Default.Newspaper, com.arflix.tv.navigation.FiptvNav.MEDIATHEK),
-    BottomBarItem(R.string.fiptv_nav_youtube, Icons.Default.SmartDisplay, com.arflix.tv.navigation.FiptvNav.YOUTUBE),
-    BottomBarItem(R.string.settings, Icons.Default.Settings, "settings")
+    BottomBarItem(R.string.fiptv_nav_vod, com.arflix.tv.fiptv.FiptvIcons.Film, com.arflix.tv.navigation.FiptvNav.VOD),
+    BottomBarItem(R.string.fiptv_nav_sport, com.arflix.tv.fiptv.FiptvIcons.Trophy, com.arflix.tv.navigation.FiptvNav.SPORT),
+    BottomBarItem(R.string.fiptv_nav_mediathek, com.arflix.tv.fiptv.FiptvIcons.Mediathek, com.arflix.tv.navigation.FiptvNav.MEDIATHEK),
+    BottomBarItem(R.string.fiptv_nav_youtube, com.arflix.tv.fiptv.FiptvIcons.VideoScreen, com.arflix.tv.navigation.FiptvNav.YOUTUBE),
+    BottomBarItem(R.string.settings, com.arflix.tv.fiptv.FiptvIcons.Settings, "settings")
 )
 
 /** Bottom clearance applied inside scrolling content rather than to its viewport. */

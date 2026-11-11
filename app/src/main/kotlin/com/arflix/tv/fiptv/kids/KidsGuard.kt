@@ -29,6 +29,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.size
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -137,7 +138,7 @@ private fun KidsTimeUpDialog(hasParentPin: Boolean, onBack: () -> Unit, onUnlock
     ) {
         Box(Modifier.fillMaxSize().background(Color(0xF20B0D12)), contentAlignment = Alignment.Center) {
             Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.widthIn(max = 620.dp).padding(32.dp)) {
-                Text("⏰", fontSize = 64.sp)
+                androidx.tv.material3.Icon(com.arflix.tv.fiptv.FiptvIcons.Kids, contentDescription = null, tint = Color.White, modifier = Modifier.size(64.dp))
                 Spacer(Modifier.height(12.dp))
                 Text("Für heute ist Schluss!", color = Color.White, fontSize = 32.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
                 Spacer(Modifier.height(10.dp))

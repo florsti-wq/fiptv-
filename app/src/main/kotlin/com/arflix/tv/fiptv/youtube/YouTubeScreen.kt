@@ -108,7 +108,7 @@ fun YouTubeScreen(
             Spacer(Modifier.width(20.dp))
             val search = (state.view as? YtView.Search)?.query
             Pill(
-                label = if (search == null) "🔍 Suchen" else "🔍 $search",
+                label = if (search == null) "Suchen" else "$search",
                 selected = search != null,
                 onClick = { searchOpen = true },
                 modifier = Modifier.focusRequester(firstFocus),
@@ -133,7 +133,7 @@ fun YouTubeScreen(
             item {
                 Pill("★ Meine Kanäle", state.view == YtView.MyChannels, { viewModel.show(YtView.MyChannels) })
             }
-            item { Pill("🔥 Trends", state.view == YtView.Trends, { viewModel.show(YtView.Trends) }) }
+            item { Pill("Trends", state.view == YtView.Trends, { viewModel.show(YtView.Trends) }) }
             items(state.savedChannels, key = { it.id }) { ch ->
                 Pill(
                     label = ch.title,
@@ -190,7 +190,7 @@ fun YouTubeScreen(
         Spacer(Modifier.height(6.dp))
         when {
             state.error != null -> Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("⚠ ${state.error}", color = Color(0xFFFF8A80), fontSize = 15.sp)
+                Text("${state.error}", color = Color(0xFFFF8A80), fontSize = 15.sp)
                 Spacer(Modifier.width(12.dp))
                 Pill("Erneut versuchen", false, { viewModel.retry() })
             }
