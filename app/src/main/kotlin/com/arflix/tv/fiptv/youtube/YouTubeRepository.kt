@@ -5,7 +5,9 @@ import com.arflix.tv.network.OkHttpProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.HttpUrl.Companion.toHttpUrl
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -27,6 +29,8 @@ data class YtChannel(
 )
 
 data class YtPage<T>(val items: List<T>, val nextPageToken: String?)
+
+data class YtPlaylist(val id: String, val title: String, val thumbnail: String?, val count: Int)
 
 /**
  * fIPTV: Zugriff auf die YouTube Data API v3 (nur Lesen, mit API-Schlüssel, ohne Anmeldung).
@@ -105,10 +109,67 @@ object YouTubeRepository {
         return channel to YtPage(details(ids), list.optStringOrNull("nextPageToken"))
     }
 
+    // ---------- mit Google-Anmeldung (fIPTV) ----------
+
+    /** Eigener Kanal des angemeldeten Kontos (Name und Bild). */
+    suspend fun myChannel(token: String): YtChannel? {
+        val json = request("channels", token, null, "part" to "snippet", "mine" to "true")
+        return json.optJSONArray("items").mapObjects { item ->
+            val sn = item.optJSONObject("snippet") ?: JSONObject()
+            YtChannel(item.optString("id"), sn.optString("title"), thumb(sn))
+        }.firstOrNull()
+    }
+
+    /** Abonnierte Kanäle (alphabetisch, alle Seiten bis 500). */
+    suspend fun mySubscriptions(token: String): List<YtChannel> {
+        val out = mutableListOf<YtChannel>()
+        var page: String? = null
+        do {
+            val json = request("subscriptions", token, null, "part" to "snippet", "mine" to "true",
+                "maxResults" to "50", "order" to "alphabetical", "pageToken" to page)
+            out += json.optJSONArray("items").mapObjects { item ->
+                val sn = item.optJSONObject("snippet") ?: JSONObject()
+                YtChannel(sn.optJSONObject("resourceId")?.optString("channelId").orEmpty(), sn.optString("title"), thumb(sn))
+            }.filter { it.id.isNotBlank() }
+            page = json.optStringOrNull("nextPageToken")
+        } while (page != null && out.size < 500)
+        return out
+    }
+
+    suspend fun myPlaylists(token: String): List<YtPlaylist> {
+        val json = request("playlists", token, null, "part" to "snippet,contentDetails", "mine" to "true", "maxResults" to "50", "hl" to LANGUAGE)
+        return json.optJSONArray("items").mapObjects { item ->
+            val sn = item.optJSONObject("snippet") ?: JSONObject()
+            YtPlaylist(item.optString("id"), sn.optJSONObject("localized")?.optStringOrNull("title") ?: sn.optString("title"),
+                thumb(sn), item.optJSONObject("contentDetails")?.optInt("itemCount") ?: 0)
+        }
+    }
+
+    suspend fun playlistVideos(token: String, playlistId: String, pageToken: String? = null): YtPage<YtVideo> {
+        val json = request("playlistItems", token, null, "part" to "contentDetails", "playlistId" to playlistId,
+            "maxResults" to "50", "pageToken" to pageToken)
+        val ids = json.optJSONArray("items").mapObjects { it.optJSONObject("contentDetails")?.optString("videoId").orEmpty() }
+            .filter { it.isNotBlank() }
+        return YtPage(details(ids, token), json.optStringOrNull("nextPageToken"))
+    }
+
+    /** Videos mit „Mag ich“. */
+    suspend fun likedVideos(token: String, pageToken: String? = null): YtPage<YtVideo> {
+        val json = request("videos", token, null, "part" to "snippet,contentDetails", "myRating" to "like",
+            "maxResults" to "50", "pageToken" to pageToken, "hl" to LANGUAGE)
+        return YtPage(json.optJSONArray("items").mapObjects(::parseVideo), json.optStringOrNull("nextPageToken"))
+    }
+
+    suspend fun subscribe(token: String, channelId: String) {
+        request("subscriptions", token,
+            JSONObject().put("snippet", JSONObject().put("resourceId", JSONObject().put("kind", "youtube#channel").put("channelId", channelId))),
+            "part" to "snippet")
+    }
+
     /** Dauer und Live-Status gibt es nur über videos.list (1 Einheit für bis zu 50 Videos). */
-    private suspend fun details(ids: List<String>): List<YtVideo> {
+    private suspend fun details(ids: List<String>, token: String? = null): List<YtVideo> {
         if (ids.isEmpty()) return emptyList()
-        val json = get("videos", "part" to "snippet,contentDetails", "id" to ids.take(50).joinToString(","), "hl" to LANGUAGE)
+        val json = request("videos", token, null, "part" to "snippet,contentDetails", "id" to ids.take(50).joinToString(","), "hl" to LANGUAGE)
         val byId = json.optJSONArray("items").mapObjects(::parseVideo).associateBy { it.id }
         return ids.mapNotNull { byId[it] }
     }
@@ -164,14 +225,21 @@ object YouTubeRepository {
         }
     }
 
-    private suspend fun get(path: String, vararg params: Pair<String, String?>): JSONObject = withContext(Dispatchers.IO) {
-        check(isConfigured) { "YouTube ist noch nicht eingerichtet (API-Schlüssel fehlt)." }
+    private suspend fun get(path: String, vararg params: Pair<String, String?>): JSONObject = request(path, null, null, *params)
+
+    /** Anfrage, optional mit Google-Anmeldung ([bearer]) und JSON-Inhalt ([postBody] → POST). */
+    private suspend fun request(path: String, bearer: String?, postBody: JSONObject?, vararg params: Pair<String, String?>): JSONObject = withContext(Dispatchers.IO) {
+        check(isConfigured || bearer != null) { "YouTube ist noch nicht eingerichtet (API-Schlüssel fehlt)." }
         val url = "$BASE/$path".toHttpUrl().newBuilder().apply {
             params.forEach { (k, v) -> if (!v.isNullOrBlank()) addQueryParameter(k, v) }
-            addQueryParameter("key", apiKey)
+            if (bearer == null) addQueryParameter("key", apiKey)
         }.build()
         val request = Request.Builder()
             .url(url)
+            .apply {
+                if (bearer != null) header("Authorization", "Bearer $bearer")
+                if (postBody != null) post(postBody.toString().toRequestBody("application/json".toMediaType()))
+            }
             // Für einen auf Android-Apps beschränkten Schlüssel (optional)
             .header("X-Android-Package", BuildConfig.APPLICATION_ID.removeSuffix(".beta"))
             .build()
@@ -185,6 +253,9 @@ object YouTubeRepository {
                     when (reason) {
                         "quotaExceeded", "dailyLimitExceeded" -> "Das Tageskontingent für YouTube ist aufgebraucht. Morgen geht es wieder."
                         "keyInvalid", "badRequest" -> "Der YouTube-API-Schlüssel ist ungültig."
+                        "authError", "unauthorized" -> "Die Google-Anmeldung ist abgelaufen – bitte neu anmelden."
+                        "insufficientPermissions", "forbidden" -> "Dafür fehlt die Berechtigung des Google-Kontos."
+                        "subscriptionDuplicate" -> "Diesen Kanal hast du schon abonniert."
                         "accessNotConfigured" -> "Im Google-Projekt ist die „YouTube Data API v3“ noch nicht aktiviert."
                         else -> "YouTube antwortet nicht (Fehler ${response.code}${reason?.let { ": $it" } ?: ""})."
                     }

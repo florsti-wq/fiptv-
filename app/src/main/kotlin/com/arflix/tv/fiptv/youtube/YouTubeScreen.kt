@@ -71,6 +71,11 @@ fun YouTubeScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val isTouch = LocalDeviceType.current.isTouchDevice()
     var searchOpen by remember { mutableStateOf(false) }
+    var confirmSignOut by remember { mutableStateOf(false) }
+    val context = androidx.compose.ui.platform.LocalContext.current
+    LaunchedEffect(state.toast) {
+        state.toast?.let { android.widget.Toast.makeText(context, it, android.widget.Toast.LENGTH_SHORT).show(); viewModel.consumeToast() }
+    }
     var playing by remember { mutableStateOf<YtVideo?>(null) }
     // fIPTV: aus der „Suche über alles“ gewähltes Video abspielen
     LaunchedEffect(Unit) { com.arflix.tv.fiptv.search.FiptvSearchBridge.takeYoutube()?.let { playing = it } }
@@ -117,9 +122,16 @@ fun YouTubeScreen(
                 Spacer(Modifier.width(8.dp))
                 Pill(label = "✕", selected = false, onClick = { viewModel.show(YtView.Trends) })
             }
+            // fIPTV: Google-Konto
+            if (state.accountAvailable) {
+                Spacer(Modifier.width(8.dp))
+                val acc = state.account
+                if (acc == null) Pill(label = "Mit Google anmelden", selected = false, onClick = { viewModel.startSignIn() })
+                else Pill(label = acc.name, selected = false, onClick = { confirmSignOut = true }, image = acc.thumbnail)
+            }
         }
 
-        if (!state.configured) {
+        if (!state.configured && state.account == null) {
             Spacer(Modifier.height(24.dp))
             Text(
                 "YouTube ist noch nicht eingerichtet: Es fehlt der API-Schlüssel (GitHub-Secret „YOUTUBE_API_KEY“).",
@@ -130,6 +142,11 @@ fun YouTubeScreen(
 
         Spacer(Modifier.height(12.dp))
         LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(vertical = 4.dp)) {
+            if (state.account != null) {
+                item { Pill("Abos", state.view == YtView.Subscriptions, { viewModel.show(YtView.Subscriptions) }) }
+                item { Pill("Mag ich", state.view == YtView.Liked, { viewModel.show(YtView.Liked) }) }
+                item { Pill("Playlists", state.view == YtView.Playlists || state.view is YtView.Playlist, { viewModel.show(YtView.Playlists) }) }
+            }
             item {
                 Pill("★ Meine Kanäle", state.view == YtView.MyChannels, { viewModel.show(YtView.MyChannels) })
             }
@@ -160,6 +177,10 @@ fun YouTubeScreen(
                         selected = state.isOpenChannelSaved,
                         onClick = { viewModel.toggleSaveOpenChannel() },
                     )
+                    if (state.account != null && state.subscriptions.none { it.id == view.id }) {
+                        Spacer(Modifier.width(8.dp))
+                        Pill(label = "Abonnieren", selected = false, onClick = { viewModel.subscribeOpenChannel() })
+                    }
                 }
             }
             is YtView.Search -> if (state.foundChannels.isNotEmpty()) {
@@ -179,7 +200,27 @@ fun YouTubeScreen(
                     color = Muted, fontSize = 15.sp,
                 )
             }
-            YtView.Trends -> Unit
+            YtView.Trends, YtView.Liked -> Unit
+            YtView.Subscriptions -> if (state.subscriptions.isNotEmpty()) {
+                Spacer(Modifier.height(8.dp))
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(vertical = 4.dp)) {
+                    items(state.subscriptions, key = { "sub_" + it.id }) { ch ->
+                        Pill(ch.title, false, { viewModel.openChannel(ch.id, ch.title) }, image = ch.thumbnail)
+                    }
+                }
+            }
+            YtView.Playlists, is YtView.Playlist -> {
+                Spacer(Modifier.height(8.dp))
+                if (state.playlists.isEmpty() && view == YtView.Playlists && !state.loading) {
+                    Text("Keine eigenen Playlists gefunden.", color = Muted, fontSize = 15.sp)
+                }
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(vertical = 4.dp)) {
+                    items(state.playlists, key = { "pl_" + it.id }) { pl ->
+                        Pill("${pl.title} (${pl.count})", (view as? YtView.Playlist)?.id == pl.id,
+                            { viewModel.show(YtView.Playlist(pl.id, pl.title)) }, image = pl.thumbnail)
+                    }
+                }
+            }
         }
 
         Spacer(Modifier.height(6.dp))
@@ -195,7 +236,7 @@ fun YouTubeScreen(
                 Pill("Erneut versuchen", false, { viewModel.retry() })
             }
             state.loading && state.videos.isEmpty() -> Text("Wird geladen …", color = Muted, fontSize = 15.sp)
-            !state.loading && state.videos.isEmpty() && state.view != YtView.MyChannels ->
+            !state.loading && state.videos.isEmpty() && state.view != YtView.MyChannels && state.view != YtView.Playlists ->
                 Text("Keine Videos gefunden.", color = Muted, fontSize = 15.sp)
         }
 
@@ -234,6 +275,17 @@ fun YouTubeScreen(
         },
         onCancel = { searchOpen = false },
     )
+
+    state.signIn?.let { si ->
+        YouTubeSignInDialog(si, onRetry = { viewModel.startSignIn() }, onCancel = { viewModel.cancelSignIn() })
+    }
+    if (confirmSignOut) {
+        YouTubeSignOutDialog(
+            name = state.account?.name.orEmpty(),
+            onSignOut = { confirmSignOut = false; viewModel.signOut() },
+            onCancel = { confirmSignOut = false },
+        )
+    }
 
     playing?.let { video ->
         YouTubeTrailerModal(
