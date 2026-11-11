@@ -3014,6 +3014,11 @@ internal fun HomeInputLayer(
             val movePrev = {
                 if (!focusState.isSidebarFocused) {
                     if (focusState.currentItemIndex == 0) {
+                        // fIPTV: am linken Rand nach links = Menü links
+                        if (com.arflix.tv.ui.components.FiptvTvRail.leftEdge()) {
+                            focusState.isSidebarFocused = true
+                            focusState.lastNavEventTime = SystemClock.elapsedRealtime()
+                        }
                         true
                     } else {
                         focusState.currentItemIndex--
@@ -3261,6 +3266,8 @@ internal fun HomeInputLayer(
             .then(keyEventModifier)
     ) {
         if (!isMobile) {
+            // fIPTV: Menü-Taste öffnet das Menü links
+            androidx.compose.runtime.LaunchedEffect(Unit) { com.arflix.tv.ui.components.FiptvTvRail.enterRequests.collect { focusState.isSidebarFocused = true } }
             AppTopBar(
                 selectedItem = SidebarItem.HOME,
                 isFocused = focusState.isSidebarFocused,

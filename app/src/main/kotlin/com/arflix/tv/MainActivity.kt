@@ -526,6 +526,12 @@ class MainActivity : ComponentActivity() {
                 return true
             }
         }
+        // fIPTV: Menü-Taste (☰) öffnet das Menü links
+        if (event.keyCode == android.view.KeyEvent.KEYCODE_MENU && com.arflix.tv.ui.components.FiptvTvRail.visible &&
+            !com.arflix.tv.ui.components.FiptvTvRail.focused) {
+            if (event.action == android.view.KeyEvent.ACTION_DOWN && event.repeatCount == 0) com.arflix.tv.ui.components.FiptvTvRail.requestEnter()
+            return true
+        }
         // fIPTV: Menü links – solange es den Fokus hat, Pfeiltasten senkrecht bedienen
         com.arflix.tv.ui.components.FiptvTvRail.remapKey(event.keyCode)?.let { mapped ->
             if (mapped < 0) return true

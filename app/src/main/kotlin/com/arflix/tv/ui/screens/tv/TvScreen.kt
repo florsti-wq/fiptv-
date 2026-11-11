@@ -970,7 +970,7 @@ fun TvScreen(
                                 TvFocusZone.SIDEBAR -> if (sidebarFocusIndex > 0) {
                                     sidebarFocusIndex = (sidebarFocusIndex - 1).coerceIn(0, maxSidebarIndex)
                                 }
-                                TvFocusZone.GROUPS -> Unit
+                                TvFocusZone.GROUPS -> if (com.arflix.tv.ui.components.FiptvTvRail.leftEdge()) focusZone = TvFocusZone.SIDEBAR
                                 TvFocusZone.GUIDE -> focusZone = TvFocusZone.GROUPS
                             }
                             true
@@ -1041,6 +1041,8 @@ fun TvScreen(
             }
     ) {
         if (!LocalDeviceType.current.isTouchDevice()) {
+            // fIPTV: Menü-Taste öffnet das Menü links
+            androidx.compose.runtime.LaunchedEffect(Unit) { com.arflix.tv.ui.components.FiptvTvRail.enterRequests.collect { focusZone = TvFocusZone.SIDEBAR } }
             AppTopBar(
                 selectedItem = SidebarItem.TV,
                 isFocused = focusZone == TvFocusZone.SIDEBAR,

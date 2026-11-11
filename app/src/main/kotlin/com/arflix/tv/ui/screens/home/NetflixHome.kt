@@ -234,6 +234,12 @@ internal fun handleNetflixHomeKey(
         return when (event.key) {
             Key.DirectionLeft, Key.DirectionRight -> {
                 val forward = (event.key == Key.DirectionRight) != isRtl
+                // fIPTV: links vom ersten Knopf = Menü links
+                if (!forward && focusState.heroButtonIndex == 0 && com.arflix.tv.ui.components.FiptvTvRail.leftEdge()) {
+                    focusState.isSidebarFocused = true
+                    focusState.lastNavEventTime = now
+                    return true
+                }
                 focusState.heroButtonIndex = if (forward) 1 else 0
                 focusState.userHasNavigated = true
                 focusState.lastNavEventTime = now

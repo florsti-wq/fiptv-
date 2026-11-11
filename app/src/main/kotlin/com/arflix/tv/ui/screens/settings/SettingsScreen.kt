@@ -1959,6 +1959,8 @@ fun SettingsScreen(
                 onDisconnectTrakt = { showTraktDisconnectConfirm = true }
             )
         } else {
+            // fIPTV: Menü-Taste öffnet das Menü links
+            androidx.compose.runtime.LaunchedEffect(Unit) { com.arflix.tv.ui.components.FiptvTvRail.enterRequests.collect { activeZone = Zone.SIDEBAR } }
             AppTopBar(
                 selectedItem = SidebarItem.SETTINGS,
                 isFocused = activeZone == Zone.SIDEBAR,

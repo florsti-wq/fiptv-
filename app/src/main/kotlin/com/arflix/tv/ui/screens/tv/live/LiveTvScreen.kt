@@ -5243,6 +5243,8 @@ fun LiveTvScreen(
         LiveTvRenderBoundary {
             if (showTopBar && fsProgress < 1f) {
             Box(modifier = Modifier.graphicsLayer { alpha = 1f - fsProgress }) {
+                // fIPTV: Menü-Taste öffnet das Menü links
+                androidx.compose.runtime.LaunchedEffect(Unit) { com.arflix.tv.ui.components.FiptvTvRail.enterRequests.collect { focusZone = LiveTvFocusZone.TOPBAR } }
                 AppTopBar(
                     selectedItem = SidebarItem.TV,
                     isFocused = focusZone == LiveTvFocusZone.TOPBAR,

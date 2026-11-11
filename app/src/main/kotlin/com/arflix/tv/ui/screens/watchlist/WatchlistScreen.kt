@@ -292,6 +292,8 @@ fun WatchlistScreen(
                             else -> false
                         }
                     }.focusable()) {
+                    // fIPTV: Menü-Taste öffnet das Menü links
+                    androidx.compose.runtime.LaunchedEffect(Unit) { com.arflix.tv.ui.components.FiptvTvRail.enterRequests.collect { runCatching { topFocus.requestFocus() } } }
                     AppTopBar(SidebarItem.WATCHLIST, topFocused, topIndex, profile = currentProfile)
                 }
             }

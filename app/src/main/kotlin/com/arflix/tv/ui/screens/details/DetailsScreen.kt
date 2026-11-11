@@ -1080,6 +1080,8 @@ fun DetailsScreen(
         }
 
         if (!LocalDeviceType.current.isTouchDevice()) {
+            // fIPTV: Menü-Taste öffnet das Menü links
+            androidx.compose.runtime.LaunchedEffect(Unit) { com.arflix.tv.ui.components.FiptvTvRail.enterRequests.collect { isSidebarFocused = true } }
             AppTopBar(
                 selectedItem = SidebarItem.HOME,
                 isFocused = isSidebarFocused,

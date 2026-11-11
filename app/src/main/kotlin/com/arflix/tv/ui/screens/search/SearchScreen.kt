@@ -747,13 +747,14 @@ fun SearchScreen(
                             // Stays inside the row, like the D-pad map says: left/right never
                             // wraps into another line and never leaves the zone.
                             if (gridFocusIndex % gridColumns > 0) moveGridFocus(-1)
+                            else if (com.arflix.tv.ui.components.FiptvTvRail.leftEdge()) focusZone = FocusZone.SIDEBAR
                             true
                         }
                         else {
                             if (currentItemIndex > 0) {
                                 resultsLastNavEventTime = SystemClock.elapsedRealtime()
                                 currentItemIndex--
-                            }
+                            } else if (com.arflix.tv.ui.components.FiptvTvRail.leftEdge()) focusZone = FocusZone.SIDEBAR
                             true
                         }
                     }
@@ -872,6 +873,8 @@ fun SearchScreen(
     } else Modifier
 
     Box(modifier = Modifier.fillMaxSize().background(appBackgroundDark()).then(dpadModifier).testTag("search-screen")) {
+        // fIPTV: Menü-Taste öffnet das Menü links
+        androidx.compose.runtime.LaunchedEffect(Unit) { com.arflix.tv.ui.components.FiptvTvRail.enterRequests.collect { focusZone = FocusZone.SIDEBAR } }
         if (!isTouchDevice) AppTopBar(selectedItem = SidebarItem.SEARCH, isFocused = focusZone == FocusZone.SIDEBAR, focusedIndex = sidebarFocusIndex, profile = currentProfile)
 
         Column(

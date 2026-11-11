@@ -99,6 +99,18 @@ object FiptvTvRail {
         }
     }
 
+    private val _enter = kotlinx.coroutines.flow.MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    /** Bitte an den sichtbaren Bildschirm: Fokus ins Menü links setzen (Menü-Taste). */
+    val enterRequests: kotlinx.coroutines.flow.SharedFlow<Unit> = _enter
+
+    fun requestEnter(): Boolean {
+        if (!visible || focused) return false
+        return _enter.tryEmit(Unit)
+    }
+
+    /** Am linken Rand nach links: soll der Bildschirm ins Menü wechseln? */
+    fun leftEdge(): Boolean = enabled && visible
+
     /** Pfeiltasten umdeuten, solange das Menü den Fokus hat. null = nicht anfassen. */
     fun remapKey(keyCode: Int): Int? {
         if (!focused) return null
