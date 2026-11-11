@@ -12,6 +12,7 @@ import {
 } from "@/lib/fiptvSport";
 import { F1View, TennisView, WrestlingView } from "./MoreSports";
 import { GoalAlertToggle } from "@/components/fiptv/GoalAlerts";
+import { FiptvIcon } from "@/components/fiptv/FiptvIcon";
 
 type Tab = "hub" | "mine" | "football" | "f1" | "tennis" | "wrestling";
 type Page = { kind: "team"; team: SportTeam } | { kind: "match"; match: SportMatch } | { kind: "league"; league: League } | null;
@@ -87,8 +88,8 @@ function Hub({ myTeams, onOpen }: { myTeams: SportTeam[]; onOpen: (m: SportMatch
   const myNext = games.filter((m) => isMine(m) && m.state !== "post");
   return (
     <>
-      <MatchList title="🔴 Jetzt live" list={live} onOpen={onOpen} />
-      <MatchList title="⭐ Meine Teams" list={myNext.slice(0, 12)} onOpen={onOpen} />
+      <MatchList title="Jetzt live" list={live} onOpen={onOpen} />
+      <MatchList title="Meine Teams" list={myNext.slice(0, 12)} onOpen={onOpen} />
       <MatchList title="Heute" list={today} onOpen={onOpen} />
       <MatchList title="Nächste Spiele" list={next.slice(0, 30)} onOpen={onOpen} />
       <MatchList title="Ergebnisse" list={results.slice(0, 30)} onOpen={onOpen} />
@@ -193,7 +194,7 @@ function FootballView({ onLeague }: { onLeague: (l: League) => void }) {
   return (
     <>
       {LEAGUE_GROUPS.map((g) => (
-        <section key={g.id} className="sp-section"><h2>{g.label}</h2>
+        <section key={g.id} className="sp-section"><h2><FiptvIcon name={g.id === "top" ? "Trophy" : g.id === "europe" ? "Star" : "Football"} /> {g.label}</h2>
           <div className="sp-teams">
             {LEAGUES.filter((l) => l.group === g.id).map((l) => (
               <button key={l.id} type="button" className="sp-team sp-league" onClick={() => onLeague(l.id)}>
@@ -277,7 +278,7 @@ function MatchPage({ match }: { match: SportMatch }) {
     const t = window.setInterval(detail.reload, 30_000);
     return () => window.clearInterval(t);
   }, [m.state]); // eslint-disable-line react-hooks/exhaustive-deps
-  const icon = (type: string) => (/goal/i.test(type) ? "⚽" : /red/i.test(type) ? "🟥" : /yellow/i.test(type) ? "🟨" : /sub/i.test(type) ? "🔁" : "•");
+  const icon = (type: string) => (/goal/i.test(type) ? "Tor ·" : /red/i.test(type) ? "Rot ·" : /yellow/i.test(type) ? "Gelb ·" : /sub/i.test(type) ? "Wechsel ·" : "·");
   return (
     <>
       <div className="sp-score">
@@ -374,10 +375,10 @@ export function SportScreen() {
           <div className="sp-tabs">
             <button type="button" className={tab === "hub" ? "active" : ""} onClick={() => setTab("hub")}>Übersicht</button>
             <button type="button" className={tab === "mine" ? "active" : ""} onClick={() => setTab("mine")}>Meine Teams</button>
-            <button type="button" className={tab === "football" ? "active" : ""} onClick={() => setTab("football")}>⚽ Fußball</button>
-            <button type="button" className={tab === "f1" ? "active" : ""} onClick={() => setTab("f1")}>🏎 Formel 1</button>
-            <button type="button" className={tab === "tennis" ? "active" : ""} onClick={() => setTab("tennis")}>🎾 Tennis</button>
-            <button type="button" className={tab === "wrestling" ? "active" : ""} onClick={() => setTab("wrestling")}>🤼 Wrestling</button>
+            <button type="button" className={tab === "football" ? "active" : ""} onClick={() => setTab("football")}><FiptvIcon name="Football" size={18} /> Fußball</button>
+            <button type="button" className={tab === "f1" ? "active" : ""} onClick={() => setTab("f1")}><FiptvIcon name="Formula1" size={18} /> Formel 1</button>
+            <button type="button" className={tab === "tennis" ? "active" : ""} onClick={() => setTab("tennis")}><FiptvIcon name="Tennis" size={18} /> Tennis</button>
+            <button type="button" className={tab === "wrestling" ? "active" : ""} onClick={() => setTab("wrestling")}><FiptvIcon name="Wrestling" size={18} /> Wrestling</button>
           </div>
         )}
         <button type="button" className="sp-btn" onClick={() => setKey((k) => k + 1)} title="Neu laden"><RefreshCw size={16} /></button>

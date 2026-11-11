@@ -11,6 +11,7 @@ import {
   type F1Standing, type WrestlingShow
 } from "@/lib/fiptvMoreSports";
 import { channelVideos, type YtVideo } from "@/lib/fiptvYouTube";
+import { FiptvIcon, type FiptvIconName } from "@/components/fiptv/FiptvIcon";
 
 function useLoad<T>(load: () => Promise<T>, deps: unknown[]) {
   const [data, setData] = useState<T | null>(null);
@@ -35,10 +36,19 @@ const day = (ms: number) => ms ? new Date(ms).toLocaleDateString("de-DE", { week
 const clock = (ms: number) => ms ? new Date(ms).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }) : "";
 const Flag = ({ src }: { src?: string }) => (src ? <img className="sp-logo" src={src} alt="" width={20} height={14} loading="lazy" /> : null);
 
+const TAB_ICONS: Record<string, FiptvIconName | undefined> = {
+  "Im TV": "OnTv", Videos: "PlayCircle", Rennwochenenden: "Calendar", Turniere: "Calendar", Shows: "Calendar",
+  "Fahrer-WM": "Trophy", "Team-WM": "Trophy", Weltrangliste: "Trophy"
+};
+
 function SubTabs<T extends string>({ value, onChange, tabs }: { value: T; onChange: (v: T) => void; tabs: Array<[T, string]> }) {
   return (
     <div className="sp-tabs small" style={{ marginBottom: 16 }}>
-      {tabs.map(([id, label]) => <button key={id} type="button" className={value === id ? "active" : ""} onClick={() => onChange(id)}>{label}</button>)}
+      {tabs.map(([id, label]) => (
+        <button key={id} type="button" className={value === id ? "active" : ""} onClick={() => onChange(id)}>
+          {TAB_ICONS[label] && <FiptvIcon name={TAB_ICONS[label]!} size={16} />} {label}
+        </button>
+      ))}
     </div>
   );
 }
@@ -49,7 +59,7 @@ export function F1View() {
   const [tab, setTab] = useState<"weekends" | "drivers" | "teams" | "tv">("weekends");
   return (
     <>
-      <SubTabs value={tab} onChange={setTab} tabs={[["weekends", "Rennwochenenden"], ["drivers", "Fahrer-WM"], ["teams", "Team-WM"], ["tv", "📺 Im TV"]]} />
+      <SubTabs value={tab} onChange={setTab} tabs={[["weekends", "Rennwochenenden"], ["drivers", "Fahrer-WM"], ["teams", "Team-WM"], ["tv", "Im TV"]]} />
       {tab === "weekends" ? <F1Weekends /> : tab === "tv" ? <TvListings pattern={TV_PATTERNS.f1} sport="Formel 1" /> : <F1Table which={tab} />}
     </>
   );
@@ -81,7 +91,7 @@ function F1Weekends() {
       ))}
       {!data.weekends.length && <div className="sp-empty">Gerade keine Rennwochenenden.</div>}
       {rest.length > 0 && (
-        <section className="sp-section"><h2>📅 Weitere Rennen der Saison</h2>
+        <section className="sp-section"><h2><FiptvIcon name="Calendar" /> Weitere Rennen der Saison</h2>
           <table className="sp-table"><tbody>{rest.map((c) => <tr key={c.name + c.start}><td className="l">{c.name}</td><td>{day(c.start)} – {day(c.end)}</td></tr>)}</tbody></table>
         </section>
       )}
@@ -94,7 +104,7 @@ function F1Table({ which }: { which: "drivers" | "teams" }) {
   if (!data) return <Wait error={error} reload={reload} />;
   const list: F1Standing[] = which === "drivers" ? data.drivers : data.teams;
   return (
-    <section className="sp-section"><h2>🏆 {which === "drivers" ? "Fahrer-Weltmeisterschaft" : "Konstrukteurs-Weltmeisterschaft"}</h2>
+    <section className="sp-section"><h2><FiptvIcon name="Trophy" /> {which === "drivers" ? "Fahrer-Weltmeisterschaft" : "Konstrukteurs-Weltmeisterschaft"}</h2>
       <table className="sp-table"><tbody>
         {list.map((r) => <tr key={r.rank + r.name}><td>{r.rank}</td><td className="l"><Flag src={r.flag} /> {r.name}</td><td><b>{r.points} Pkt</b></td></tr>)}
       </tbody></table>
@@ -111,7 +121,7 @@ export function TennisView() {
     <>
       <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
         <SubTabs value={tour} onChange={setTour} tabs={[["atp", "ATP Herren"], ["wta", "WTA Damen"]]} />
-        <SubTabs value={tab} onChange={setTab} tabs={[["events", "Turniere"], ["ranking", "Weltrangliste"], ["tv", "📺 Im TV"]]} />
+        <SubTabs value={tab} onChange={setTab} tabs={[["events", "Turniere"], ["ranking", "Weltrangliste"], ["tv", "Im TV"]]} />
       </div>
       {tab === "events" ? <TennisEvents tour={tour} /> : tab === "ranking" ? <TennisRanking tour={tour} /> : <TvListings pattern={TV_PATTERNS.tennis} sport="Tennis" />}
     </>
@@ -125,7 +135,7 @@ function TennisEvents({ tour }: { tour: "atp" | "wta" }) {
   return (
     <>
       {data.map((t) => (
-        <section key={t.id} className="sp-section"><h2>{t.major ? "🏆" : "🎾"} {t.name}</h2>
+        <section key={t.id} className="sp-section"><h2><FiptvIcon name={t.major ? "Trophy" : "Tennis"} /> {t.name}</h2>
           <table className="sp-table"><tbody>
             {t.matches.slice(0, 40).map((m) => (
               <tr key={m.id}>
@@ -152,7 +162,7 @@ function TennisRanking({ tour }: { tour: "atp" | "wta" }) {
   const { data, error, reload } = useLoad(() => tennisRanking(tour), [tour]);
   if (!data) return <Wait error={error} reload={reload} />;
   return (
-    <section className="sp-section"><h2>🏆 {tour === "atp" ? "ATP" : "WTA"}-Weltrangliste</h2>
+    <section className="sp-section"><h2><FiptvIcon name="Trophy" /> {tour === "atp" ? "ATP" : "WTA"}-Weltrangliste</h2>
       <table className="sp-table"><tbody>
         {data.map((r) => (
           <tr key={r.rank + r.name}>
@@ -171,7 +181,7 @@ export function WrestlingView() {
   const [tab, setTab] = useState<"shows" | "tv" | "videos">("shows");
   return (
     <>
-      <SubTabs value={tab} onChange={setTab} tabs={[["shows", "Shows"], ["tv", "📺 Im TV"], ["videos", "▶ Videos"]]} />
+      <SubTabs value={tab} onChange={setTab} tabs={[["shows", "Shows"], ["tv", "Im TV"], ["videos", "Videos"]]} />
       {tab === "shows" ? <WrestlingShows /> : tab === "tv" ? <TvListings pattern={TV_PATTERNS.wrestling} sport="Wrestling" /> : <WrestlingVideos />}
     </>
   );
@@ -195,10 +205,10 @@ function WrestlingShows() {
   );
   return (
     <>
-      {next.length > 0 && <section className="sp-section"><h2>📅 Nächste Shows</h2>{next.map((s) => <Show key={s.promotion + s.name} s={s} />)}</section>}
-      {past.length > 0 && <section className="sp-section"><h2>🏁 Letzte Shows & Ergebnisse</h2>{past.map((s) => <Show key={s.promotion + s.name} s={s} />)}</section>}
+      {next.length > 0 && <section className="sp-section"><h2><FiptvIcon name="Calendar" /> Nächste Shows</h2>{next.map((s) => <Show key={s.promotion + s.name} s={s} />)}</section>}
+      {past.length > 0 && <section className="sp-section"><h2><FiptvIcon name="Wrestling" /> Letzte Shows & Ergebnisse</h2>{past.map((s) => <Show key={s.promotion + s.name} s={s} />)}</section>}
       {!data.length && <div className="sp-empty">Keine Show-Daten verfügbar.</div>}
-      <div className="sp-empty">In Deutschland: WWE Raw, SmackDown & große Events bei Netflix, AEW u. a. bei DAZN/TNT. Unter „📺 Im TV“ siehst du, was dein Anbieter zeigt.</div>
+      <div className="sp-empty">In Deutschland: WWE Raw, SmackDown & große Events bei Netflix, AEW u. a. bei DAZN/TNT. Unter „Im TV“ siehst du, was dein Anbieter zeigt.</div>
     </>
   );
 }
@@ -279,7 +289,7 @@ function TvListings({ pattern, sport }: { pattern: RegExp; sport: string }) {
   if (!state.list.length) return <div className="sp-empty">Gerade nichts zu {sport} im Programm deines Anbieters gefunden (nächste 3 Tage).</div>;
   const now = Date.now();
   return (
-    <section className="sp-section"><h2>📺 {sport} im TV</h2>
+    <section className="sp-section"><h2><FiptvIcon name="OnTv" /> {sport} im TV</h2>
       <table className="sp-table"><tbody>
         {state.list.map(({ channel, program }) => {
           const live = program.startUtcMillis <= now;

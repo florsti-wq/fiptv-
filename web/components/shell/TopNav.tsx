@@ -2,7 +2,12 @@
 import { useTranslation } from "@/lib/i18n";
 
 
-import { BadgeCheck, Bookmark, Clapperboard, Home, Library, Search, Settings, MonitorPlay, Trophy, Tv } from "lucide-react";
+import { BadgeCheck } from "lucide-react";
+import { icon } from "@/components/fiptv/FiptvIcon";
+
+// fIPTV: eigene Linien-Icons wie am Fire TV
+const Home = icon("Home"), Search = icon("Search"), Bookmark = icon("Bookmark"), Tv = icon("LiveTv"), Clapperboard = icon("Film");
+const Library = icon("Mediathek"), MonitorPlay = icon("VideoScreen"), Trophy = icon("Trophy"), Settings = icon("Settings");
 import { useEffect, useRef, useState } from "react";
 import { useAppPick } from "@/lib/store";
 import { kidsLevelOf } from "@/lib/kids";

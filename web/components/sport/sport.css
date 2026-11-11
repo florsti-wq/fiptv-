@@ -76,3 +76,5 @@
 .sp-player iframe{width:min(100%,calc((100vh - 140px)*16/9));aspect-ratio:16/9;border:0;border-radius:12px}
 .sp-player-bar{width:min(100%,calc((100vh - 140px)*16/9));display:flex;align-items:center;gap:12px;margin-bottom:12px}
 .sp-player-bar b{flex:1}
+.sp-section h2{display:flex;align-items:center;gap:10px}
+.sp-tabs button{display:inline-flex;align-items:center;gap:6px}

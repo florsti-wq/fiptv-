@@ -5,11 +5,11 @@ export type League = string;
 export type LeagueGroup = "top" | "germany" | "europe" | "national" | "friendly";
 export type LeagueInfo = { id: League; label: string; short: string; group: LeagueGroup; table: boolean; stats: boolean; national?: boolean };
 export const LEAGUE_GROUPS: Array<{ id: LeagueGroup; label: string }> = [
-  { id: "top", label: "🏆 Top-Ligen Europas" },
-  { id: "germany", label: "🇩🇪 Deutschland" },
-  { id: "europe", label: "⭐ Europapokal" },
-  { id: "national", label: "🌍 Nationalmannschaften" },
-  { id: "friendly", label: "🤝 Freundschaftsspiele" }
+  { id: "top", label: "Top-Ligen Europas" },
+  { id: "germany", label: "Deutschland" },
+  { id: "europe", label: "Europapokal" },
+  { id: "national", label: "Nationalmannschaften" },
+  { id: "friendly", label: "Freundschaftsspiele" }
 ];
 export const LEAGUES: LeagueInfo[] = [
   { id: "ger.1", label: "Bundesliga", short: "BL", group: "top", table: true, stats: true },
@@ -209,7 +209,7 @@ export type StatLeader = { rank: number; name: string; team: string; logo: strin
 export async function leaders(league: League): Promise<Array<{ title: string; leaders: StatLeader[] }>> {
   const data = await espn(`${SITE}/${league}/statistics`);
   return (data.stats ?? []).map((cat: Json) => ({
-    title: cat.name === "goalsLeaders" ? "⚽ Torjäger" : cat.name === "assistsLeaders" ? "🅰 Vorlagen" : String(cat.displayName ?? ""),
+    title: cat.name === "goalsLeaders" ? "Torjäger" : cat.name === "assistsLeaders" ? "Vorlagen" : String(cat.displayName ?? ""),
     leaders: (cat.leaders ?? []).slice(0, 20).map((l: Json, i: number) => ({
       rank: i + 1,
       name: String(l.athlete?.displayName ?? ""),

@@ -6,6 +6,7 @@ import "./goalAlerts.css";
 import { useEffect, useRef, useState } from "react";
 import { useAppPick } from "@/lib/store";
 import { kidsLevelOf } from "@/lib/kids";
+import { FiptvIcon } from "./FiptvIcon";
 import { currentScoreboard, decodeTeams, matchDetail, teamMatches, type SportMatch } from "@/lib/fiptvSport";
 
 const KEY = "fiptv.goalAlerts";
@@ -21,7 +22,7 @@ export function GoalAlertToggle() {
       <button type="button" className={`sp-btn ${on ? "on" : ""}`} onClick={() => {
         const next = !on; setOn(next);
         try { localStorage.setItem(KEY, next ? "on" : "off"); } catch { /* egal */ }
-      }}>{on ? "🔔 Tor-Hinweise: an" : "🔕 Tor-Hinweise: aus"}</button>
+      }}><FiptvIcon name="Bell" size={16} /> {on ? "Tor-Hinweise: an" : "Tor-Hinweise: aus"}</button>
       <small style={{ opacity: 0.65 }}>Tore, Anpfiff und Abpfiff deiner Teams als kurzer Hinweis – auch während du etwas anderes schaust.</small>
     </div>
   );
@@ -80,12 +81,12 @@ export function GoalAlerts() {
               const goal = [...d.events].reverse().find((e) => /goal/i.test(e.type) && e.teamId === side.id);
               if (goal) line = `${goal.player || goal.text} (${goal.minute})`;
             } catch { /* ohne Torschütze */ }
-            queue.current.push({ key: `${g.id}:${h}:${a}`, title: `⚽ TOR für ${side.name}!`, match: g, line, mine: ids.has(side.id) });
+            queue.current.push({ key: `${g.id}:${h}:${a}`, title: `TOR für ${side.name}!`, match: g, line, mine: ids.has(side.id) });
           } else if (h < before.h || a < before.a) {
-            queue.current.push({ key: `${g.id}:var:${h}:${a}`, title: "🖥 Tor zurückgenommen (VAR)", match: g, line: g.clock, mine: false });
+            queue.current.push({ key: `${g.id}:var:${h}:${a}`, title: "Tor zurückgenommen (VAR)", match: g, line: g.clock, mine: false });
           }
-          if (before.state !== "post" && g.state === "post") queue.current.push({ key: `${g.id}:end`, title: "🏁 Abpfiff", match: g, line: "", mine: false });
-          else if (before.state === "pre" && g.state === "in") queue.current.push({ key: `${g.id}:start`, title: "▶ Anpfiff", match: g, line: "", mine: false });
+          if (before.state !== "post" && g.state === "post") queue.current.push({ key: `${g.id}:end`, title: "Abpfiff", match: g, line: "", mine: false });
+          else if (before.state === "pre" && g.state === "in") queue.current.push({ key: `${g.id}:start`, title: "Anpfiff", match: g, line: "", mine: false });
         }
       }
       return 40_000;
@@ -117,7 +118,7 @@ export function GoalAlerts() {
   const m = alert.match;
   return (
     <div className={`goal-alert ${alert.mine ? "mine" : ""}`} role="status" onClick={() => setAlert(null)}>
-      <b className="goal-title">{alert.title}</b>
+      <b className="goal-title"><FiptvIcon name={alert.title.startsWith("TOR") ? "Goal" : "Football"} size={20} /> {alert.title}</b>
       <div className="goal-score">
         {m.home.logo && <img src={m.home.logo} alt="" />}
         <span>{m.home.name} <b>{m.home.score || "0"} : {m.away.score || "0"}</b> {m.away.name}</span>
