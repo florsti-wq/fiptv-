@@ -70,7 +70,8 @@ export async function findGameSources(args: {
   // 2) Programmführer im Zeitraum der Spiele
   const limited = candidates.slice(0, 2500);
   const missing = limited.filter((c) => !args.guide[c.id]);
-  const guide = { ...args.guide, ...(missing.length ? await loadIptvGuideForChannels(playlists, missing).catch(() => ({})) : {}) };
+  const extra: Record<string, IptvNowNext> = missing.length ? await loadIptvGuideForChannels(playlists, missing).catch(() => ({})) : {};
+  const guide: Record<string, IptvNowNext> = { ...args.guide, ...extra };
   for (const c of limited) {
     for (const p of programsOf(guide[c.id])) {
       const title = norm(p.title), text = `${title} ${norm(p.description ?? "")}`;
