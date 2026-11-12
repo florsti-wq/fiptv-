@@ -1017,6 +1017,8 @@
 .livetv-field > label { font-size: 13px; font-weight: 650; color: #e6e6e6; }
 .livetv-field input { min-height: 44px; padding: 8px 12px; border-radius: 8px; border: 1px solid #2c3035; background: #131416; color: #fff; font-size: 15px; }
 .livetv-field input:focus { border-color: var(--accent, #2ec4b6); outline: none; }
+.livetv-field textarea { min-height: 64px; padding: 8px 12px; border-radius: 8px; border: 1px solid #2c3035; background: #131416; color: #fff; font-size: 14px; font-family: inherit; resize: vertical; line-height: 1.4; }
+.livetv-field textarea:focus { border-color: var(--accent, #2ec4b6); outline: none; }
 .livetv-field small { font-size: 12.5px; color: #a3a8ae; line-height: 1.4; }
 .livetv-form-error { color: #ffb4ab; font-size: 13px; margin: 0; }
 .livetv-test-result { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 13.5px; color: #cfd3d8; }

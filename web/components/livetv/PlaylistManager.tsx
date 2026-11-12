@@ -4,7 +4,7 @@ import { MAX_IPTV_PLAYLISTS } from "@/lib/iptvPlaylistIdentity";
 import { useTranslation } from "@/lib/i18n";
 import { AlertTriangle, CheckCircle2, Eye, Pencil, Plus, RefreshCw, Settings, Trash2, X } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
-import { normalizeIptvInput, testIptvPlaylist, xtreamInfoFromUrl } from "@/lib/iptv";
+import { normalizeEpgInputs, normalizeIptvInput, testIptvPlaylist, xtreamInfoFromUrl } from "@/lib/iptv";
 import { playlistErrorCause, xtreamPlaylistUrls, type PlaylistErrorCause } from "@/lib/iptvGuide";
 import { maskedUrl } from "@/lib/maskUrl";
 import { groupDisplayName } from "@/lib/iptvGroups";
@@ -67,25 +67,36 @@ type Kind = "m3u" | "xtream" | "stalker";
 type Draft = { kind: Kind; name: string; url: string; epg: string; host: string; username: string; password: string; portal: string; mac: string };
 const emptyDraft: Draft = { kind: "m3u", name: "", url: "", epg: "", host: "", username: "", password: "", portal: "", mac: "" };
 
+/** fIPTV: alle EPG-Adressen einer Playlist (Haupt-Adresse + weitere), ohne Doppelte. */
+function epgListOf(playlist: IptvPlaylistEntry): string[] {
+  return [...new Set([playlist.epgUrl, ...(playlist.epgUrls ?? [])].map((url) => url?.trim() ?? "").filter(Boolean))];
+}
+
 function draftFor(playlist: IptvPlaylistEntry): Draft {
   const xtream = xtreamInfoFromUrl(playlist.m3uUrl);
-  return xtream
-    ? { ...emptyDraft, kind: "xtream", name: playlist.name, host: xtream.baseUrl, username: xtream.username, password: xtream.password }
-    : { ...emptyDraft, kind: "m3u", name: playlist.name, url: playlist.m3uUrl, epg: playlist.epgUrl ?? "" };
+  if (xtream) {
+    // bei Xtream ist die Anbieter-EPG automatisch dabei → im Feld nur die zusätzlichen Adressen zeigen
+    const own = xtreamPlaylistUrls(xtream.baseUrl, xtream.username, xtream.password)?.epgUrl;
+    const extra = epgListOf(playlist).filter((url) => url !== own && !/\/xmltv\.php\?/i.test(url));
+    return { ...emptyDraft, kind: "xtream", name: playlist.name, host: xtream.baseUrl, username: xtream.username, password: xtream.password, epg: extra.join("\n") };
+  }
+  return { ...emptyDraft, kind: "m3u", name: playlist.name, url: playlist.m3uUrl, epg: epgListOf(playlist).join("\n") };
 }
 
 /** Draft → the playlist entry fIPTV stores (or an error to show under the form). */
 export type DraftProblem = "missing-xtream" | "missing-url" | "bad-url";
 export function playlistFromDraft(draft: Pick<Draft, "kind" | "name" | "url" | "epg" | "host" | "username" | "password">, id: string): IptvPlaylistEntry | DraftProblem {
+  const extra = normalizeEpgInputs(draft.epg ?? "");
   if (draft.kind === "xtream") {
     const urls = xtreamPlaylistUrls(draft.host, draft.username, draft.password);
     if (!urls) return "missing-xtream";
-    return { id, name: draft.name.trim() || "Playlist", m3uUrl: urls.m3uUrl, epgUrl: urls.epgUrl, enabled: true };
+    const all = [...new Set([urls.epgUrl, ...extra].filter(Boolean))];
+    return { id, name: draft.name.trim() || "Playlist", m3uUrl: urls.m3uUrl, epgUrl: all[0] ?? "", epgUrls: all, enabled: true };
   }
   const url = draft.url.trim();
   if (!url) return "missing-url";
   if (!/^https?:\/\//i.test(normalizeIptvInput(url))) return "bad-url";
-  return { id, name: draft.name.trim() || "Playlist", m3uUrl: url, epgUrl: draft.epg.trim(), enabled: true };
+  return { id, name: draft.name.trim() || "Playlist", m3uUrl: url, epgUrl: extra[0] ?? "", epgUrls: extra, enabled: true };
 }
 
 /** Message for a portal the user typed that cannot be saved or tested yet. */
@@ -192,13 +203,17 @@ export function PlaylistManager({ playlists, hiddenGroups, groupNames, portals, 
     setDraft(emptyDraft);
   };
 
-  const field = (key: keyof Draft, label: string, help: string, options: { type?: string; placeholder?: string; autoComplete?: string; first?: boolean } = {}) => (
+  const field = (key: keyof Draft, label: string, help: string, options: { type?: string; placeholder?: string; autoComplete?: string; first?: boolean; multiline?: boolean } = {}) => (
     <div className="livetv-field">
       <label htmlFor={`${formId}-${key}-input`}>{label}</label>
-      <input id={`${formId}-${key}-input`} ref={options.first ? firstField : undefined} type={options.type ?? "text"} value={draft[key]} placeholder={options.placeholder}
+      {options.multiline ? (
+        <textarea id={`${formId}-${key}-input`} value={draft[key]} placeholder={options.placeholder} rows={3}
+          autoCapitalize="none" autoCorrect="off" spellCheck={false} className="livetv-textarea"
+          onChange={(event) => set({ [key]: event.target.value } as Partial<Draft>)} aria-describedby={help ? `${formId}-${key}` : undefined} />
+      ) : <input id={`${formId}-${key}-input`} ref={options.first ? firstField : undefined} type={options.type ?? "text"} value={draft[key]} placeholder={options.placeholder}
         autoCapitalize="none" autoCorrect="off" spellCheck={false} autoComplete={options.autoComplete ?? "off"}
         inputMode={options.type === "url" ? "url" : undefined}
-        onChange={(event) => set({ [key]: event.target.value } as Partial<Draft>)} aria-describedby={help ? `${formId}-${key}` : undefined} />
+        onChange={(event) => set({ [key]: event.target.value } as Partial<Draft>)} aria-describedby={help ? `${formId}-${key}` : undefined} />}
       {help && <small id={`${formId}-${key}`}>{help}</small>}
     </div>
   );
@@ -246,12 +261,13 @@ export function PlaylistManager({ playlists, hiddenGroups, groupNames, portals, 
           {field("name", translateUi("Name"), translateUi("Shown in the Live TV categories, e.g. your provider's name."), { first: true, placeholder: draft.kind === "stalker" ? translateUi("Portal 1") : translateUi("My provider") })}
           {draft.kind === "m3u" && <>
             {field("url", translateUi("Playlist link (M3U)"), translateUi("The M3U or M3U8 link from your provider. Xtream get.php links work too."), { type: "url", placeholder: "https://provider.example/playlist.m3u" })}
-            {field("epg", translateUi("Guide link (XMLTV, optional)"), translateUi("Leave empty to use the guide named inside the playlist."), { type: "url", placeholder: "https://provider.example/epg.xml" })}
+            {field("epg", "EPG-Quellen (XMLTV, optional)", "Eine Adresse pro Zeile – fIPTV gleicht sie der Reihe nach ab. Leer lassen, um die EPG aus der Playlist zu nutzen.", { multiline: true, placeholder: "https://provider.example/epg.xml" })}
           </>}
           {draft.kind === "xtream" && <>
             {field("host", translateUi("Server address"), translateUi("From your provider, including the port, e.g. http://provider.example:8080"), { type: "url", placeholder: "http://provider.example:8080" })}
             {field("username", translateUi("Username"), "", { autoComplete: "username" })}
             {field("password", translateUi("Password"), translateUi("fIPTV builds the playlist and guide links from these and syncs them to your other devices."), { type: "password", autoComplete: "current-password" })}
+            {field("epg", "Weitere EPG-Quellen (optional)", "Die EPG deines Anbieters ist automatisch dabei. Hier zusätzliche Adressen eintragen, eine pro Zeile – z. B. für Sender ohne Programm.", { multiline: true, placeholder: "https://epgshare01.online/epgshare01/epg_ripper_DE1.xml.gz" })}
           </>}
           {draft.kind === "stalker" && <>
             {field("portal", translateUi("Portal address"), translateUi("The portal URL from your provider, e.g. http://portal.example/c/"), { type: "url", placeholder: "http://portal.example/c/" })}

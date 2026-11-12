@@ -3,7 +3,7 @@ import { MAX_IPTV_PLAYLISTS } from "@/lib/iptvPlaylistIdentity";
 import { Plus, RefreshCw, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "@/lib/i18n";
-import { iptvPlaylistSignature } from "@/lib/iptv";
+import { iptvPlaylistSignature, normalizeEpgInputs } from "@/lib/iptv";
 import { moveIndex } from "@/lib/ordering";
 import { useAppPick } from "@/lib/store";
 import { isManagedId } from "@/lib/managedConfiguration";
@@ -43,11 +43,11 @@ export function LiveTvSection() {
   const addPlaylist = () => {
     if (playlists.length >= MAX_IPTV_PLAYLISTS) { setToast("Maximum of 10 IPTV playlists reached"); return; }
     const trimmedM3u = m3uUrl.trim();
-    const trimmedEpg = epgUrl.trim();
+    const epgList = normalizeEpgInputs(epgUrl);
     if (!trimmedM3u) { setToast("Enter an M3U playlist URL first."); return; }
     if (!/^https?:\/\//i.test(trimmedM3u)) { setToast("Playlist URL must start with http:// or https://."); return; }
-    if (trimmedEpg && !/^https?:\/\//i.test(trimmedEpg)) { setToast("EPG URL must start with http:// or https://."); return; }
-    updatePlaylists([{ id: crypto.randomUUID(), name: name.trim() || "IPTV Playlist", m3uUrl: trimmedM3u, epgUrl: trimmedEpg, enabled: true }, ...playlists]);
+    if (epgList.some((url) => !/^https?:\/\//i.test(url))) { setToast("EPG URL must start with http:// or https://."); return; }
+    updatePlaylists([{ id: crypto.randomUUID(), name: name.trim() || "IPTV Playlist", m3uUrl: trimmedM3u, epgUrl: epgList[0] ?? "", epgUrls: epgList, enabled: true }, ...playlists]);
     setName(""); setM3uUrl(""); setEpgUrl("");
     setToast("IPTV playlist saved.");
   };
@@ -79,7 +79,7 @@ export function LiveTvSection() {
               <>
                 <input className="st-input is-wide" aria-label={translateUi("Playlist name")} value={playlist.name} onChange={(e) => edit(playlist.id, { name: e.target.value })} />
                 <input className="st-input is-wide" aria-label={translateUi("M3U playlist URL")} value={playlist.m3uUrl} onChange={(e) => edit(playlist.id, { m3uUrl: e.target.value })} />
-                <input className="st-input is-wide" aria-label={translateUi("EPG URL")} placeholder={translateUi("EPG XMLTV URL (optional)")} value={playlist.epgUrl ?? ""} onChange={(e) => edit(playlist.id, { epgUrl: e.target.value })} />
+                <EpgSourcesInput playlist={playlist} onCommit={(urls) => edit(playlist.id, { epgUrl: urls[0] ?? "", epgUrls: urls })} />
                 <span className="st-import-flags">
                   <span className="st-sort-sub">{translateUi("Import on Android and TV")}</span>
                   {([["importLiveTv", "Live channels"], ["importVod", "Movies"], ["importSeries", "Series"]] as const).map(([flag, label]) => (
@@ -106,7 +106,7 @@ export function LiveTvSection() {
         <div className="st-form">
           <input className="st-input" value={name} onChange={(e) => setName(e.target.value)} placeholder={translateUi("Playlist name")} aria-label={translateUi("Playlist name")} />
           <input className="st-input" value={m3uUrl} onChange={(e) => setM3uUrl(e.target.value)} placeholder={translateUi("M3U playlist URL")} aria-label={translateUi("M3U playlist URL")} inputMode="url" />
-          <input className="st-input" value={epgUrl} onChange={(e) => setEpgUrl(e.target.value)} placeholder={translateUi("EPG XMLTV URL (optional)")} aria-label={translateUi("EPG XMLTV URL (optional)")} inputMode="url" />
+          <textarea className="st-input st-textarea" rows={2} value={epgUrl} onChange={(e) => setEpgUrl(e.target.value)} placeholder="EPG-Quellen (optional, eine Adresse pro Zeile)" aria-label="EPG-Quellen" spellCheck={false} />
           <div className="st-form-actions"><button type="button" className="st-btn is-primary" onClick={addPlaylist}><Plus size={16} /> {translateUi("Add playlist")}</button></div>
         </div>
       </Group>
@@ -171,3 +171,15 @@ export function MetadataSection() {
   );
 }
 
+
+/** fIPTV: mehrere EPG-Adressen, eine pro Zeile; wird beim Verlassen des Felds übernommen. */
+function EpgSourcesInput({ playlist, onCommit }: { playlist: IptvPlaylistEntry; onCommit: (urls: string[]) => void }) {
+  const joined = [...new Set([playlist.epgUrl, ...(playlist.epgUrls ?? [])].map((url) => url?.trim() ?? "").filter(Boolean))].join("\n");
+  const [text, setText] = useState(joined);
+  useEffect(() => { setText(joined); }, [joined]);
+  return (
+    <textarea className="st-input is-wide st-textarea" rows={Math.max(2, text.split("\n").length)} aria-label="EPG-Quellen" spellCheck={false}
+      placeholder="EPG-Quellen (optional, eine Adresse pro Zeile)" value={text} onChange={(e) => setText(e.target.value)}
+      onBlur={() => { const urls = normalizeEpgInputs(text); if (urls.join("\n") !== joined) onCommit(urls); }} />
+  );
+}

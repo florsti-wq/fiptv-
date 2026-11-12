@@ -149,3 +149,6 @@
 .st-confirm { display: inline-flex; gap: 6px; flex-wrap: wrap; }
 .st-sort-main .addon-url { max-width: 100%; }
 @media (max-width: 760px) { .st-addon-installer { padding-inline-start: 16px; padding-inline-end: 16px; } }
+
+/* fIPTV: mehrzeilige EPG-Quellen */
+.st-textarea { font-family: inherit; resize: vertical; line-height: 1.4; min-height: 56px; }
