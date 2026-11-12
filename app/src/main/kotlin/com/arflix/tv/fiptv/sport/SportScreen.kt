@@ -230,7 +230,7 @@ private fun LazyListScope.hubItems(state: SportUiState, onOpen: (SportMatch) -> 
             Column {
                 Text(title, color = if (title.startsWith("●")) LiveRed else Accent, fontSize = 16.sp, fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(top = 10.dp, bottom = 6.dp))
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp), contentPadding = PaddingValues(vertical = 4.dp, horizontal = 2.dp)) {
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp), contentPadding = PaddingValues(vertical = 8.dp, horizontal = 16.dp)) {
                     items(games, key = { it.id }) { m ->
                         GameCard(m, state.sources[m.id], state.sourcesLoading, followed = state.isFollowed(m.home.team.id) || state.isFollowed(m.away.team.id)) { onOpen(m) }
                     }
