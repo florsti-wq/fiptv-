@@ -158,13 +158,19 @@ object SportRepository {
         return rows.sortedBy { if (it.rank > 0) it.rank else 999 }
     }
 
-    /** Spiele von gestern bis in 8 Tagen; ist da nichts, die aktuelle Runde. */
-    suspend fun matches(league: SportLeague): List<SportMatch> {
+    /** Spiele von vor 3 bis in 8 Tagen; ist da nichts, die aktuelle Runde.
+     *  ESPN lehnt Datumsbereiche (JJJJMMTT-JJJJMMTT) seit Nov. 2026 mit Fehler 400 ab → ganze Monate holen und filtern. */
+    suspend fun matches(league: SportLeague): List<SportMatch> = coroutineScope {
         val today = LocalDate.now()
-        val f = DateTimeFormatter.BASIC_ISO_DATE
-        val range = "${today.minusDays(3).format(f)}-${today.plusDays(8).format(f)}"
-        val list = parseEvents(get("$SITE/${league.code}/scoreboard?dates=$range&limit=200"), league)
-        return list.ifEmpty { parseEvents(get("$SITE/${league.code}/scoreboard"), league) }.sortedBy { it.startMs }
+        val from = today.minusDays(3)
+        val to = today.plusDays(8)
+        val months = listOf(from, to).map { "%04d%02d".format(it.year, it.monthValue) }.distinct()
+        val fromMs = from.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+        val toMs = to.plusDays(1).atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+        val list = months.map { m -> async { runCatching { parseEvents(get("$SITE/${league.code}/scoreboard?dates=$m&limit=300"), league) }.getOrDefault(emptyList()) } }
+            .awaitAll().flatten().distinctBy { it.id }
+            .filter { it.isLive || it.startMs in fromMs until toMs }
+        list.ifEmpty { parseEvents(get("$SITE/${league.code}/scoreboard"), league) }.sortedBy { it.startMs }
     }
 
     /** Aktueller Spieltag eines Wettbewerbs (für Live-Stände). */

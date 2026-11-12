@@ -35,7 +35,19 @@ export function germanGp(name: string) {
 export async function f1Weekends(): Promise<{ weekends: F1Weekend[]; calendar: Array<{ name: string; start: number; end: number }> }> {
   const from = new Date(); from.setDate(from.getDate() - 21);
   const to = new Date(); to.setDate(to.getDate() + 45);
-  const j = await espn(`${S}/racing/f1/scoreboard`, { dates: `${ymd(from)}-${ymd(to)}` });
+  // ESPN: Datumsbereiche liefern Fehler 400 → Saison(en) holen und filtern
+  const years = [...new Set([from.getFullYear(), to.getFullYear()])];
+  const seasons = (await Promise.allSettled(years.map((y) => espn(`${S}/racing/f1/scoreboard`, { dates: String(y) }))))
+    .flatMap((r) => (r.status === "fulfilled" ? [r.value] : []));
+  if (!seasons.length) throw new Error("Formel-1-Daten nicht erreichbar");
+  const fromDay = ymd(from), toDay = ymd(to);
+  const j: Json = {
+    events: seasons.flatMap((s: Json) => s.events ?? []).filter((e: Json) => {
+      const d = String(e.date ?? "").slice(0, 10).replace(/-/g, "");
+      return !d || (d >= fromDay && d <= toDay);
+    }),
+    leagues: (seasons.find((s: Json) => s.season?.year === new Date().getFullYear()) ?? seasons[seasons.length - 1]).leagues
+  };
   const weekends: F1Weekend[] = (j.events ?? []).map((e: Json) => {
     const sessions: F1Session[] = (e.competitions ?? []).map((c: Json) => ({
       label: SESSION[c.type?.abbreviation] ?? String(c.type?.abbreviation ?? ""),

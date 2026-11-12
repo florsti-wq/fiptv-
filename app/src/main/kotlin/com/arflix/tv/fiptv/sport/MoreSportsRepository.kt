@@ -60,9 +60,18 @@ object MoreSportsRepository {
 
     /** Rennwochenenden von vor 3 Wochen bis in 6 Wochen, dazu der Saisonkalender. */
     suspend fun f1Weekends(): Pair<List<F1Weekend>, List<F1Calendar>> {
-        val f = DateTimeFormatter.BASIC_ISO_DATE
         val today = LocalDate.now()
-        val j = get("$SITE/racing/f1/scoreboard?dates=${today.minusDays(21).format(f)}-${today.plusDays(45).format(f)}")
+        // ESPN: Datumsbereiche liefern Fehler 400 → Saison(en) holen und auf -3/+6 Wochen filtern
+        val from = today.minusDays(21)
+        val to = today.plusDays(45)
+        val seasons = listOf(from.year, to.year).distinct().mapNotNull { y -> runCatching { get("$SITE/racing/f1/scoreboard?dates=$y") }.getOrNull() }
+        if (seasons.isEmpty()) error("Formel-1-Daten nicht erreichbar")
+        val events = seasons.flatMap { it.optJSONArray("events").objects() }.filter { e ->
+            val d = runCatching { LocalDate.parse(e.optString("date").take(10)) }.getOrNull()
+            d == null || (!d.isBefore(from) && !d.isAfter(to))
+        }
+        val j = org.json.JSONObject().put("events", org.json.JSONArray(events))
+            .put("leagues", (seasons.firstOrNull { it.optJSONObject("season")?.optInt("year") == today.year } ?: seasons.last()).optJSONArray("leagues") ?: org.json.JSONArray())
         val weekends = j.optJSONArray("events").objects().map { e ->
             val circuit = e.optJSONObject("circuit")
             val sessions = e.optJSONArray("competitions").objects().map { c ->

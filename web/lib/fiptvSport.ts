@@ -125,16 +125,20 @@ function parseCompetition(event: Json, comp: Json, league: League): SportMatch {
 }
 
 export async function matches(league: League): Promise<SportMatch[]> {
-  const from = new Date(); from.setDate(from.getDate() - 3);
-  const to = new Date(); to.setDate(to.getDate() + 8);
-  let data: Json;
-  try {
-    data = await espn(`${SITE}/${league}/scoreboard`, { dates: `${ymd(from)}-${ymd(to)}`, limit: "200" });
-    if (!data.events?.length) data = await espn(`${SITE}/${league}/scoreboard`);
-  } catch {
-    data = await espn(`${SITE}/${league}/scoreboard`);
-  }
-  return (data.events ?? [])
+  // ESPN lehnt Datumsbereiche (JJJJMMTT-JJJJMMTT) seit Nov. 2026 mit Fehler 400 ab → ganze Monate holen und filtern
+  const from = new Date(); from.setDate(from.getDate() - 3); from.setHours(0, 0, 0, 0);
+  const to = new Date(); to.setDate(to.getDate() + 9); to.setHours(0, 0, 0, 0);
+  const months = [...new Set([from, to].map((d) => ymd(d).slice(0, 6)))];
+  const lists = await Promise.allSettled(months.map((m) => espn(`${SITE}/${league}/scoreboard`, { dates: m, limit: "300" })));
+  const seen = new Set<string>();
+  let events: Json[] = lists.flatMap((r) => (r.status === "fulfilled" ? r.value.events ?? [] : []))
+    .filter((e: Json) => { const id = String(e.id); if (seen.has(id)) return false; seen.add(id); return true; })
+    .filter((e: Json) => {
+      const t = Date.parse(e.date);
+      return e.status?.type?.state === "in" || (t >= from.getTime() && t < to.getTime());
+    });
+  if (!events.length) events = (await espn(`${SITE}/${league}/scoreboard`)).events ?? [];
+  return events
     .map((e: Json) => parseCompetition(e, e.competitions?.[0], league))
     .sort((a: SportMatch, b: SportMatch) => a.date.localeCompare(b.date));
 }
