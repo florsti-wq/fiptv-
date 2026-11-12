@@ -40,6 +40,7 @@ export function keywords(...names: string[]): Set<string> {
 
 const programsOf = (g?: IptvNowNext) => (g ? [...(g.recent ?? []), g.now, g.next, g.later, ...(g.upcoming ?? [])].filter((p): p is IptvProgram => Boolean(p)) : []);
 const startOf = (m: SportMatch) => Date.parse(m.date);
+const guideCache = new Map<string, { at: number; g?: IptvNowNext }>();
 
 /** Sucht Quellen für die Spiele. `knownTeams`: weitere Teamnamen, damit „Bayern – Leipzig“ nicht als Bayern-Köln zählt. */
 export async function findGameSources(args: {
@@ -60,19 +61,27 @@ export async function findGameSources(args: {
 
   // 1) Sendernamen: Kandidaten für den Programmführer + Event-Sender
   const byId = new Map(channels.map((c) => [c.id, c]));
-  const candidates: IptvChannel[] = [];
+  const named: IptvChannel[] = [], sporty: IptvChannel[] = [];
   const soon = keys.filter((k) => k.g.state === "in" || k.start - now < 18 * 3600_000);
   for (const c of channels) {
     const n = norm(c.name), grp = norm(c.group ?? "");
-    if (SPORTS_CHANNEL.test(` ${grp} ${n} `) || [...allKw].some((w) => has(n, w))) candidates.push(c);
+    if ([...allKw].some((w) => has(n, w))) named.push(c);
+    else if (SPORTS_CHANNEL.test(` ${grp} ${n} `)) sporty.push(c);
     for (const k of soon) if ([...k.home].some((w) => has(n, w)) && [...k.away].some((w) => has(n, w))) add(k.g.id, c.id, undefined, 3);
   }
+  // Event-/Sportsender zuerst (DAZN-Events, Sky Sport …); bei Xtream kostet jeder Sender eine Abfrage → begrenzen
+  const prio = (c: IptvChannel) => (/ (event|events|live event|ppv) /.test(norm(`${c.group ?? ""} ${c.name}`)) ? 0 : 1);
+  const limited = [...named, ...sporty.sort((a, b) => prio(a) - prio(b))].slice(0, 300);
 
-  // 2) Programmführer im Zeitraum der Spiele
-  const limited = candidates.slice(0, 2500);
-  const missing = limited.filter((c) => !args.guide[c.id]);
+  // 2) Programmführer im Zeitraum der Spiele (10 Min. zwischengespeichert, auch für die Spielseite)
+  const fresh = (id: string) => { const c = guideCache.get(id); return c && now - c.at < 600_000 ? c.g : undefined; };
+  const known = (id: string) => { const g = args.guide[id]; return g && (g.upcoming?.length ?? 0) > 0 ? g : undefined; };
+  const cachedFresh = (id: string) => { const c = guideCache.get(id); return Boolean(c && now - c.at < 600_000); };
+  const missing = limited.filter((c) => !known(c.id) && !cachedFresh(c.id));
   const extra: Record<string, IptvNowNext> = missing.length ? await loadIptvGuideForChannels(playlists, missing).catch(() => ({})) : {};
-  const guide: Record<string, IptvNowNext> = { ...args.guide, ...extra };
+  for (const c of missing) guideCache.set(c.id, { at: now, g: extra[c.id] });
+  const guide: Record<string, IptvNowNext> = {};
+  for (const c of limited) { const g = known(c.id) ?? extra[c.id] ?? fresh(c.id) ?? args.guide[c.id]; if (g) guide[c.id] = g; }
   for (const c of limited) {
     for (const p of programsOf(guide[c.id])) {
       const title = norm(p.title), text = `${title} ${norm(p.description ?? "")}`;

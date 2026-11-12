@@ -41,7 +41,12 @@ function useGameSources(games: SportMatch[]): Record<string, GameSources> {
   const { iptvSnapshot, settings, addons } = useAppPick("iptvSnapshot", "settings", "addons");
   const [map, setMap] = useState<Record<string, GameSources>>({});
   const ids = games.map((g) => g.id).join(",");
+  // Nur neu suchen, wenn sich Spiele, Senderzahl oder Addons ändern – nicht bei jedem Programm-Update
+  const snap = useRef(iptvSnapshot);
+  snap.current = iptvSnapshot;
+  const channelCount = (iptvSnapshot.allChannels?.length || iptvSnapshot.channels.length);
   useEffect(() => {
+    const iptvSnapshot = snap.current;
     if (!games.length) return;
     const now = Date.now();
     const cached: Record<string, GameSources> = {};
@@ -59,7 +64,7 @@ function useGameSources(games: SportMatch[]): Record<string, GameSources> {
         setMap((old) => ({ ...old, ...found }));
       }).catch(() => {});
     return () => controller.abort();
-  }, [ids, iptvSnapshot, addons, settings.iptvPlaylists]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [ids, channelCount, addons.length, settings.iptvPlaylists.length]); // eslint-disable-line react-hooks/exhaustive-deps
   return map;
 }
 
