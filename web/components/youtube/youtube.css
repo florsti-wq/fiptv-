@@ -1,4 +1,4 @@
-.yt-screen{padding:24px clamp(16px,4vw,48px) 64px;color:#fff;background:var(--bg,#08090a);min-height:100%}
+.yt-screen{padding:clamp(84px,9vh,108px) clamp(16px,4vw,48px) 64px;color:#fff;background:var(--bg,#08090a);min-height:100%}
 .yt-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
 .yt-head h1{font-size:28px;margin:0 auto 0 0}
 .yt-add{display:flex;gap:8px}

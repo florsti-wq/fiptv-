@@ -1,4 +1,4 @@
-.sp-screen{padding:24px clamp(16px,4vw,48px) 64px;color:#fff;background:var(--bg,#08090a);min-height:100%}
+.sp-screen{padding:clamp(84px,9vh,108px) clamp(16px,4vw,48px) 64px;color:#fff;background:var(--bg,#08090a);min-height:100%}
 .sp-screen .spin{animation:arvio-spin 1s linear infinite}
 .sp-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:20px}
 .sp-head h1{font-size:28px;margin:0}

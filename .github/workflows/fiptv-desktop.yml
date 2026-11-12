@@ -66,8 +66,13 @@ jobs:
           rm -rf desktop/server
           cp -r web/.next/standalone desktop/server
           mkdir -p desktop/server/.next
-          cp -r web/.next/static desktop/server/.next/static
-          cp -r web/public desktop/server/public
+          # Inhalte hineinkopieren: der Standalone-Build legt „public“ teils schon an –
+          # „cp -r web/public …/public“ ergäbe dann public/public und Logos/Profilbilder fehlten.
+          mkdir -p desktop/server/.next/static desktop/server/public
+          cp -r web/.next/static/. desktop/server/.next/static/
+          cp -r web/public/. desktop/server/public/
+          test -f desktop/server/public/arvio-logo.svg
+          test -d desktop/server/public/avatars
           test -f desktop/server/server.js
           du -sh desktop/server
 
@@ -115,6 +120,7 @@ jobs:
           tar -tzf win-unpacked/resources/server.tgz > ../server-files.txt
           grep -q "node_modules/next/package.json" ../server-files.txt
           grep -q "^./.next/static/" ../server-files.txt
+          grep -q "^./public/arvio-logo.svg" ../server-files.txt
 
       - name: Freigabe „desktop-latest“ aktualisieren
         env:
