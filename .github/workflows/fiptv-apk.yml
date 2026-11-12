@@ -23,6 +23,8 @@ on:
       - ".github/workflows/fiptv-resolver.yml"
       - ".github/workflows/fiptv-web-check.yml"
       - ".github/workflows/fiptv-probe.yml"
+      - ".github/workflows/fiptv-epg.yml"
+      - ".github/epg/**"
       - "screenshots/**"
 
 permissions:
