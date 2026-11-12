@@ -1,5 +1,5 @@
 # fIPTV: eigener Programmführer (EPG) aus iptv-org/epg – täglich neu gebaut.
-# Ergebnis: https://raw.githubusercontent.com/florsti-wq/fiptv-/epg/guide.xml.gz
+# Ergebnis: https://raw.githubusercontent.com/florsti-wq/fiptv-/epg/guide.xml.gz (Fire TV) und …/guide.xml (Windows/Web)
 # Die Datei liegt im Zweig "epg", der bei jedem Lauf ersetzt wird (keine wachsende Historie).
 name: fIPTV EPG bauen
 
@@ -25,7 +25,7 @@ jobs:
     timeout-minutes: 300
     env:
       # Deutschland zuerst, dann Luxemburg und Österreich (gleiche Sender nur einmal)
-      SITES: "web.magentatv.de tv.post.lu tv.magenta.at"
+      SITES: "web.magentatv.de tv.post.lu tvheute.at"
     steps:
       - uses: actions/checkout@v4
         with:
@@ -57,7 +57,7 @@ jobs:
           test "$pr" -gt 1000
       - name: Veröffentlichen (Zweig epg)
         run: |
-          mkdir pub && cp out/guide.xml.gz pub/ && cd pub
+          mkdir pub && cp out/guide.xml.gz out/guide.xml pub/ && cd pub
           printf '# fIPTV EPG\n\nTäglich gebaut aus iptv-org/epg (%s).\n\nAdresse: https://raw.githubusercontent.com/%s/epg/guide.xml.gz\n' "$SITES" "$GITHUB_REPOSITORY" > README.md
           git init -q -b epg
           git config user.name "fiptv-bot"

@@ -29,7 +29,8 @@ def main() -> None:
             k = key(name)
             if not name or not k or k in seen_names:
                 continue
-            xid = (ch.get("xmltv_id") or "").strip() or f"{re.sub(r'[^A-Za-z0-9]+', '', name)}.{tld}"
+            # "DasErste.de@SD" → "DasErste.de" (so heißen die tvg-ids in den meisten Playlists)
+            xid = (ch.get("xmltv_id") or "").strip().split("@")[0] or f"{re.sub(r'[^A-Za-z0-9]+', '', name)}.{tld}"
             if xid in seen_ids:
                 continue
             seen_names.add(k)

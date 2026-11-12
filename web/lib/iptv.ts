@@ -903,6 +903,16 @@ export function isDividerChannelName(name?: string) {
   return /^[#=\-*•_~|<>♦►]{3,}/.test(trimmed) && /[#=\-*•_~|<>♦►]{3,}$/.test(trimmed);
 }
 
+/** fIPTV: eigener Programmführer (täglich per GitHub aus iptv-org/epg gebaut, unkomprimiert für den Browser). */
+export const FIPTV_GUIDE_EPG_URL = "https://raw.githubusercontent.com/florsti-wq/fiptv-/epg/guide.xml";
+
+/** Lockerer Sendername-Schlüssel: "Das Erste HD" → "daserste". */
+function looseGuideKey(name: string): string {
+  const key = name.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
+    .replace(/^[a-z]{2,3}\s*[|:]\s*/, "").replace(/\b(hd|uhd|fhd|sd|4k|hevc|h265|raw|tv)\b/g, " ").replace(/[^a-z0-9]+/g, "");
+  return key.length >= 3 ? `~${key}` : "";
+}
+
 async function loadNowNext(playlists: IptvPlaylistEntry[], channels: IptvChannel[]) {
   if (!channels.length) return {};
   const programsById: Record<string, IptvProgram[]> = {};
@@ -910,7 +920,7 @@ async function loadNowNext(playlists: IptvPlaylistEntry[], channels: IptvChannel
     const lookup = new Map<string, Set<string>>();
     for (const channel of channels) {
       if (!channel.id.startsWith(`${playlist.id}:`)) continue;
-      for (const key of [channel.tvgId, channel.name]) {
+      for (const key of [channel.tvgId, channel.name, looseGuideKey(channel.name ?? "")]) {
         if (!key?.trim()) continue;
         const normalized = key.trim().toLowerCase();
         if (!lookup.has(normalized)) lookup.set(normalized, new Set());
@@ -918,12 +928,16 @@ async function loadNowNext(playlists: IptvPlaylistEntry[], channels: IptvChannel
       }
     }
     if (!lookup.size) continue;
-    const urls = [...new Set([playlist.epgUrl, ...(playlist.epgUrls ?? [])].filter((url): url is string => Boolean(url?.trim())))];
+    const urls = [...new Set([playlist.epgUrl, ...(playlist.epgUrls ?? []), FIPTV_GUIDE_EPG_URL].filter((url): url is string => Boolean(url?.trim())))];
     for (const url of urls) {
       const programs = await cachedXmltvPrograms(url).catch(() => []);
       const matchedThisSource = new Set<string>();
-      for (const { channel, program } of programs) {
-        for (const id of lookup.get(channel.trim().toLowerCase()) ?? []) {
+      for (const { channel, names, program } of programs) {
+        const ids = new Set(lookup.get(channel.trim().toLowerCase()) ?? []);
+        if (!ids.size && names) for (const name of names) {
+          for (const id of lookup.get(name.trim().toLowerCase()) ?? lookup.get(looseGuideKey(name)) ?? []) ids.add(id);
+        }
+        for (const id of ids) {
           // Earlier configured sources own the channel when they contain data.
           if (programsById[id] && !matchedThisSource.has(id)) continue;
           matchedThisSource.add(id);
@@ -963,7 +977,17 @@ function cachedXmltvPrograms(url: string) {
 }
 
 function parseXmltv(xml: string) {
-  const results: Array<{ channel: string; program: IptvProgram }> = [];
+  const results: Array<{ channel: string; names?: string[]; program: IptvProgram }> = [];
+  // fIPTV: Sendernamen aus <channel><display-name>, damit auch ohne passende tvg-id zugeordnet wird
+  const channelNames = new Map<string, string[]>();
+  const channelRe = /<channel\b([^>]*)>([\s\S]*?)<\/channel>/gi;
+  let ch: RegExpExecArray | null;
+  while ((ch = channelRe.exec(xml))) {
+    const id = attr(ch[1], "id");
+    if (!id) continue;
+    const names = [...ch[2].matchAll(/<display-name\b[^>]*>([\s\S]*?)<\/display-name>/gi)].map((m) => decodeXml(m[1]).trim()).filter(Boolean);
+    if (names.length) channelNames.set(id, names);
+  }
   const programRe = /<programme\b([^>]*)>([\s\S]*?)<\/programme>/gi;
   let match: RegExpExecArray | null;
   while ((match = programRe.exec(xml))) {
@@ -975,6 +999,7 @@ function parseXmltv(xml: string) {
     if (!channel || !start || !stop) continue;
     results.push({
       channel,
+      names: channelNames.get(channel),
       program: {
         title: decodeXml(textTag(body, "title") || "Untitled"),
         description: decodeXml(textTag(body, "desc") || ""),

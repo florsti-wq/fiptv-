@@ -8830,6 +8830,9 @@ class IptvRepository @Inject constructor(
                 }
             }
             discoveredM3uEpgUrls.forEach { add(ScopedEpgCandidate(it)) }
+            // fIPTV: eigener Programmführer (täglich per GitHub aus iptv-org/epg gebaut) füllt
+            // zum Schluss die Sender auf, für die der Anbieter nichts liefert.
+            add(ScopedEpgCandidate(FIPTV_GUIDE_EPG_URL))
         }
             .filter { it.url.isNotBlank() }
             .distinctBy { "${it.playlistId.orEmpty()}|${it.url}" }
@@ -13041,3 +13044,6 @@ private object IptvRepositoryRegexes {
     val RESOLUTION_TAG_REGEX = Regex("""\b(4K|UHD|FHD|HD|SD|2160P?|1080P?|720P?|576P?|480P?)\b""", RegexOption.IGNORE_CASE)
     val BRACKET_PAREN_REGEX = Regex("""\[[^\]]*]|\([^)]*\)""")
 }
+
+/** fIPTV: eigener EPG (DE/LU/AT), siehe .github/workflows/fiptv-epg.yml */
+const val FIPTV_GUIDE_EPG_URL = "https://raw.githubusercontent.com/florsti-wq/fiptv-/epg/guide.xml.gz"
