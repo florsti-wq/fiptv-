@@ -170,7 +170,10 @@ fun SportScreen(
                                 if (stream.external) runCatching {
                                     context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(stream.url))
                                         .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK))
-                                } else onPlayStream(title, stream.url)
+                                } else {
+                                    FiptvStreamHeaders.put(stream.url, stream.headers)
+                                    onPlayStream(title, stream.url)
+                                }
                             })
                         SportView.MyTeams -> myTeams(state, viewModel)
                         is SportView.League -> when (view.tab) {

@@ -1010,7 +1010,11 @@ class PlayerViewModel @Inject constructor(
                         quality = "",
                         size = "",
                         url = url,
-                        iptvSourceId = providedIptvSourceId
+                        iptvSourceId = providedIptvSourceId,
+                        // fIPTV: Kopfzeilen für Sport-Addon-Streams
+                        behaviorHints = com.arflix.tv.fiptv.sport.FiptvStreamHeaders.get(url)?.let {
+                            com.arflix.tv.data.model.StreamBehaviorHints(proxyHeaders = com.arflix.tv.data.model.ProxyHeaders(request = it))
+                        }
                     )
                 }
             val providedIsHubPage = providedStreamCandidate?.url
@@ -1308,7 +1312,8 @@ class PlayerViewModel @Inject constructor(
                             isLoading = false,
                             isLoadingStreams = false,
                             sourceSearchActive = false,
-                            error = PlayerMessage.Res(R.string.player_error_imdb_resolve)
+                            // fIPTV: Live-/Sport-Stream ohne Film-ID → kein IMDB-Hinweis, sondern „Quelle ließ sich nicht öffnen“
+                            error = PlayerMessage.Res(if (mediaId <= 0) R.string.player_error_open_source_failed else R.string.player_error_imdb_resolve)
                         )
                         return@launch
                     }
