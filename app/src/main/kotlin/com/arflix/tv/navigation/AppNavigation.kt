@@ -760,6 +760,8 @@ fun AppNavigation(
             val autoPlay = autoPlayArg && !autoPlayHandled
             val mediaType = if (mediaTypeStr == "tv") MediaType.TV else MediaType.MOVIE
 
+            // fIPTV: Platz für die Leiste links, sonst liegt sie über Titel und Kacheln
+            NavigationRailScreen(navigationRailInset, bottomInset = navigationRailBottomInset) {
             DetailsScreen(
                 onFullscreenChanged = onOverlayFullscreenChanged,
                 mediaType = mediaType,
@@ -824,6 +826,7 @@ fun AppNavigation(
                 },
                 onBack = { navController.popBackStack() }
             )
+            }
         }
 
         // Player screen
