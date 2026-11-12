@@ -903,8 +903,16 @@ export function isDividerChannelName(name?: string) {
   return /^[#=\-*•_~|<>♦►]{3,}/.test(trimmed) && /[#=\-*•_~|<>♦►]{3,}$/.test(trimmed);
 }
 
-/** fIPTV: eigener Programmführer (täglich per GitHub aus iptv-org/epg gebaut, unkomprimiert für den Browser). */
-export const FIPTV_GUIDE_EPG_URL = "https://raw.githubusercontent.com/florsti-wq/fiptv-/epg/guide.xml";
+/** fIPTV: eigener Programmführer (täglich per GitHub aus iptv-org/epg gebaut; DE, LU, AT, FR, BE, NL, UK, US). */
+export const FIPTV_GUIDE_EPG_URL = "https://raw.githubusercontent.com/florsti-wq/fiptv-/epg/guide.xml.gz";
+
+/** Lädt den fIPTV-Guide (gzip) direkt und entpackt ihn im Browser. */
+async function fetchFiptvGuideText(): Promise<string> {
+  const response = await fetch(FIPTV_GUIDE_EPG_URL, { cache: "no-store" });
+  if (!response.ok || !response.body) throw new Error(`fIPTV-EPG nicht erreichbar (${response.status})`);
+  if (typeof DecompressionStream === "undefined") throw new Error("Entpacken wird nicht unterstützt");
+  return new Response(response.body.pipeThrough(new DecompressionStream("gzip"))).text();
+}
 
 /** Lockerer Sendername-Schlüssel: "Das Erste HD" → "daserste". */
 function looseGuideKey(name: string): string {
@@ -967,7 +975,7 @@ const parsedGuides = new Map<string, { at: number; promise: Promise<ReturnType<t
 function cachedXmltvPrograms(url: string) {
   const cached = parsedGuides.get(url);
   if (cached && Date.now() - cached.at < EPG_TTL_MS) return cached.promise;
-  const promise = fetchEpgText(url).then(parseXmltv).catch((error) => {
+  const promise = (url === FIPTV_GUIDE_EPG_URL ? fetchFiptvGuideText() : fetchEpgText(url)).then(parseXmltv).catch((error) => {
     parsedGuides.delete(url);
     throw error;
   });

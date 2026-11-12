@@ -1,5 +1,5 @@
 # fIPTV: eigener Programmführer (EPG) aus iptv-org/epg – täglich neu gebaut.
-# Ergebnis: https://raw.githubusercontent.com/florsti-wq/fiptv-/epg/guide.xml.gz (Fire TV) und …/guide.xml (Windows/Web)
+# Ergebnis: https://raw.githubusercontent.com/florsti-wq/fiptv-/epg/guide.xml.gz
 # Die Datei liegt im Zweig "epg", der bei jedem Lauf ersetzt wird (keine wachsende Historie).
 name: fIPTV EPG bauen
 
@@ -8,7 +8,7 @@ on:
     inputs:
       days:
         description: "Wie viele Tage holen"
-        default: "3"
+        default: "2"
   schedule:
     - cron: "23 2 * * *"
 
@@ -24,8 +24,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 300
     env:
-      # Deutschland zuerst, dann Luxemburg und Österreich (gleiche Sender nur einmal)
-      SITES: "web.magentatv.de tv.post.lu tvheute.at"
+      # Reihenfolge = Vorrang bei gleichen Sendern: DE, LU, AT, FR, BE, NL, UK, US
+      SITES: "web.magentatv.de tv.post.lu tvheute.at programme-tv.net pickx.be tvgids.nl ziggogo.tv freeview.co.uk zap2it.com"
     steps:
       - uses: actions/checkout@v4
         with:
@@ -43,7 +43,7 @@ jobs:
       - name: Programm laden
         working-directory: epg
         env:
-          DAYS: ${{ github.event.inputs.days || '3' }}
+          DAYS: ${{ github.event.inputs.days || '2' }}
         run: |
           npm run grab --- --channels=../fiptv.channels.xml --output=../out/guide.xml \
             --days=$DAYS --maxConnections=8 --timeout=30000 --gzip=../out/guide.xml.gz
@@ -57,7 +57,7 @@ jobs:
           test "$pr" -gt 1000
       - name: Veröffentlichen (Zweig epg)
         run: |
-          mkdir pub && cp out/guide.xml.gz out/guide.xml pub/ && cd pub
+          mkdir pub && cp out/guide.xml.gz pub/ && cd pub
           printf '# fIPTV EPG\n\nTäglich gebaut aus iptv-org/epg (%s).\n\nAdresse: https://raw.githubusercontent.com/%s/epg/guide.xml.gz\n' "$SITES" "$GITHUB_REPOSITORY" > README.md
           git init -q -b epg
           git config user.name "fiptv-bot"
