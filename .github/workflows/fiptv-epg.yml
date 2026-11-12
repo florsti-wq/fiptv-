@@ -25,7 +25,7 @@ jobs:
     timeout-minutes: 300
     env:
       # Reihenfolge = Vorrang bei gleichen Sendern: DE, LU, AT, FR, BE, NL, UK, US
-      SITES: "web.magentatv.de tv.post.lu tvheute.at programme-tv.net pickx.be tvgids.nl ziggogo.tv freeview.co.uk zap2it.com"
+      SITES: "web.magentatv.de tv.post.lu tvheute.at programme-tv.net telenet.tv mon-programme-tv.be tvgids.nl ziggogo.tv freeview.co.uk zap2it.com"
     steps:
       - uses: actions/checkout@v4
         with:
