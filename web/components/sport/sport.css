@@ -78,3 +78,15 @@
 .sp-player-bar b{flex:1}
 .sp-section h2{display:flex;align-items:center;gap:10px}
 .sp-tabs button{display:inline-flex;align-items:center;gap:6px}
+
+/* fIPTV: Quellen (TV-Sender / Addon-Streams) */
+.sp-match-src { margin-top: 6px; font-size: 12px; color: var(--accent, #4f8cff); font-weight: 600; }
+.sp-sources { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px; }
+.sp-source { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,.08); background: rgba(255,255,255,.04); color: inherit; text-align: left; cursor: pointer; }
+.sp-source:hover, .sp-source:focus-visible { background: rgba(255,255,255,.1); outline: 2px solid var(--accent, #4f8cff); }
+.sp-source img { width: 40px; height: 28px; object-fit: contain; flex: none; }
+.sp-source-ph { width: 40px; height: 28px; flex: none; display: grid; place-items: center; border-radius: 6px; background: rgba(255,255,255,.08); font-size: 12px; font-weight: 700; }
+.sp-source span:last-child { display: flex; flex-direction: column; min-width: 0; }
+.sp-source b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sp-source small { opacity: .7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sp-source-sub { margin-left: 18px; }

@@ -4,7 +4,9 @@
 import "./sport.css";
 
 import { ArrowLeft, Loader2, RefreshCw, Star } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { findGameSources, type GameSources } from "@/lib/fiptvSportSources";
+import { resolveSportsAddon, type SportsAddonEvent, type SportsAddonStream } from "@/lib/sportsAddons";
 import { useAppPick } from "@/lib/store";
 import {
   LEAGUES, LEAGUE_GROUPS, allMatches, decodeTeams, encodeTeams, isToday, kickoff, leagueInfo, leagueLabel, leaders, matchDetail, matches, table, teamMatches, teams,
@@ -33,12 +35,43 @@ function useLoad<T>(load: () => Promise<T>, deps: unknown[]) {
   return { data, error, loading, reload: () => setN((x) => x + 1) };
 }
 
+/** fIPTV: TV-Sender und Addon-Streams zu Spielen (wie Fire TV). Ergebnis 5 Min. zwischengespeichert. */
+const sourceCache = new Map<string, { at: number; data: GameSources }>();
+function useGameSources(games: SportMatch[]): Record<string, GameSources> {
+  const { iptvSnapshot, settings, addons } = useAppPick("iptvSnapshot", "settings", "addons");
+  const [map, setMap] = useState<Record<string, GameSources>>({});
+  const ids = games.map((g) => g.id).join(",");
+  useEffect(() => {
+    if (!games.length) return;
+    const now = Date.now();
+    const cached: Record<string, GameSources> = {};
+    for (const g of games) { const c = sourceCache.get(g.id); if (c && now - c.at < 300_000) cached[g.id] = c.data; }
+    setMap(cached);
+    const todo = games.filter((g) => !cached[g.id]);
+    const channels = iptvSnapshot.allChannels?.length ? iptvSnapshot.allChannels : iptvSnapshot.channels;
+    if (!todo.length || (!channels.length && !addons.length)) return;
+    const controller = new AbortController();
+    findGameSources({ games: todo, channels, playlists: settings.iptvPlaylists, guide: iptvSnapshot.nowNext, addons,
+      knownTeams: games.flatMap((g) => [g.home.name, g.away.name]), signal: controller.signal })
+      .then((found) => {
+        if (controller.signal.aborted) return;
+        for (const [id, data] of Object.entries(found)) sourceCache.set(id, { at: Date.now(), data });
+        setMap((old) => ({ ...old, ...found }));
+      }).catch(() => {});
+    return () => controller.abort();
+  }, [ids, iptvSnapshot, addons, settings.iptvPlaylists]); // eslint-disable-line react-hooks/exhaustive-deps
+  return map;
+}
+
+const sourceCount = (s?: GameSources) => (s ? s.tv.length + s.addons.length : 0);
+
 function Logo({ src, size = 28 }: { src: string; size?: number }) {
   return src ? <img className="sp-logo" src={src} alt="" width={size} height={size} loading="lazy" /> : <span className="sp-logo" style={{ width: size, height: size }} />;
 }
 
-function MatchCard({ m, onOpen }: { m: SportMatch; onOpen: (m: SportMatch) => void }) {
+function MatchCard({ m, onOpen, sources }: { m: SportMatch; onOpen: (m: SportMatch) => void; sources?: GameSources }) {
   const live = m.state === "in";
+  const count = sourceCount(sources);
   return (
     <button type="button" className={`sp-match ${live ? "live" : ""}`} onClick={() => onOpen(m)}>
       <div className="sp-match-top">
@@ -50,16 +83,17 @@ function MatchCard({ m, onOpen }: { m: SportMatch; onOpen: (m: SportMatch) => vo
           <Logo src={s.logo} /> <span>{s.name}</span> <b>{m.state === "pre" ? "" : s.score}</b>
         </div>
       ))}
+      {count > 0 && m.state !== "post" && <div className="sp-match-src">▶ {count} {count === 1 ? "Quelle" : "Quellen"}</div>}
     </button>
   );
 }
 
-function MatchList({ title, list, onOpen }: { title: string; list: SportMatch[]; onOpen: (m: SportMatch) => void }) {
+function MatchList({ title, list, onOpen, sources }: { title: string; list: SportMatch[]; onOpen: (m: SportMatch) => void; sources?: Record<string, GameSources> }) {
   if (!list.length) return null;
   return (
     <section className="sp-section">
       <h2>{title}</h2>
-      <div className="sp-row">{list.map((m) => <MatchCard key={`${m.league}-${m.id}`} m={m} onOpen={onOpen} />)}</div>
+      <div className="sp-row">{list.map((m) => <MatchCard key={`${m.league}-${m.id}`} m={m} onOpen={onOpen} sources={sources?.[m.id]} />)}</div>
     </section>
   );
 }
@@ -77,6 +111,8 @@ function Hub({ myTeams, onOpen }: { myTeams: SportTeam[]; onOpen: (m: SportMatch
     const t = window.setInterval(reload, 60_000);
     return () => window.clearInterval(t);
   }, [data]); // eslint-disable-line react-hooks/exhaustive-deps
+  const soonGames = useMemo(() => (data ?? []).filter((m) => m.state === "in" || (m.state === "pre" && Date.parse(m.date) - Date.now() < 30 * 3600_000)).slice(0, 40), [data]);
+  const sources = useGameSources(soonGames);
   if (!data) return <Status loading={loading} error={error} reload={reload} />;
   const mine = new Set(myTeams.map((t) => t.id));
   const isMine = (m: SportMatch) => mine.has(m.home.id) || mine.has(m.away.id);
@@ -88,10 +124,10 @@ function Hub({ myTeams, onOpen }: { myTeams: SportTeam[]; onOpen: (m: SportMatch
   const myNext = games.filter((m) => isMine(m) && m.state !== "post");
   return (
     <>
-      <MatchList title="Jetzt live" list={live} onOpen={onOpen} />
-      <MatchList title="Meine Teams" list={myNext.slice(0, 12)} onOpen={onOpen} />
-      <MatchList title="Heute" list={today} onOpen={onOpen} />
-      <MatchList title="Nächste Spiele" list={next.slice(0, 30)} onOpen={onOpen} />
+      <MatchList title="Jetzt live" list={live} onOpen={onOpen} sources={sources} />
+      <MatchList title="Meine Teams" list={myNext.slice(0, 12)} onOpen={onOpen} sources={sources} />
+      <MatchList title="Heute" list={today} onOpen={onOpen} sources={sources} />
+      <MatchList title="Nächste Spiele" list={next.slice(0, 30)} onOpen={onOpen} sources={sources} />
       <MatchList title="Ergebnisse" list={results.slice(0, 30)} onOpen={onOpen} />
       {!games.length && <div className="sp-empty">Gerade keine Spiele in den nächsten Tagen.</div>}
     </>
@@ -278,6 +314,8 @@ function MatchPage({ match }: { match: SportMatch }) {
     const t = window.setInterval(detail.reload, 30_000);
     return () => window.clearInterval(t);
   }, [m.state]); // eslint-disable-line react-hooks/exhaustive-deps
+  const one = useMemo(() => [match], [match.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  const sources = useGameSources(match.state === "post" ? [] : one)[match.id];
   const icon = (type: string) => (/goal/i.test(type) ? "Tor ·" : /red/i.test(type) ? "Rot ·" : /yellow/i.test(type) ? "Gelb ·" : /sub/i.test(type) ? "Wechsel ·" : "·");
   return (
     <>
@@ -290,6 +328,7 @@ function MatchPage({ match }: { match: SportMatch }) {
         </div>
         <div><Logo src={m.away.logo} size={72} /><b>{m.away.name}</b></div>
       </div>
+      {match.state !== "post" && <MatchSources sources={sources} />}
       {!detail.data ? <Status {...detail} /> : (
         <div className="sp-detail">
           {detail.data.events.length > 0 && (
@@ -332,6 +371,60 @@ function MatchPage({ match }: { match: SportMatch }) {
           {!detail.data.events.length && !detail.data.stats.length && <div className="sp-empty">Noch keine Spieldaten – vor dem Anpfiff gibt es meist nur die Ansetzung.</div>}
         </div>
       )}
+    </>
+  );
+}
+
+function MatchSources({ sources }: { sources?: GameSources }) {
+  const { playChannel } = useAppPick("playChannel");
+  if (!sources) return <section className="sp-section"><h2>Wo läuft das Spiel?</h2><div className="sp-empty"><Loader2 className="spin" /> Suche Sender und Streams …</div></section>;
+  const now = Date.now();
+  return (
+    <section className="sp-section"><h2>Wo läuft das Spiel?</h2>
+      {!sources.tv.length && !sources.addons.length && <div className="sp-empty">Noch keine Sender oder Streams gefunden. Kurz vor Anpfiff tauchen oft mehr auf.</div>}
+      <div className="sp-sources">
+        {sources.tv.map((s) => (
+          <button type="button" key={s.channel.id} className="sp-source" onClick={() => void playChannel(s.channel)}>
+            {s.channel.logo ? <img src={s.channel.logo} alt="" /> : <span className="sp-source-ph">TV</span>}
+            <span><b>{s.channel.name}{s.uhd ? " · 4K" : ""}</b>
+              <small>{s.program ? `${s.program.startUtcMillis <= now && s.program.endUtcMillis > now ? "● läuft · " : `${new Date(s.program.startUtcMillis).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })} · `}${s.program.title}` : "Event-Sender"}</small></span>
+          </button>
+        ))}
+        {sources.addons.map((e) => <AddonSource key={e.key} event={e} />)}
+      </div>
+    </section>
+  );
+}
+
+function AddonSource({ event }: { event: SportsAddonEvent }) {
+  const { addons, playChannel } = useAppPick("addons", "playChannel");
+  const [streams, setStreams] = useState<SportsAddonStream[] | null>(null);
+  const [loading, setLoading] = useState(false);
+  const ctrl = useRef<AbortController | null>(null);
+  useEffect(() => () => ctrl.current?.abort(), []);
+  const load = async () => {
+    ctrl.current?.abort();
+    const c = new AbortController(); ctrl.current = c;
+    setLoading(true);
+    try { const r = await resolveSportsAddon(event, addons, c.signal); if (!c.signal.aborted) setStreams(r); }
+    catch { if (!c.signal.aborted) setStreams([]); }
+    finally { if (!c.signal.aborted) setLoading(false); }
+  };
+  const play = (s: SportsAddonStream) => {
+    if (s.external) { window.open(s.url, "_blank", "noopener,noreferrer"); return; }
+    void playChannel({ id: `sports-addon:${event.addonId}:${event.type}:${event.eventId}`, name: event.title, group: event.addonName, streamUrl: s.url, requestHeaders: s.headers });
+  };
+  return (
+    <>
+      <button type="button" className="sp-source" aria-busy={loading} onClick={() => { if (!loading) void load(); }}>
+        <span className="sp-source-ph">▶</span>
+        <span><b>{event.addonName}{event.live ? " · ● live" : ""}</b><small>{loading ? "Lade Streams …" : streams?.length === 0 ? "Keine Streams – erneut versuchen" : event.title}</small></span>
+      </button>
+      {streams?.map((s, i) => (
+        <button type="button" key={i} className="sp-source sp-source-sub" onClick={() => play(s)}>
+          <span className="sp-source-ph">▶</span><span><b>{s.name}</b><small>{[s.description, s.external ? "öffnet extern ↗" : ""].filter(Boolean).join(" · ")}</small></span>
+        </button>
+      ))}
     </>
   );
 }
