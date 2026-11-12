@@ -111,3 +111,11 @@
 @media (max-width: 760px) { .addons-screen > .addon-manager { margin-inline: 16px; } }
 .addon-manager :is(.primary, .secondary) { width: auto; min-width: max-content; min-height: 42px; padding: 0 16px; border-radius: 999px; font-size: 14px; gap: 6px; }
 .addon-switch.is-on::after { background: #0a0a0a; }
+
+/* fIPTV: normale Knopfgröße im Addon-Installer (die großen TV-Knöpfe sind hier zu breit bzw. rund und überlappten) */
+.addon-installer .primary,
+.addon-installer .secondary {
+  width: auto; min-height: 40px; padding: 0 18px; border-radius: 10px;
+  font-size: 14px; font-weight: 600; white-space: nowrap;
+}
+.addon-installer .addon-install-row .primary { min-height: 42px; }
