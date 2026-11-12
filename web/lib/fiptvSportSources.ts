@@ -31,9 +31,10 @@ export function norm(s: string): string {
 }
 const has = (text: string, word: string) => text.includes(` ${word} `);
 
-export function keywords(name: string): Set<string> {
-  const words = norm(name).trim().split(" ").filter((w) => w.length >= 4 && !STOP.has(w));
-  const base = words.length ? words : norm(name).trim().split(" ").filter((w) => w.length >= 3);
+export function keywords(...names: string[]): Set<string> {
+  const all = [...new Set(names.filter(Boolean))];
+  const words = all.flatMap((name) => norm(name).trim().split(" ")).filter((w) => w.length >= 4 && !STOP.has(w));
+  const base = words.length ? words : all.flatMap((name) => norm(name).trim().split(" ")).filter((w) => w.length >= 3);
   return new Set([...base, ...base.flatMap((w) => SYNONYMS[w] ?? [])]);
 }
 
@@ -47,7 +48,7 @@ export async function findGameSources(args: {
 }): Promise<Record<string, GameSources>> {
   const { games, channels, playlists, addons } = args;
   const now = Date.now();
-  const keys = games.map((g) => ({ g, home: keywords(g.home.name), away: keywords(g.away.name), start: startOf(g) }));
+  const keys = games.map((g) => ({ g, home: keywords(g.home.name, ...(g.home.alt ?? [])), away: keywords(g.away.name, ...(g.away.alt ?? [])), start: startOf(g) }));
   const allKw = new Set([...(args.knownTeams ?? []).flatMap((n) => [...keywords(n)]), ...keys.flatMap((k) => [...k.home, ...k.away])]);
   const found = new Map<string, Map<string, { program?: IptvProgram; score: number }>>();
   const add = (gameId: string, channelId: string, program: IptvProgram | undefined, score: number) => {

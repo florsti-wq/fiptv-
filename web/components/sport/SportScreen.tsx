@@ -52,7 +52,7 @@ function useGameSources(games: SportMatch[]): Record<string, GameSources> {
     if (!todo.length || (!channels.length && !addons.length)) return;
     const controller = new AbortController();
     findGameSources({ games: todo, channels, playlists: settings.iptvPlaylists, guide: iptvSnapshot.nowNext, addons,
-      knownTeams: games.flatMap((g) => [g.home.name, g.away.name]), signal: controller.signal })
+      knownTeams: games.flatMap((g) => [g.home.name, g.away.name, ...(g.home.alt ?? []), ...(g.away.alt ?? [])]), signal: controller.signal })
       .then((found) => {
         if (controller.signal.aborted) return;
         for (const [id, data] of Object.entries(found)) sourceCache.set(id, { at: Date.now(), data });

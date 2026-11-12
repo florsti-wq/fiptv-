@@ -33,7 +33,7 @@ export const LEAGUES: LeagueInfo[] = [
 export const leagueInfo = (id: string) => LEAGUES.find((l) => l.id === id);
 
 export type SportTeam = { id: string; name: string; logo: string; league: string };
-export type MatchSide = { id: string; name: string; logo: string; score: string; winner: boolean };
+export type MatchSide = { id: string; name: string; logo: string; score: string; winner: boolean; /** Originalnamen (englisch) für die Sendersuche */ alt?: string[] };
 export type MatchState = "pre" | "in" | "post";
 export type SportMatch = {
   id: string; league: League; date: string; state: MatchState; clock: string; detail: string;
@@ -101,7 +101,8 @@ function side(c: Json | undefined): MatchSide {
     name: germanName(String(team.shortDisplayName ?? team.displayName ?? team.name ?? "?")),
     logo: String(team.logo ?? team.logos?.[0]?.href ?? (id ? logoFallback(id) : "")),
     score: scoreOf(c?.score),
-    winner: Boolean(c?.winner)
+    winner: Boolean(c?.winner),
+    alt: [team.shortDisplayName, team.displayName, team.name].filter((n): n is string => typeof n === "string" && Boolean(n))
   };
 }
 
