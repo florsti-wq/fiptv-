@@ -3,7 +3,7 @@ import { MAX_IPTV_PLAYLISTS } from "@/lib/iptvPlaylistIdentity";
 import { Plus, RefreshCw, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "@/lib/i18n";
-import { iptvPlaylistSignature, normalizeEpgInputs } from "@/lib/iptv";
+import { fetchIptvAccountSummary, iptvPlaylistSignature, normalizeEpgInputs, type IptvAccountSummary } from "@/lib/iptv";
 import { moveIndex } from "@/lib/ordering";
 import { useAppPick } from "@/lib/store";
 import { isManagedId } from "@/lib/managedConfiguration";
@@ -94,6 +94,7 @@ export function LiveTvSection() {
             )}
             renderActions={(playlist) => (
               <>
+                <IptvAccountBadge m3uUrl={playlist.m3uUrl} />
                 <Toggle label={playlist.name} value={playlist.enabled} onChange={(enabled) => edit(playlist.id, { enabled })} />
                 <button type="button" className="st-icon-btn is-danger" aria-label={translateUi("Remove {value0}", { value0: playlist.name })} onClick={() => updatePlaylists(playlists.filter((item) => item.id !== playlist.id))}><Trash2 size={17} /></button>
               </>
@@ -182,4 +183,27 @@ function EpgSourcesInput({ playlist, onCommit }: { playlist: IptvPlaylistEntry; 
       placeholder="EPG-Quellen (optional, eine Adresse pro Zeile)" value={text} onChange={(e) => setText(e.target.value)}
       onBlur={() => { const urls = normalizeEpgInputs(text); if (urls.join("\n") !== joined) onCommit(urls); }} />
   );
+}
+
+/** fIPTV: Wie lange läuft das Abo noch? (nur Xtream-Zugänge; Angaben vom Anbieter) */
+function IptvAccountBadge({ m3uUrl }: { m3uUrl: string }) {
+  const [info, setInfo] = useState<IptvAccountSummary | null | "error">(null);
+  const load = (force = false) => {
+    fetchIptvAccountSummary(m3uUrl, force).then((r) => setInfo(r ?? null)).catch(() => setInfo("error"));
+  };
+  useEffect(() => { setInfo(null); load(); }, [m3uUrl]); // eslint-disable-line react-hooks/exhaustive-deps
+  if (info === null) return null;
+  if (info === "error") return <button type="button" className="st-account-badge is-muted" title="Kontodaten nicht abrufbar – erneut versuchen" onClick={() => load(true)}>Abo: ?</button>;
+  const day = 86_400_000;
+  const date = info.expiresAt ? new Date(info.expiresAt).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" }) : "";
+  let text: string, tone: string;
+  if (info.status && info.status !== "active" || (info.expiresAt && info.expiresAt < Date.now())) { text = info.expiresAt ? `Abgelaufen seit ${date}` : "Abgelaufen"; tone = "is-bad"; }
+  else if (info.unlimited || !info.expiresAt) { text = "Abo: unbegrenzt"; tone = "is-ok"; }
+  else {
+    const days = Math.floor((info.expiresAt - Date.now()) / day);
+    text = days <= 0 ? `Endet heute (${date})` : days === 1 ? `Noch 1 Tag · bis ${date}` : `Noch ${days} Tage · bis ${date}`;
+    tone = days <= 14 ? "is-warn" : "is-ok";
+  }
+  const streams = info.max ? ` · ${info.max} ${info.max === 1 ? "Stream" : "Streams"}` : "";
+  return <button type="button" className={`st-account-badge ${tone}`} title="Angaben deines Anbieters – klicken zum Aktualisieren" onClick={() => load(true)}>{text}{streams}</button>;
 }

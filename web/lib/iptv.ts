@@ -702,6 +702,29 @@ async function fetchXtreamJson<T>(url: string, headers: Record<string, string>) 
   try { return await task; } finally { if (apiInFlight.get(key) === task) apiInFlight.delete(key); }
 }
 
+/** fIPTV: Abo-Infos eines Xtream-Zugangs (Ablaufdatum, Status, Verbindungen) aus player_api.php. */
+export type IptvAccountSummary = { status?: string; expiresAt?: number; unlimited: boolean; active?: number; max?: number; checkedAt: number };
+const accountCache = new Map<string, IptvAccountSummary>();
+export async function fetchIptvAccountSummary(m3uUrl: string, force = false): Promise<IptvAccountSummary | null> {
+  const info = xtreamInfoFromUrl(m3uUrl);
+  if (!info) return null;
+  const url = buildXtreamPlayerApiUrl(info.baseUrl, info.username, info.password);
+  const cached = accountCache.get(url);
+  if (cached && !force && Date.now() - cached.checkedAt < 30 * 60_000) return cached;
+  const user = jsonFromText<{ user_info?: Record<string, unknown> }>(await xtreamApiText(url, {}))?.user_info;
+  if (!user) return null;
+  const exp = Number(user.exp_date);
+  const num = (v: unknown) => { const n = Number(v); return Number.isFinite(n) ? n : undefined; };
+  const summary: IptvAccountSummary = {
+    status: typeof user.status === "string" ? user.status.toLowerCase() : undefined,
+    expiresAt: Number.isFinite(exp) && exp > 0 ? exp * 1000 : undefined,
+    unlimited: !(Number.isFinite(exp) && exp > 0),
+    active: num(user.active_cons), max: num(user.max_connections), checkedAt: Date.now(),
+  };
+  accountCache.set(url, summary);
+  return summary;
+}
+
 /** player_api.php text, directly and then through the app proxy (panels without CORS), both behind the provider request guard. */
 async function xtreamApiText(url: string, headers: Record<string, string>) {
   try {
