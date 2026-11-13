@@ -37,7 +37,7 @@ export function LiveTvSection() {
   const [m3uUrl, setM3uUrl] = useState("");
   const [epgUrl, setEpgUrl] = useState("");
   // fIPTV: Zugang wahlweise als M3U-Link oder mit Xtream-Zugangsdaten (Server, Benutzer, Passwort)
-  const [kind, setKind] = useState<"m3u" | "xtream">("xtream");
+  const [kind, setKind] = useState<"m3u" | "xtream" | "stalker">("xtream");
   const [host, setHost] = useState("");
   const [user, setUser] = useState("");
   const [pass, setPass] = useState("");
@@ -119,11 +119,16 @@ export function LiveTvSection() {
         <div className="st-form">
           <input className="st-input" value={name} onChange={(e) => setName(e.target.value)} placeholder={translateUi("Playlist name")} aria-label={translateUi("Playlist name")} />
           <div className="st-kind-switch" role="radiogroup" aria-label="Art des Zugangs">
-            {([["xtream", "Xtream (Server, Benutzer, Passwort)"], ["m3u", "M3U-Link"]] as const).map(([value, label]) => (
+            {([["xtream", "Xtream (Server, Benutzer, Passwort)"], ["m3u", "M3U-Link"], ["stalker", "Stalker (Portal + MAC)"]] as const).map(([value, label]) => (
               <button key={value} type="button" role="radio" aria-checked={kind === value} className={`st-kind-btn${kind === value ? " is-active" : ""}`} onClick={() => setKind(value)}>{label}</button>
             ))}
           </div>
-          {kind === "xtream" ? (
+          {kind === "stalker" ? (
+            <div className="st-sort-sub">
+              Stalker-/Ministra-Portale haben ein eigenes Formular mit Portal-Adresse und MAC-Adresse.{" "}
+              <button type="button" className="st-btn" onClick={() => document.getElementById("fiptv-stalker-portals")?.scrollIntoView({ behavior: "smooth", block: "start" })}>Zu den Stalker-Portalen</button>
+            </div>
+          ) : kind === "xtream" ? (
             <>
               <input className="st-input" value={host} onChange={(e) => setHost(e.target.value)} placeholder="Server, z. B. http://anbieter.tv:8080" aria-label="Xtream-Server" inputMode="url" autoComplete="off" spellCheck={false} />
               <input className="st-input" value={user} onChange={(e) => setUser(e.target.value)} placeholder="Benutzername" aria-label="Xtream-Benutzername" autoComplete="off" spellCheck={false} />
@@ -133,7 +138,7 @@ export function LiveTvSection() {
             <input className="st-input" value={m3uUrl} onChange={(e) => setM3uUrl(e.target.value)} placeholder={translateUi("M3U playlist URL")} aria-label={translateUi("M3U playlist URL")} inputMode="url" />
           )}
           <textarea className="st-input st-textarea" rows={2} value={epgUrl} onChange={(e) => setEpgUrl(e.target.value)} placeholder="EPG-Quellen (optional, eine Adresse pro Zeile)" aria-label="EPG-Quellen" spellCheck={false} />
-          <div className="st-form-actions"><button type="button" className="st-btn is-primary" onClick={addPlaylist}><Plus size={16} /> {translateUi("Add playlist")}</button></div>
+          {kind !== "stalker" && <div className="st-form-actions"><button type="button" className="st-btn is-primary" onClick={addPlaylist}><Plus size={16} /> {translateUi("Add playlist")}</button></div>}
         </div>
       </Group>
 
@@ -160,7 +165,7 @@ export function LiveTvSection() {
       )}
 
       <SettingAnchor id="stalker-url">
-        <StalkerPortalSettings settings={settings} updateSettings={updateSettings} />
+        <div id="fiptv-stalker-portals" style={{ scrollMarginTop: 110 }}><StalkerPortalSettings settings={settings} updateSettings={updateSettings} /></div>
       </SettingAnchor>
     </>
   );
