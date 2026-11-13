@@ -159,3 +159,8 @@
 .st-account-badge.is-warn { background: rgba(245,158,11,.18); color: #fbbf24; }
 .st-account-badge.is-bad { background: rgba(239,68,68,.18); color: #f87171; }
 .st-account-badge.is-muted { opacity: .7; }
+
+/* fIPTV: Umschalter M3U / Xtream */
+.st-kind-switch { display: flex; gap: 6px; flex-wrap: wrap; }
+.st-kind-btn { border: 1px solid rgba(255,255,255,.14); background: transparent; color: inherit; border-radius: 999px; padding: 6px 14px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.st-kind-btn.is-active { background: var(--accent, #e50914); border-color: transparent; color: #fff; }

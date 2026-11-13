@@ -3,6 +3,7 @@ import { MAX_IPTV_PLAYLISTS } from "@/lib/iptvPlaylistIdentity";
 import { Plus, RefreshCw, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "@/lib/i18n";
+import { xtreamPlaylistUrls } from "@/lib/iptvGuide";
 import { fetchIptvAccountSummary, iptvPlaylistSignature, normalizeEpgInputs, type IptvAccountSummary } from "@/lib/iptv";
 import { moveIndex } from "@/lib/ordering";
 import { useAppPick } from "@/lib/store";
@@ -35,6 +36,11 @@ export function LiveTvSection() {
   const [name, setName] = useState("");
   const [m3uUrl, setM3uUrl] = useState("");
   const [epgUrl, setEpgUrl] = useState("");
+  // fIPTV: Zugang wahlweise als M3U-Link oder mit Xtream-Zugangsdaten (Server, Benutzer, Passwort)
+  const [kind, setKind] = useState<"m3u" | "xtream">("xtream");
+  const [host, setHost] = useState("");
+  const [user, setUser] = useState("");
+  const [pass, setPass] = useState("");
   const playlists = safeArray(settings.iptvPlaylists).filter(playlist => !isManagedId(playlist.id));
   const updatePlaylists = (next: IptvPlaylistEntry[]) => updateSettings({ iptvPlaylists: next });
   const isLoadingTv = Boolean(busy && busy.toLowerCase().includes("tv"));
@@ -42,13 +48,19 @@ export function LiveTvSection() {
 
   const addPlaylist = () => {
     if (playlists.length >= MAX_IPTV_PLAYLISTS) { setToast("Maximum of 10 IPTV playlists reached"); return; }
-    const trimmedM3u = m3uUrl.trim();
-    const epgList = normalizeEpgInputs(epgUrl);
+    let trimmedM3u = m3uUrl.trim();
+    let epgList = normalizeEpgInputs(epgUrl);
+    if (kind === "xtream") {
+      const urls = xtreamPlaylistUrls(host.trim(), user.trim(), pass);
+      if (!urls) { setToast("Bitte Server, Benutzername und Passwort eingeben."); return; }
+      trimmedM3u = urls.m3uUrl;
+      epgList = [...new Set([urls.epgUrl, ...epgList].filter(Boolean))];
+    }
     if (!trimmedM3u) { setToast("Enter an M3U playlist URL first."); return; }
     if (!/^https?:\/\//i.test(trimmedM3u)) { setToast("Playlist URL must start with http:// or https://."); return; }
     if (epgList.some((url) => !/^https?:\/\//i.test(url))) { setToast("EPG URL must start with http:// or https://."); return; }
     updatePlaylists([{ id: crypto.randomUUID(), name: name.trim() || "IPTV Playlist", m3uUrl: trimmedM3u, epgUrl: epgList[0] ?? "", epgUrls: epgList, enabled: true }, ...playlists]);
-    setName(""); setM3uUrl(""); setEpgUrl("");
+    setName(""); setM3uUrl(""); setEpgUrl(""); setHost(""); setUser(""); setPass("");
     setToast("IPTV playlist saved.");
   };
   const edit = (id: string, patch: Partial<IptvPlaylistEntry>) => updatePlaylists(playlists.map((item) => item.id === id ? { ...item, ...patch } : item));
@@ -106,7 +118,20 @@ export function LiveTvSection() {
       <Group title="Add a playlist">
         <div className="st-form">
           <input className="st-input" value={name} onChange={(e) => setName(e.target.value)} placeholder={translateUi("Playlist name")} aria-label={translateUi("Playlist name")} />
-          <input className="st-input" value={m3uUrl} onChange={(e) => setM3uUrl(e.target.value)} placeholder={translateUi("M3U playlist URL")} aria-label={translateUi("M3U playlist URL")} inputMode="url" />
+          <div className="st-kind-switch" role="radiogroup" aria-label="Art des Zugangs">
+            {([["xtream", "Xtream (Server, Benutzer, Passwort)"], ["m3u", "M3U-Link"]] as const).map(([value, label]) => (
+              <button key={value} type="button" role="radio" aria-checked={kind === value} className={`st-kind-btn${kind === value ? " is-active" : ""}`} onClick={() => setKind(value)}>{label}</button>
+            ))}
+          </div>
+          {kind === "xtream" ? (
+            <>
+              <input className="st-input" value={host} onChange={(e) => setHost(e.target.value)} placeholder="Server, z. B. http://anbieter.tv:8080" aria-label="Xtream-Server" inputMode="url" autoComplete="off" spellCheck={false} />
+              <input className="st-input" value={user} onChange={(e) => setUser(e.target.value)} placeholder="Benutzername" aria-label="Xtream-Benutzername" autoComplete="off" spellCheck={false} />
+              <input className="st-input" type="password" value={pass} onChange={(e) => setPass(e.target.value)} placeholder="Passwort" aria-label="Xtream-Passwort" autoComplete="new-password" />
+            </>
+          ) : (
+            <input className="st-input" value={m3uUrl} onChange={(e) => setM3uUrl(e.target.value)} placeholder={translateUi("M3U playlist URL")} aria-label={translateUi("M3U playlist URL")} inputMode="url" />
+          )}
           <textarea className="st-input st-textarea" rows={2} value={epgUrl} onChange={(e) => setEpgUrl(e.target.value)} placeholder="EPG-Quellen (optional, eine Adresse pro Zeile)" aria-label="EPG-Quellen" spellCheck={false} />
           <div className="st-form-actions"><button type="button" className="st-btn is-primary" onClick={addPlaylist}><Plus size={16} /> {translateUi("Add playlist")}</button></div>
         </div>
