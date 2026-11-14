@@ -18,7 +18,7 @@ BLOCK = re.compile(r"pluto\.tv|plutotv|samsung|jmp2\.uk|rakuten|plex\.tv|wurl|am
 
 def main() -> None:
     out, files = sys.argv[1], sys.argv[2:]
-    seen, lines, kept, dropped = set(), ["#EXTM3U x-tvg-url=\"https://raw.githubusercontent.com/florsti-wq/fiptv-/epg/guide.xml.gz\""], 0, 0
+    seen, lines, kept, dropped = set(), ["#EXTM3U"], 0, 0
     for path in files:
         code = os.path.basename(path).split(".")[0]
         group = COUNTRY.get(code, code.upper())

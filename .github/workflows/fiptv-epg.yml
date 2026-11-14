@@ -55,6 +55,8 @@ jobs:
           echo "Sender mit Daten: $ch, Sendungen: $pr"
           echo "### fIPTV EPG: $ch Sender, $pr Sendungen" >> "$GITHUB_STEP_SUMMARY"
           test "$pr" -gt 1000
+      - name: Guide verschlanken (Speicher auf Fire TV)
+        run: python3 .github/epg/slim_guide.py out/guide.xml out/guide.xml.gz
       - name: Gratis-Sender (iptv-org, öffentliche Streams der Sender)
         continue-on-error: true
         run: |
@@ -62,11 +64,12 @@ jobs:
           for c in de lu at ch be fr nl uk us; do
             curl -sSfL --retry 3 -o free/$c.m3u "https://iptv-org.github.io/iptv/countries/$c.m3u" || echo "fehlt: $c"
           done
-          python3 .github/epg/build_free.py out/free.m3u free/de.m3u free/lu.m3u free/at.m3u free/ch.m3u free/be.m3u free/fr.m3u free/nl.m3u free/uk.m3u free/us.m3u
-          echo "### Gratis-Sender: $(grep -c '^#EXTINF' out/free.m3u)" >> "$GITHUB_STEP_SUMMARY"
+          python3 .github/epg/build_free.py out/free.m3u free/de.m3u free/lu.m3u free/at.m3u free/ch.m3u free/be.m3u free/fr.m3u free/nl.m3u free/uk.m3u
+          python3 .github/epg/build_free.py out/free-us.m3u free/us.m3u
+          echo "### Gratis-Sender: $(grep -c '^#EXTINF' out/free.m3u) (+ USA $(grep -c '^#EXTINF' out/free-us.m3u))" >> "$GITHUB_STEP_SUMMARY"
       - name: Veröffentlichen (Zweig epg)
         run: |
-          mkdir pub && cp out/guide.xml.gz pub/ && { cp out/free.m3u pub/ 2>/dev/null || true; } && cd pub
+          mkdir pub && cp out/guide.xml.gz pub/ && { cp out/free.m3u out/free-us.m3u pub/ 2>/dev/null || true; } && cd pub
           printf '# fIPTV EPG\n\nTäglich gebaut aus iptv-org/epg (%s).\n\nAdresse: https://raw.githubusercontent.com/%s/epg/guide.xml.gz\n' "$SITES" "$GITHUB_REPOSITORY" > README.md
           git init -q -b epg
           git config user.name "fiptv-bot"
