@@ -145,10 +145,8 @@ fun CrashReportScreen(
 
     val formattedReport = remember(crashId, crashMsg, crashVersion, timeString, firebase) {
         """
-        **🚨 ARVIO Crash Report**
-        **Crash ID:** `$crashId`
-        **${if (firebase) "Crashlytics" else "Sentry Link"}:** $dashboardLink
-        ${if (firebase) "**Report reference:** `arvio_report_id=$crashId`" else ""}
+        **fIPTV-Absturzbericht** (nur auf diesem Gerät, wird nirgendwohin gesendet)
+        **ID:** `$crashId`
         **Version:** $crashVersion
         **Time:** $timeString
         **Error:** $crashMsg
