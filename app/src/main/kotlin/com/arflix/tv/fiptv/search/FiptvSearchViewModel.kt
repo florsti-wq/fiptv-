@@ -61,8 +61,6 @@ object FiptvSearchBridge {
 private object VodIndex {
     var at = 0L
     var key = ""
-    var movies: List<VodMovie> = emptyList()
-    var series: List<VodSeries> = emptyList()
     var client: XtreamVodClient? = null
 }
 
@@ -157,15 +155,22 @@ class FiptvSearchViewModel @Inject constructor(
                 return
             }
             val key = "${account.sourceId}|${account.username}|${account.baseUrl}"
-            if (VodIndex.key != key || System.currentTimeMillis() - VodIndex.at > 6 * 60 * 60_000L || VodIndex.movies.isEmpty()) {
-                val c = XtreamVodClient(account)
-                val movies = runCatching { c.movies(null) }.getOrDefault(emptyList())
-                val series = runCatching { c.series(null) }.getOrDefault(emptyList())
-                VodIndex.movies = movies; VodIndex.series = series; VodIndex.client = c
-                VodIndex.key = key; VodIndex.at = System.currentTimeMillis()
-            }
-            val movies = VodIndex.movies.filter { matches(it.name, words) }.sortedByDescending { it.added }.take(60)
-            val series = VodIndex.series.filter { matches(it.name, words) }.take(60)
+            val tag = Integer.toHexString(key.hashCode())
+            val dir = java.io.File(context.cacheDir, "fiptv_vod").apply { mkdirs() }
+            val movieFile = java.io.File(dir, "movies_$tag.json")
+            val seriesFile = java.io.File(dir, "series_$tag.json")
+            val c = VodIndex.client?.takeIf { VodIndex.key == key } ?: XtreamVodClient(account)
+            VodIndex.client = c; VodIndex.key = key
+            val stale = { f: java.io.File -> !f.exists() || f.length() < 3 || System.currentTimeMillis() - f.lastModified() > 6 * 60 * 60_000L }
+            if (stale(movieFile)) runCatching { c.downloadAll(false, movieFile) }
+            if (stale(seriesFile)) runCatching { c.downloadAll(true, seriesFile) }
+            val accept: (String) -> Boolean = { matches(it, words) }
+            val movies = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                runCatching { c.scan(movieFile, false, accept, 400).first }.getOrDefault(emptyList())
+            }.sortedByDescending { it.added }.take(60)
+            val series = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                runCatching { c.scan(seriesFile, true, accept, 120).second }.getOrDefault(emptyList())
+            }.take(60)
             _state.update { it.copy(movies = Section(movies), series = Section(series)) }
         } catch (e: kotlinx.coroutines.CancellationException) {
             throw e
