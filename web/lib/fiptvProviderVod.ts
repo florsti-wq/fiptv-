@@ -21,6 +21,8 @@ export type VodItem = {
   ext?: string;
   added?: number;
   categoryId?: string;
+  /** TMDB-Nummer, falls der Anbieter sie liefert → Detailseite mit Beschreibung und Quellenwahl */
+  tmdb?: number;
 };
 
 export type VodEpisode = {
@@ -128,7 +130,8 @@ export async function loadVodItems(provider: VodProvider, kind: VodKind, categor
       rating: Number.isFinite(rating) && rating > 0 ? rating.toFixed(1) : undefined,
       ext: entry.container_extension,
       added: Number(entry.added ?? entry.last_modified) || undefined,
-      categoryId: entry.category_id !== undefined ? String(entry.category_id) : undefined
+      categoryId: entry.category_id !== undefined ? String(entry.category_id) : undefined,
+      tmdb: (() => { const t = Number(entry.tmdb ?? entry.tmdb_id); return Number.isFinite(t) && t > 0 ? t : undefined; })()
     });
   }
   return items;

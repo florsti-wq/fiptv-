@@ -334,7 +334,8 @@ fun AppNavigation(
         composable(FiptvNav.VOD) {
             NavigationRailScreen(navigationRailInset, bottomInset = navigationRailBottomInset) {
                 com.arflix.tv.fiptv.vod.VodScreen(
-                    onPlay = { entry, start -> navController.navigate(fiptvPlayerRoute(entry, start)) }
+                    onPlay = { entry, start -> navController.navigate(fiptvPlayerRoute(entry, start)) },
+                    onOpenDetails = { type, id -> navController.navigate(Screen.Details.createRoute(type, id)) },
                 )
             }
         }

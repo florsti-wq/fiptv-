@@ -66,6 +66,8 @@ private val Accent = Color(0xFF4F7CFF)
 fun VodScreen(
     /** Abspielen; zweiter Wert = Startposition (Weiterschauen) */
     onPlay: (entry: FiptvResume.Entry, startPositionMs: Long?) -> Unit,
+    /** Detailseite (Beschreibung + Quellenwahl, Anbieter zuerst) – nur mit TMDB-Nummer vom Anbieter */
+    onOpenDetails: (com.arflix.tv.data.model.MediaType, Int) -> Unit = { _, _ -> },
     viewModel: VodViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -143,10 +145,15 @@ fun VodScreen(
                 state.series && state.seriesList.isEmpty() -> Message("Keine Serien in dieser Kategorie.")
                 !state.series && state.movies.isEmpty() -> Message("Keine Filme in dieser Kategorie.")
                 state.series -> PosterGrid(state.seriesList.map { PosterData(it.id, it.name, it.poster, it.rating) }) { idx ->
-                    viewModel.openSeries(state.seriesList[idx])
+                    val s = state.seriesList[idx]
+                    val tmdb = s.tmdbId
+                    if (tmdb != null && tmdb > 0) onOpenDetails(com.arflix.tv.data.model.MediaType.TV, tmdb) else viewModel.openSeries(s)
                 }
                 else -> PosterGrid(state.movies.map { PosterData(it.id, it.name, it.poster, it.rating) }) { idx ->
-                    viewModel.prepareMovie(state.movies[idx])?.let { (e, start) -> onPlay(e, start) }
+                    val m = state.movies[idx]
+                    val tmdb = m.tmdbId
+                    if (tmdb != null && tmdb > 0) onOpenDetails(com.arflix.tv.data.model.MediaType.MOVIE, tmdb)
+                    else viewModel.prepareMovie(m)?.let { (e, start) -> onPlay(e, start) }
                 }
             }
         }

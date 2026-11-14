@@ -40,7 +40,7 @@ function Poster({ src, name }: { src?: string; name: string }) {
 }
 
 export function ProviderVodScreen() {
-  const { settings, playStream, activeProfile } = useAppPick("settings", "playStream", "activeProfile");
+  const { settings, playStream, activeProfile, openDetails } = useAppPick("settings", "playStream", "activeProfile", "openDetails");
   const profileId = activeProfile?.id ?? "";
   useResumeSync(profileId);
   useResumeVersion();
@@ -115,8 +115,14 @@ export function ProviderVodScreen() {
       .catch((err) => setDetailError(friendlyError(err)));
   }, [provider, userAgent]);
 
+  // fIPTV: zuerst die Detailseite (Beschreibung + Quellenwahl: Anbieter zuerst, dann Stremio).
+  // Ohne TMDB-Nummer vom Anbieter wie bisher direkt abspielen bzw. Folgenliste.
   const activate = (item: VodItem) => {
     if (!provider) return;
+    if (item.tmdb) {
+      void openDetails({ id: item.tmdb, title: item.name, mediaType: item.kind === "movies" ? "movie" : "tv", image: item.poster, year: item.year });
+      return;
+    }
     if (item.kind === "movies") playStream(movieSource(provider, item, userAgent, profileId));
     else openSeries(item);
   };
