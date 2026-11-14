@@ -143,6 +143,17 @@ fun CrashReportScreen(
     val dashboardLink = if (firebase) "https://console.firebase.google.com/project/arvio-15c5a/crashlytics"
         else "https://sentry.io/issues/?query=id%3A${Uri.encode(crashId)}"
 
+    // fIPTV: die ersten Zeilen der Fehlerstelle mit anzeigen, damit man die Ursache findet (bleibt auf dem Gerät)
+    val crashContext = androidx.compose.ui.platform.LocalContext.current
+    val fiptvStackExcerpt = remember(crashId) {
+        val stack = crashContext.getSharedPreferences("arvio_crash_store", android.content.Context.MODE_PRIVATE)
+            .getString("fiptv_last_crash_stack", null).orEmpty()
+        val rt = Runtime.getRuntime()
+        val lines = stack.lines().drop(1).map { it.trim() }.filter { it.startsWith("at ") }
+        val own = lines.filter { "arflix" in it || "fiptv" in it }.take(8)
+        val top = lines.take(4)
+        if (lines.isEmpty()) "" else "\n**Stelle:**\n" + (top + own).distinct().joinToString("\n") { "`${it.removePrefix("at ").take(140)}`" }
+    }
     val formattedReport = remember(crashId, crashMsg, crashVersion, timeString, firebase) {
         """
         **fIPTV-Absturzbericht** (nur auf diesem Gerät, wird nirgendwohin gesendet)
@@ -150,7 +161,7 @@ fun CrashReportScreen(
         **Version:** $crashVersion
         **Time:** $timeString
         **Error:** $crashMsg
-        """.trimIndent()
+        """.trimIndent() + fiptvStackExcerpt
     }
 
     val webBridgeUrl = remember(crashId, crashVersion, crashMsg, crashTime, firebase) {

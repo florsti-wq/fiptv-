@@ -1060,7 +1060,8 @@ class IptvRepository @Inject constructor(
     private val epgUpcomingProgramLimit = 96
     private val epgRecentProgramLimit = 2
     private val xmlTvPastWindowMs = 3L * IptvGuideHistory.DAY_MS
-    private val xmlTvFutureWindowMs = 72L * 60L * 60_000L
+    // fIPTV: 36 statt 72 Stunden im Speicher – Fire TV lief mit mehreren Listen + großem EPG in OutOfMemory
+    private val xmlTvFutureWindowMs = 36L * 60L * 60_000L
     private val indexedGuideFutureWarmMs = 6L * 60L * 60_000L
     private val completeEpgCoverageTarget = 0.98f
     private val xtreamShortEpgLimit = 24
@@ -10710,7 +10711,7 @@ class IptvRepository @Inject constructor(
                         }
                         "desc" -> {
                             if (currentChannelKey != null) {
-                                currentDesc = parser.nextText().trim().ifBlank { null }
+                                currentDesc = parser.nextText().trim().ifBlank { null }?.take(300)
                             }
                         }
                         "icon" -> if (currentChannelKey != null) {
@@ -10910,7 +10911,7 @@ class IptvRepository @Inject constructor(
                     }
                     "desc" -> {
                         if (readingDesc) {
-                            currentDesc = textBuffer.toString().trim().ifBlank { null }
+                            currentDesc = textBuffer.toString().trim().ifBlank { null }?.take(300)
                             readingDesc = false
                             textBuffer.setLength(0)
                         }
