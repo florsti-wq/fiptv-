@@ -38,12 +38,13 @@ enum class StreamIntegrationType(
     );
 
     companion object {
+        // fIPTV: Filme/Serien des IPTV-Anbieters zuerst (viel deutscher Inhalt), Stremio danach als Alternative
         val DEFAULT_ORDER = listOf(
+            IPTV_VOD,
             HOME_SERVER,
             STREMIO_ADDONS,
             PLUGINS,
-            TELEGRAM,
-            IPTV_VOD
+            TELEGRAM
         )
 
         fun fromId(id: String?): StreamIntegrationType? {

@@ -46,6 +46,10 @@ class StreamIntegrationRepository @Inject constructor(
     private fun enabledKey(profileId: String, type: StreamIntegrationType) =
         profileManager.profileBooleanKeyFor(profileId, "$STREAM_INTEGRATION_ENABLED_PREFIX${type.id}")
 
+    /** fIPTV: gesetzt, sobald die Quellen-Reihenfolge selbst geändert wurde (dann gilt nur noch diese). */
+    private fun fiptvVodFirstKey(profileId: String) =
+        androidx.datastore.preferences.core.booleanPreferencesKey("fiptv_vod_order_custom_$profileId")
+
     private fun providerOrderKey(profileId: String) =
         profileManager.profileStringKeyFor(profileId, STREAM_PROVIDERS_CUSTOM_ORDER_PREFIX)
 
@@ -345,8 +349,11 @@ class StreamIntegrationRepository @Inject constructor(
                 }
             }
 
-            val total = orderedItems.size
-            orderedItems.mapIndexed { index, item ->
+            // fIPTV: Anbieter-VOD einmalig nach vorn – bis die Reihenfolge selbst geändert wird
+            val finalOrder = if (prefs[fiptvVodFirstKey(profileId)] == true) orderedItems
+                else orderedItems.sortedBy { if (it.type == StreamIntegrationType.IPTV_VOD) 0 else 1 }
+            val total = finalOrder.size
+            finalOrder.mapIndexed { index, item ->
                 val enabledOverride = prefs[providerEnabledKey(profileId, item.id)]
                 val finalEnabled = enabledOverride ?: run {
                     if (item.id.endsWith("_root") || item.id == "telegram") {
@@ -408,6 +415,7 @@ class StreamIntegrationRepository @Inject constructor(
         val serialized = mutableList.joinToString(",")
         context.settingsDataStore.edit { prefs ->
             prefs[providerOrderKey(profileId)] = serialized
+            prefs[fiptvVodFirstKey(profileId)] = true
         }
         invalidationBus.markDirty(
             scope = CloudSyncScope.PROFILE_SETTINGS,

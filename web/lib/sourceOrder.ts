@@ -9,7 +9,8 @@
 import type { HomeServerConfig, InstalledAddon, IptvPlaylistEntry } from "./types";
 
 export type IntegrationType = "home_server" | "stremio_addons" | "plugins" | "telegram" | "iptv_vod";
-export const DEFAULT_INTEGRATION_ORDER: IntegrationType[] = ["home_server", "stremio_addons", "plugins", "telegram", "iptv_vod"];
+// fIPTV: Anbieter-VOD zuerst (viel deutscher Inhalt), Stremio als Alternative danach
+export const DEFAULT_INTEGRATION_ORDER: IntegrationType[] = ["iptv_vod", "home_server", "stremio_addons", "plugins", "telegram"];
 
 export const INTEGRATION_LABELS: Record<IntegrationType, string> = {
   home_server: "Home server",
