@@ -51,6 +51,8 @@ type RawItem = {
   stream_id?: string | number;
   series_id?: string | number;
   name?: string;
+  tmdb?: string | number;
+  tmdb_id?: string | number;
   title?: string;
   stream_icon?: string;
   cover?: string;
