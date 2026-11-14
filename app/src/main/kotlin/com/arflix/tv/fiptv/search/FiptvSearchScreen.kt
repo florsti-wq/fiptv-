@@ -81,6 +81,7 @@ fun FiptvSearchScreen(
     val context = LocalContext.current
     val reminderKeys by FiptvReminders.keys.collectAsState()
     val fieldFocus = remember { FocusRequester() }
+    val view = androidx.compose.ui.platform.LocalView.current
     val voice = rememberVoiceSearch(
         onPartial = { viewModel.setQuery(it) },
         onResult = { viewModel.setQuery(it, immediate = true) },
@@ -125,7 +126,12 @@ fun FiptvSearchScreen(
                     if (voice.isAvailable) {
                         Chip(if (voice.isListening) "Höre zu …" else "Sprechen", selected = voice.isListening) { voice.toggle() }
                     }
-                    if (state.query.isNotEmpty()) Chip("✕", selected = false) { viewModel.setQuery("") }
+                    if (state.query.isNotEmpty()) Chip("✕", selected = false) {
+                        // fIPTV: erst den Fokus ins Suchfeld, dann (nach dem Tipp) leeren – der Knopf verschwindet
+                        // sonst mitten in der Touch-Geste, was auf dem Handy die App beenden konnte.
+                        runCatching { fieldFocus.requestFocus() }
+                        view.post { viewModel.setQuery("") }
+                    }
                 }
                 Text(
                     if (voice.isAvailable) "Tipp: Auf „Sprechen“ drücken und den Titel sagen."
