@@ -490,6 +490,7 @@ fun AppNavigation(
                         },
                         onPlay = { entry, start -> navController.navigate(fiptvPlayerRoute(entry, start)) },
                         onOpenCatalogSearch = { navController.navigate(FIPTV_CATALOG_SEARCH) },
+                        onOpenDetails = { mediaType, mediaId -> navController.navigate(Screen.Details.createRoute(mediaType, mediaId)) },
                     )
                 }
             }

@@ -75,6 +75,7 @@ fun FiptvSearchScreen(
     onTuneChannel: (channelId: String) -> Unit,
     onPlay: (entry: FiptvResume.Entry, startPositionMs: Long?) -> Unit,
     onOpenCatalogSearch: () -> Unit,
+    onOpenDetails: (com.arflix.tv.data.model.MediaType, Int) -> Unit = { _, _ -> },
     viewModel: FiptvSearchViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
@@ -181,6 +182,11 @@ fun FiptvSearchScreen(
         }
         section("Sender", state.channels, com.arflix.tv.fiptv.FiptvIcons.LiveTv) { list ->
             items(list, key = { it.id }) { ch -> ChannelCard(ch) { onTuneChannel(ch.id) } }
+        }
+        section("Filme & Serien (Stremio)", state.catalog, com.arflix.tv.fiptv.FiptvIcons.PlayCircle) { list ->
+            items(list, key = { "c${it.mediaType}${it.id}" }) { m ->
+                PosterCard(listOf(m.title, m.year).filter { it.isNotBlank() }.joinToString(" · "), m.image.ifBlank { null }) { onOpenDetails(m.mediaType, m.id) }
+            }
         }
         section("Filme beim Anbieter", state.movies, com.arflix.tv.fiptv.FiptvIcons.Film) { list ->
             items(list, key = { "m${it.id}" }) { m ->

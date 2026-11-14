@@ -24,6 +24,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.async
 import java.text.Normalizer
 import javax.inject.Inject
 
@@ -41,6 +43,8 @@ data class FiptvSearchState(
     val series: Section<VodSeries> = Section(emptyList()),
     val mediathek: Section<MediathekItem> = Section(emptyList()),
     val youtube: Section<YtVideo> = Section(emptyList()),
+    /** Filme & Serien über TMDB und die Kataloge der Stremio-Addons (öffnet die Detailseite mit Streams) */
+    val catalog: Section<com.arflix.tv.data.model.MediaItem> = Section(emptyList()),
 )
 
 /** Gemerkte Ziele für die Bereiche (Serie öffnen, Sendung öffnen, Video abspielen). */
@@ -71,6 +75,7 @@ class FiptvSearchViewModel @Inject constructor(
     private val iptvRepository: IptvRepository,
     @ApplicationContext private val context: Context,
     private val profileManager: ProfileManager,
+    private val mediaRepository: com.arflix.tv.data.repository.MediaRepository,
 ) : ViewModel() {
     private val _state = MutableStateFlow(FiptvSearchState())
     val state: StateFlow<FiptvSearchState> = _state.asStateFlow()
@@ -89,11 +94,12 @@ class FiptvSearchViewModel @Inject constructor(
             if (!immediate) delay(650)
             _state.update {
                 it.copy(epg = Section(), channels = Section(), movies = Section(), series = Section(), mediathek = Section(),
-                    youtube = if (YouTubeRepository.isConfigured) Section() else Section(emptyList()))
+                    youtube = if (YouTubeRepository.isConfigured) Section() else Section(emptyList()), catalog = Section())
             }
             launch { searchLive(query) }
             launch { searchVod(query) }
             launch { searchMediathek(query) }
+            launch { searchCatalog(query) }
             if (YouTubeRepository.isConfigured) launch { searchYouTube(query) }
         }
     }
@@ -165,6 +171,20 @@ class FiptvSearchViewModel @Inject constructor(
             throw e
         } catch (e: Exception) {
             _state.update { it.copy(movies = Section(emptyList(), e.message), series = Section(emptyList())) }
+        }
+    }
+
+    /** Stremio-Addon-Kataloge + TMDB: dieselbe Quelle wie die normale Katalogsuche. */
+    private suspend fun searchCatalog(query: String) = coroutineScope {
+        try {
+            val native = async(kotlinx.coroutines.Dispatchers.IO) { runCatching { mediaRepository.searchNativeAddonItems(query) }.getOrDefault(emptyList()) }
+            val tmdb = async(kotlinx.coroutines.Dispatchers.IO) { runCatching { mediaRepository.search(query) }.getOrDefault(emptyList()) }
+            val all = (tmdb.await() + native.await()).distinctBy { "${it.mediaType}:${it.id}" }.take(40)
+            _state.update { it.copy(catalog = Section(all)) }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            _state.update { it.copy(catalog = Section(emptyList(), "Katalogsuche nicht erreichbar")) }
         }
     }
 
