@@ -17,6 +17,7 @@ import { HOME_ROW_LIMIT } from "@/lib/tmdb";
 import type { CatalogConfig, Category, MediaItem } from "@/lib/types";
 import { RowBoundary } from "@/components/shell/ErrorBoundary";
 import { HomeHero } from "./HomeHero";
+import { buildRecommendationRows } from "@/lib/fiptvRecommendations";
 import "@/app/home.css";
 
 type ViewAll = { catalog: CatalogConfig | null; category: Category };
@@ -48,6 +49,26 @@ export function HomeScreen({ onCollectionOpenChange }: { onCollectionOpenChange?
     });
   }, [categories, watchlist, settings.watchlistOnHome]);
 
+  // fIPTV: Empfehlungen nach dem zuletzt Gesehenen, direkt unter „Weiterschauen“
+  const [recRows, setRecRows] = useState<Category[]>([]);
+  const recSignature = continueWatching.filter((m) => m.id > 0).slice(0, 4).map((m) => `${m.mediaType}:${m.id}`).join(",");
+  useEffect(() => {
+    if (!recSignature) { setRecRows([]); return undefined; }
+    let alive = true;
+    const timer = setTimeout(() => {
+      buildRecommendationRows(continueWatching).then((rows) => { if (alive) setRecRows(rows); }).catch(() => {});
+    }, 1500);
+    return () => { alive = false; clearTimeout(timer); };
+  }, [recSignature]); // eslint-disable-line react-hooks/exhaustive-deps
+  const homeRows = useMemo(() => {
+    const rows = recRows.map((row) => ({ ...row, items: row.items.filter((item) => kids.allows(item)) })).filter((row) => row.items.length >= 5);
+    if (!rows.length) return dedupedCategories;
+    const at = dedupedCategories.findIndex((c) => c.id === "continue_watching");
+    const out = [...dedupedCategories];
+    out.splice(at >= 0 ? at + 1 : 0, 0, ...rows);
+    return out;
+  }, [dedupedCategories, recRows, kids]);
+
   // Stable callbacks: MediaCard is memoised on them.
   const onCardFocus = useCallback((item: MediaItem) => {
     if (hoverTimer.current) clearTimeout(hoverTimer.current);
@@ -78,7 +99,7 @@ export function HomeScreen({ onCollectionOpenChange }: { onCollectionOpenChange?
     <div className="screen has-hero home-screen">
       <HomeHero controller={hero} fallback={fallbackHero && kids.allows(fallbackHero) ? fallbackHero : null}
         onOpen={openDetails} onPlay={playFromHero} />
-      {dedupedCategories.map((category) => {
+      {homeRows.map((category) => {
         // Presentation rows (Continue Watching, Watchlist) are complete lists;
         // they show the first HOME_ROW_LIMIT titles and open the rest in the grid.
         const capped = category.items.length > HOME_ROW_LIMIT;
