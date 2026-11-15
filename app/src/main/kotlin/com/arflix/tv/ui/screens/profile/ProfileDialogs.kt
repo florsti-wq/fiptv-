@@ -337,8 +337,31 @@ private fun ProfileDialogContent(
                             text = title,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White
+                            color = Color.White,
+                            modifier = Modifier.weight(1f)
                         )
+                        // fIPTV: Löschen zusätzlich oben – immer sichtbar, ohne Scrollen
+                        if (onDelete != null) {
+                            Box(
+                                modifier = Modifier
+                                    .padding(end = 10.dp)
+                                    .size(32.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0x33EF4444))
+                                    .clickable {
+                                        hideKeyboard()
+                                        onDelete()
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.DeleteOutline,
+                                    contentDescription = stringResource(R.string.delete),
+                                    tint = Color(0xFFF87171),
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
                         Box(
                             modifier = Modifier
                                 .size(32.dp)
