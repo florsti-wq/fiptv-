@@ -29,6 +29,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -293,7 +295,7 @@ private fun ProfileDialogContent(
     // fIPTV: verfügbare Höhe im App-Fenster messen (ohne Status- und Gestenleiste) – im Dialog-Fenster selbst
     // sind diese Werte 0, und die volle Bildschirmhöhe ließ die unteren Knöpfe aus dem Bild ragen.
     val fiptvDensity = androidx.compose.ui.platform.LocalDensity.current
-    val fiptvBars = androidx.compose.foundation.layout.WindowInsets.systemBars
+    val fiptvBars = WindowInsets.systemBars
     val fiptvMaxCardHeight = with(fiptvDensity) {
         (configuration.screenHeightDp.dp - (fiptvBars.getTop(this) + fiptvBars.getBottom(this)).toDp() - 40.dp).coerceAtLeast(320.dp)
     }
