@@ -72,6 +72,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -2204,7 +2205,95 @@ class HomeViewModel @Inject constructor(
         )
     }
 
+    // ── fIPTV: Empfehlungen nach dem, was zuletzt geschaut wurde ─────────────────────────────
+    // Quelle: „Weiterschauen“ (Filme und Serien). Für die zuletzt gesehenen Titel holt TMDB passende
+    // Empfehlungen; bereits Gesehenes wird ausgelassen. Zeilen stehen direkt unter „Weiterschauen“.
+    private var fiptvRecRows: List<Category> = emptyList()
+    private var fiptvRecSignature: String = ""
+
+    @OptIn(kotlinx.coroutines.FlowPreview::class)
+    private fun observeFiptvRecommendations() {
+        viewModelScope.launch {
+            _uiState
+                .map { st -> st.categories.firstOrNull { it.id == "continue_watching" }?.items.orEmpty()
+                    .filter { !it.isPlaceholder && it.id > 0 }
+                    .take(4)
+                    .joinToString(",") { "${it.mediaType}:${it.id}" } }
+                .distinctUntilChanged()
+                .debounce(2_000)
+                .collectLatest { signature ->
+                    if (signature.isBlank()) { fiptvRecRows = emptyList(); fiptvRecSignature = ""; return@collectLatest }
+                    if (signature != fiptvRecSignature) {
+                        fiptvRecRows = runCatching { buildFiptvRecommendationRows() }.getOrDefault(emptyList())
+                        fiptvRecSignature = signature
+                    }
+                    insertFiptvRecRows()
+                }
+        }
+        // Wird „Startseite“ neu geladen, fallen die Zeilen raus → wieder einsetzen (ohne neu zu laden)
+        viewModelScope.launch {
+            _uiState
+                .map { st -> st.categories.any { it.id == "continue_watching" } && st.categories.none { it.id.startsWith(FIPTV_REC_PREFIX) } }
+                .distinctUntilChanged()
+                .collect { missing -> if (missing && fiptvRecRows.isNotEmpty()) insertFiptvRecRows() }
+        }
+    }
+
+    private suspend fun buildFiptvRecommendationRows(): List<Category> = coroutineScope {
+        val cw = _uiState.value.categories.firstOrNull { it.id == "continue_watching" }?.items.orEmpty()
+            .filter { !it.isPlaceholder && it.id > 0 }
+            .distinctBy { "${it.mediaType}:${it.id}" }
+        if (cw.isEmpty()) return@coroutineScope emptyList()
+        val seen = cw.map { "${it.mediaType}:${it.id}" }.toSet()
+        val sources = cw.take(4)
+        val lists = sources.map { src ->
+            async { src to runCatching { mediaRepository.getSimilar(src.mediaType, src.id) }.getOrDefault(emptyList()) }
+        }.awaitAll()
+        val rows = mutableListOf<Category>()
+        val used = HashSet<String>(seen)
+        // 1) Mischung aus allen: Titel, die bei mehreren Quellen auftauchen, zuerst
+        val counts = HashMap<String, Int>()
+        val byKey = LinkedHashMap<String, MediaItem>()
+        lists.forEach { (_, items) -> items.forEach { m ->
+            val k = "${m.mediaType}:${m.id}"
+            if (k in seen) return@forEach
+            counts[k] = (counts[k] ?: 0) + 1
+            byKey.putIfAbsent(k, m)
+        } }
+        val mixed = byKey.entries.sortedByDescending { counts[it.key] ?: 0 }.map { it.value }.take(20)
+        if (mixed.size >= 6) {
+            rows += Category("${FIPTV_REC_PREFIX}mix", "Empfohlen für dich", mixed)
+            used += mixed.take(10).map { "${it.mediaType}:${it.id}" }
+        }
+        // 2) „Weil du … geschaut hast“ für die zwei zuletzt gesehenen Titel
+        lists.take(2).forEach { (src, items) ->
+            val rest = items.filter { "${it.mediaType}:${it.id}" !in used }.take(20)
+            if (rest.size >= 5) {
+                rows += Category("${FIPTV_REC_PREFIX}${src.mediaType}_${src.id}", "Weil du „${src.title}“ geschaut hast", rest)
+                used += rest.take(8).map { "${it.mediaType}:${it.id}" }
+            }
+        }
+        rows.forEach { row -> row.items.forEach { mediaRepository.cacheItem(it) } }
+        rows
+    }
+
+    private fun insertFiptvRecRows() {
+        val current = _uiState.value.categories
+        val without = current.filterNot { it.id.startsWith(FIPTV_REC_PREFIX) }
+        if (fiptvRecRows.isEmpty()) {
+            if (without.size != current.size) _uiState.value = _uiState.value.copy(categories = without)
+            return
+        }
+        val cwIndex = without.indexOfFirst { it.id == "continue_watching" }
+        val at = if (cwIndex >= 0) cwIndex + 1 else 0
+        val updated = without.toMutableList().apply { addAll(at.coerceAtMost(size), fiptvRecRows) }
+        if (updated.map { it.id } != current.map { it.id } || updated != current) {
+            _uiState.value = _uiState.value.copy(categories = updated)
+        }
+    }
+
     init {
+        observeFiptvRecommendations()
         observeHomeWatchlist()
         // Rows are published from many places (startup cache, catalog load, next pages, cloud
         // reloads), always with unmarked cards. Once a pass has run, new rows take over what it
@@ -5986,3 +6075,5 @@ private object HomeVMRegexes {
     val ALPHANUMERIC_REGEX = Regex("[^A-Za-z0-9_.-]")
     val FILE_NAME_REGEX = Regex("[^a-zA-Z0-9._-]")
 }
+
+private const val FIPTV_REC_PREFIX = "fiptv_rec_"
