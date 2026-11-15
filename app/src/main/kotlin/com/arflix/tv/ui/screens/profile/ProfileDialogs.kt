@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -305,11 +306,12 @@ private fun ProfileDialogContent(
             if (useMobileLayout) {
                 Column(
                     modifier = Modifier
-                        .padding(horizontal = 14.dp, vertical = 12.dp)
+                        // fIPTV: Statusleiste + Gestenleiste abziehen, sonst lagen „Abbrechen“/„Löschen“ unter dem Bildschirmrand
+                        .statusBarsPadding()
                         .navigationBarsPadding()
                         .imePadding()
+                        .padding(horizontal = 14.dp, vertical = 12.dp)
                         .fillMaxWidth()
-                        .heightIn(max = (configuration.screenHeightDp - 24).dp)
                         .clip(RoundedCornerShape(16.dp))
                         .background(BackgroundCard)
                         .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(16.dp))
