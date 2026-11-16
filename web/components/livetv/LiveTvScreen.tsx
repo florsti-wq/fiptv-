@@ -1,5 +1,6 @@
 "use client";
-import { channelCleanupEnabled, tidyChannels } from "@/lib/fiptvChannelCleanup";
+import { channelCleanupEnabled, cleanChannelName, tidyChannels } from "@/lib/fiptvChannelCleanup";
+import { animationsEnabled } from "@/lib/fiptvEffects";
 import { premiumAllows } from "@/lib/premiumGate";
 import { useTranslation } from "@/lib/i18n";
 import "./livetv.css";
@@ -379,6 +380,8 @@ export function LiveTvScreen() {
   zapState.current.all = channels;
   zapState.current.active = activeChannel;
   zapState.current.info = zapInfo;
+  const [zapCurtain, setZapCurtain] = useState<{ key: number; dir: 1 | -1; name: string } | null>(null);
+  const curtainTimer = useRef<number | null>(null);
   const digitTimer = useRef<number | null>(null);
   const infoTimer = useRef<number | null>(null);
   const showInfo = useCallback((channel: IptvChannel | null, ms = INFO_VISIBLE_MS) => {
@@ -410,7 +413,16 @@ export function LiveTvScreen() {
         state.lastZapAt = now;
         const list = state.list.some((channel) => channel.id === state.active!.id) ? state.list : state.all;
         const target = zapTarget(list, state.active.id, action.delta);
-        if (target) tune(target);
+        if (target) {
+          // fIPTV: Vorhang schiebt sich in Tastenrichtung durch
+          if (animationsEnabled()) {
+            const name = channelCleanupEnabled() ? cleanChannelName(target.name) : target.name;
+            setZapCurtain({ key: now, dir: action.delta, name: target.number ? `${target.number} · ${name}` : name });
+            if (curtainTimer.current) window.clearTimeout(curtainTimer.current);
+            curtainTimer.current = window.setTimeout(() => setZapCurtain(null), 1000);
+          }
+          tune(target);
+        }
         return true;
       }
       case "digit": {
@@ -727,7 +739,7 @@ export function LiveTvScreen() {
         onHideGroup={() => hideChannelGroup(menu.channel)}
         onClose={() => setMenu(null)}
       />}
-      <LiveZapOverlay digits={zapDigits} digitMatch={zapDigitMatch} info={zapInfo} guide={zapInfo ? nowNext[zapInfo.id] : undefined} clockFormat={settings.clockFormat} />
+      <LiveZapOverlay curtain={zapCurtain} digits={zapDigits} digitMatch={zapDigitMatch} info={zapInfo} guide={zapInfo ? nowNext[zapInfo.id] : undefined} clockFormat={settings.clockFormat} />
     </div>
   );
 }

@@ -1,0 +1,47 @@
+/* fIPTV: Animationen. Mit <html data-fiptv-anim="off"> (Einstellungen) abgeschaltet. */
+
+/* Startanimation */
+.fiptv-intro { position: fixed; inset: 0; z-index: 10000; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; transition: opacity 300ms ease; cursor: pointer; }
+.fiptv-intro.is-out { opacity: 0; }
+.fiptv-intro-logo { display: flex; gap: 2px; font-size: clamp(56px, 6vw, 96px); font-weight: 800; color: #fff; letter-spacing: 1px; }
+.fiptv-intro-logo span { display: inline-block; opacity: 0; transform: translateY(26px) scale(0.8); animation: fiptv-letter 420ms cubic-bezier(0.2, 0.9, 0.3, 1.4) forwards; }
+.fiptv-intro-logo span.is-accent { color: #5CE1E6; }
+.fiptv-intro-bar { height: 3px; width: 0; border-radius: 2px; background: #5CE1E6; animation: fiptv-bar 650ms ease 450ms forwards; }
+@keyframes fiptv-letter { to { opacity: 1; transform: none; } }
+@keyframes fiptv-bar { to { width: clamp(160px, 14vw, 240px); } }
+
+/* Profilauswahl: Profile kommen nacheinander herein */
+html:not([data-fiptv-anim="off"]) .profile-row > .profile-pick { animation: fiptv-pop-in 420ms cubic-bezier(0.2, 0.9, 0.3, 1.3) both; }
+html:not([data-fiptv-anim="off"]) .profile-row > .profile-pick:nth-child(2) { animation-delay: 110ms; }
+html:not([data-fiptv-anim="off"]) .profile-row > .profile-pick:nth-child(3) { animation-delay: 220ms; }
+html:not([data-fiptv-anim="off"]) .profile-row > .profile-pick:nth-child(4) { animation-delay: 330ms; }
+html:not([data-fiptv-anim="off"]) .profile-row > .profile-pick:nth-child(5) { animation-delay: 440ms; }
+html:not([data-fiptv-anim="off"]) .profile-row > .profile-pick:nth-child(6) { animation-delay: 550ms; }
+@keyframes fiptv-pop-in { from { opacity: 0; transform: translateY(24px) scale(0.6); } to { opacity: 1; transform: none; } }
+
+/* Kachel-Fokus: etwas größer, mit Nachfedern */
+html:not([data-fiptv-anim="off"]) .media-card .poster { transition: transform 360ms cubic-bezier(0.25, 1.6, 0.4, 1), box-shadow 180ms ease; }
+html:not([data-fiptv-anim="off"]) .media-card:focus-visible .poster { transform: scale(1.07); }
+html:not([data-fiptv-anim="off"]) .profile-pick .avatar-tile { transition: transform 360ms cubic-bezier(0.25, 1.6, 0.4, 1), border-color 150ms ease; }
+
+/* Favoriten-Stern ploppt beim Merken */
+html:not([data-fiptv-anim="off"]) .fiptv-star-pop { animation: fiptv-star 520ms ease both; }
+@keyframes fiptv-star { 0% { transform: scale(0.3); } 35% { transform: scale(1.9); color: #F2C94C; } 70% { transform: scale(0.85); } 100% { transform: scale(1); } }
+
+/* Senderwechsel: Vorhang schiebt sich in Tastenrichtung durch */
+.fiptv-zap-curtain { position: fixed; inset: 0; z-index: 135; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: #0e0e10; color: #fff; pointer-events: none; }
+.fiptv-zap-curtain strong { font-size: clamp(22px, 2.4vw, 40px); }
+.fiptv-zap-curtain i { width: 28px; height: 28px; border-radius: 50%; border: 3px solid #333; border-top-color: #5CE1E6; animation: fiptv-spin 800ms linear infinite; }
+.fiptv-zap-curtain.is-up { animation: fiptv-curtain-up 950ms cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+.fiptv-zap-curtain.is-down { animation: fiptv-curtain-down 950ms cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+@keyframes fiptv-curtain-up { 0% { transform: translateY(100%); } 22% { transform: translateY(0); } 72% { transform: translateY(0); } 100% { transform: translateY(-100%); } }
+@keyframes fiptv-curtain-down { 0% { transform: translateY(-100%); } 22% { transform: translateY(0); } 72% { transform: translateY(0); } 100% { transform: translateY(100%); } }
+@keyframes fiptv-spin { to { transform: rotate(360deg); } }
+
+/* Infoleiste gleitet von unten herein */
+html:not([data-fiptv-anim="off"]) .livetv-zap-info { animation: fiptv-banner-in 300ms cubic-bezier(0.3, 0.8, 0.3, 1) both; }
+@keyframes fiptv-banner-in { from { opacity: 0; transform: translateY(60px); } to { opacity: 1; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .fiptv-intro-logo span, .fiptv-intro-bar { animation-duration: 1ms; animation-delay: 0ms; }
+}

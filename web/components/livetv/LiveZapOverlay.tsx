@@ -6,7 +6,9 @@ import { formatGuideTime, type ClockFormat } from "@/lib/iptvGuide";
 import type { IptvChannel, IptvNowNext } from "@/lib/types";
 
 /** Fullscreen live player overlays: the typed channel number and the now/next card. */
-export function LiveZapOverlay({ digits, digitMatch, info, guide, clockFormat }: {
+export function LiveZapOverlay({ digits, digitMatch, info, guide, clockFormat, curtain }: {
+  /** fIPTV: Vorhang beim Senderwechsel (Schieben) */
+  curtain?: { key: number; dir: 1 | -1; name: string } | null;
   digits: string;
   digitMatch: IptvChannel | null;
   info: IptvChannel | null;
@@ -14,12 +16,15 @@ export function LiveZapOverlay({ digits, digitMatch, info, guide, clockFormat }:
   clockFormat?: ClockFormat;
 }) {
   const translateUi = useTranslation();
-  if (typeof document === "undefined" || (!digits && !info)) return null;
+  if (typeof document === "undefined" || (!digits && !info && !curtain)) return null;
   const now = guide?.now;
   const next = guide?.next ?? guide?.upcoming?.[0];
   const progress = now ? Math.min(100, Math.max(0, ((Date.now() - now.startUtcMillis) / Math.max(1, now.endUtcMillis - now.startUtcMillis)) * 100)) : 0;
   const time = (ms: number) => formatGuideTime(ms, clockFormat);
   return createPortal(<>
+    {curtain && <div key={curtain.key} className={`fiptv-zap-curtain ${curtain.dir > 0 ? "is-up" : "is-down"}`} aria-hidden="true">
+      <strong>{curtain.name}</strong><i />
+    </div>}
     {digits && <div className="livetv-zap-number" role="status" aria-live="assertive">
       <strong>{digits}</strong>
       <span>{digitMatch ? digitMatch.name : translateUi("Channel number")}</span>

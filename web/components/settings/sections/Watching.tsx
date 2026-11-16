@@ -6,6 +6,7 @@ import { CONTENT_LANGUAGE_OPTIONS } from "@/lib/i18n/languageOptions";
 import { languageCode, TRACK_LANGUAGES, trackLanguageName } from "@/lib/languages";
 import { useApp, useAppPick } from "@/lib/store";
 import type { AppSettings, QualityFilterConfig } from "@/lib/types";
+import { animationsEnabled, setAnimations, setSounds, soundsEnabled } from "@/lib/fiptvEffects";
 import { Group, Row, SecretInput, Segmented, Select, SectionHeader, Slider, Status, Swatches, Toggle, safeArray } from "../ui";
 
 type Set = (patch: Partial<AppSettings>) => void;
@@ -58,6 +59,14 @@ export function PlaybackSection() {
   return (
     <>
       <SectionHeader title="Playback" description="How fIPTV picks and starts a source." />
+      <Group title="Animationen und Töne">
+        <Row id="fiptv-animations" label="Animationen" hint="Startanimation, Profile, Kachel-Fokus, Senderwechsel und Favoriten-Stern." scope="all">
+          <EffectToggle kind="anim" />
+        </Row>
+        <Row id="fiptv-sounds" label="Töne" hint="Startklang, leises Klicken beim Navigieren, Ton bei OK und beim Merken von Favoriten." scope="all">
+          <EffectToggle kind="sound" />
+        </Row>
+      </Group>
       <Group title="Auto-play">
         <Row id="autoplay-next" label="Auto-play next episode" scope="all">
           <Toggle label="Auto-play next episode" value={settings.autoPlayNext} onChange={(v) => set({ autoPlayNext: v })} />
@@ -364,4 +373,9 @@ export function AiSubtitlesSection({ openSection }: { openSection: (id: string) 
       </Group>
     </>
   );
+}
+
+function EffectToggle({ kind }: { kind: "anim" | "sound" }) {
+  const [on, setOn] = useState(() => kind === "anim" ? animationsEnabled() : soundsEnabled());
+  return <Toggle label={kind === "anim" ? "Animationen" : "Töne"} value={on} onChange={(v) => { if (kind === "anim") setAnimations(v); else setSounds(v); setOn(v); }} />;
 }

@@ -2,6 +2,8 @@
 // und zeigt sie in einem eigenen Fenster. Sender und Streams laufen über den eigenen
 // Internetanschluss, genau wie beim Fire TV.
 const { app, BrowserWindow, Menu, ipcMain, shell, dialog } = require("electron");
+// fIPTV: Startklang darf ohne vorherigen Klick spielen
+app.commandLine.appendSwitch("autoplay-policy", "no-user-gesture-required");
 const { spawn } = require("node:child_process");
 const fs = require("node:fs");
 const http = require("node:http");

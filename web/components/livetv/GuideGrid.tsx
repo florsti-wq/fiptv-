@@ -1,7 +1,8 @@
 "use client";
+import { FavStar } from "@/components/fiptv/FavStar";
 import { channelCleanupEnabled, cleanChannelName } from "@/lib/fiptvChannelCleanup";
 import { useDirection, useTranslation } from "@/lib/i18n";
-import { ChevronLeft, ChevronRight, Play, Star } from "lucide-react";
+import { ChevronLeft, ChevronRight, Play } from "lucide-react";
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent } from "react";
 import { VirtualList } from "@/components/ui/VirtualList";
 import { ChannelLogo } from "@/components/livetv/ChannelLogo";
@@ -275,7 +276,7 @@ const GuideRow = memo(function GuideRow({ channel, favorite, guide, settled, sel
         {/* Pointer shortcut; remote users use the long-press menu, so it is not a focus stop. */}
         <button type="button" tabIndex={-1} className={`livetv-guide-star ${favorite ? "is-active" : ""}`} onClick={() => callbacks.onToggleFavorite(channel)}
           aria-label={favorite ? translateUi("Remove favorite") : translateUi("Add favorite")} title={favorite ? translateUi("Remove favorite") : translateUi("Add favorite")}>
-          <Star size={15} fill={favorite ? "currentColor" : "none"} />
+          <FavStar favorite={favorite} size={15} />
         </button>
       </div>
       <div className="livetv-guide-lane" style={{ width: `${totalWidth}px` }}>
@@ -352,7 +353,7 @@ export const ChannelRow = memo(function ChannelRow({ channel, guide, favorite, s
         <span className="livetv-row-play"><Play size={16} fill="currentColor" /></span>
       </button>
       <button type="button" className={`livetv-row-star ${favorite ? "is-active" : ""}`} onClick={() => callbacks.onToggleFavorite(channel)} aria-label={favorite ? translateUi("Remove favorite") : translateUi("Add favorite")}>
-        <Star size={17} fill={favorite ? "currentColor" : "none"} />
+        <FavStar favorite={favorite} size={17} />
       </button>
     </article>
   );

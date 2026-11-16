@@ -30,6 +30,7 @@ import { PremiumUsage as PremiumUsageView } from "./PremiumUsage";
 import { PartnerLinkHandler as PartnerLinkHandlerView } from "./PartnerLinkHandler";
 import { ScreenBoundary } from "./ErrorBoundary";
 import { GoalAlerts } from "@/components/fiptv/GoalAlerts";
+import { FiptvIntro } from "@/components/fiptv/FiptvIntro";
 import { OnScreenKeyboard } from "./OnScreenKeyboard";
 import { UpdateBanner } from "./UpdateBanner";
 import { notifySectionNavigation } from "./UpdateWatcher";
@@ -141,6 +142,8 @@ const ShellOverlays = memo(function ShellOverlays() {
       <OfflineNotice />
       {/* fIPTV: Tor-Hinweise für gefolgte Teams */}
       <GoalAlerts />
+      {/* fIPTV: Startanimation + Töne */}
+      <FiptvIntro />
     </>
   );
 });
