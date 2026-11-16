@@ -498,6 +498,7 @@ class MainActivity : ComponentActivity() {
                         onExitApp = { finish() }
                     )
                     com.arflix.tv.fiptv.FiptvIntroOverlay()
+                    com.arflix.tv.fiptv.FiptvSubscriptionReminderDialog()
                     }
                 }
             }

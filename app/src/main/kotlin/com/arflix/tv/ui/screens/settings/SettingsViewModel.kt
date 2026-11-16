@@ -1052,7 +1052,7 @@ class SettingsViewModel @Inject constructor(
                 smoothScrolling = smoothScrolling,
                 vodSearchEnabled = vodSearchEnabled,
                 epgVodActionsEnabled = epgVodActionsEnabled,
-                fallbackChannelLogosEnabled = prefs[IPTV_FALLBACK_LOGOS_ENABLED_KEY] ?: false,
+                fallbackChannelLogosEnabled = prefs[IPTV_FALLBACK_LOGOS_ENABLED_KEY] ?: true, // fIPTV: Standard an
             )
 
             refreshIntegrationUsernames(loadProfileId, isTrakt, isMdbList, isSimkl)

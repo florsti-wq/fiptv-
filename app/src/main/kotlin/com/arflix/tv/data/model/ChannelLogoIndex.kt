@@ -32,6 +32,22 @@ class ChannelLogoIndex(entries: List<ChannelLogoEntry>) {
         return lookup(guideTitle, country ?: guideCountry)
     }
 
+    /** fIPTV: Suche mit bereits aufgeräumtem Namen; Land aus dem Originalnamen, sonst eindeutige Treffer. */
+    fun candidatesCleaned(originalName: String, cleanedName: String): List<String> {
+        val country = channelIdentity(originalName).first
+        fun lookup(region: String?): List<String> {
+            val entries = byName[nameKey(cleanedName)].orEmpty().filter { region == null || canonicalCountry(it.country) == region }
+            return entries.firstOrNull()?.urls.orEmpty().filter { url -> entries.all { url in it.urls } }
+        }
+        if (country != null) return lookup(country)
+        // ohne Länderkürzel: bevorzugt Sender aus DE, AT, CH, LU, dann eindeutige Treffer
+        for (region in listOf("DE", "AT", "CH", "LU")) {
+            val hit = lookup(region)
+            if (hit.isNotEmpty()) return hit
+        }
+        return lookup(null)
+    }
+
     private fun channelIdentity(name: String): Pair<String?, String> {
         val cleaned = qualityPrefix.replace(name.trim(), "")
         val prefix = countryPrefix.find(cleaned)

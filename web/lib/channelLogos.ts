@@ -1,3 +1,4 @@
+import { cleanChannelName } from "@/lib/fiptvChannelCleanup";
 export type LogoEntry = [id: string, country: string, names: string[], urls: string[]];
 
 const countries: Record<string, string> = { UK: "GB", GB: "GB", USA: "US", US: "US", NL: "NL", NLD: "NL", DE: "DE", GER: "DE", FR: "FR", ES: "ES", IT: "IT", CA: "CA", AU: "AU", PT: "PT", BR: "BR", BE: "BE", CH: "CH", AT: "AT", IE: "IE", DK: "DK", DNK: "DK", SE: "SE", NO: "NO", FI: "FI", PL: "PL", RO: "RO", TR: "TR", IN: "IN", AR: "AR" };
@@ -20,8 +21,18 @@ export function channelLogoIndex(entries: LogoEntry[]) {
     const prefix = /^([A-Za-z]{2,3})(?:-[A-Za-z0-9]+)?\s*[|:]\s*/.exec(cleaned);
     const country = prefix && countries[prefix[1].toUpperCase()];
     const title = country ? cleaned.slice(prefix![0].length) : cleaned;
-    const matches = (names.get(nameKey(title)) ?? []).filter(entry => !country || (countries[entry[1].toUpperCase()] ?? entry[1].toUpperCase()) === country);
-    return matches.length === 1 ? matches[0][3] : [];
+    const region = (entry: LogoEntry) => countries[entry[1].toUpperCase()] ?? entry[1].toUpperCase();
+    const matches = (names.get(nameKey(title)) ?? []).filter(entry => !country || region(entry) === country);
+    if (matches.length === 1) return matches[0][3];
+    // fIPTV: Anbieter-Namen wie „DE: RTL UHD ▶ UHD“ – mit dem aufgeräumten Namen erneut suchen
+    const tidy = cleanChannelName(name);
+    if (!tidy || tidy === name) return [];
+    const all = names.get(nameKey(tidy)) ?? [];
+    for (const want of country ? [country] : ["DE", "AT", "CH", "LU"]) {
+      const hit = all.filter(entry => region(entry) === want);
+      if (hit.length >= 1) return hit[0][3];
+    }
+    return all.length === 1 ? all[0][3] : [];
   };
 }
 

@@ -2801,6 +2801,19 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             delay(if (isLowRamDevice) 15_000L else 10_000L)
             checkForAppUpdates(silent = true)
+            // fIPTV: Abo-Erinnerung (prüft selbst, ob heute schon gemeldet)
+            launch {
+                delay(30_000L)
+                while (true) {
+                    runCatching { com.arflix.tv.fiptv.FiptvSubscriptionReminder.check(context, iptvRepository) }
+                    delay(12 * 60 * 60 * 1000L)
+                }
+            }
+            // fIPTV: Fire TV bleibt oft tagelang offen – alle 6 Stunden erneut nachsehen
+            while (true) {
+                delay(6 * 60 * 60 * 1000L)
+                checkForAppUpdates(silent = true)
+            }
         }
 
     }

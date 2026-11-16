@@ -22,8 +22,8 @@ object ChannelLogoDirectory {
     private var fallbackPreference: StateFlow<Boolean>? = null
     @Synchronized fun fallbackEnabled(context: Context): StateFlow<Boolean> =
         fallbackPreference ?: context.applicationContext.settingsDataStore.data
-            .map { it[IPTV_FALLBACK_LOGOS_ENABLED_KEY] ?: false }
-            .stateIn(preferenceScope, SharingStarted.Eagerly, false)
+            .map { it[IPTV_FALLBACK_LOGOS_ENABLED_KEY] ?: true } // fIPTV: Standard an
+            .stateIn(preferenceScope, SharingStarted.Eagerly, true)
             .also { fallbackPreference = it }
 
     private val mutex = Mutex()
@@ -56,7 +56,11 @@ object ChannelLogoDirectory {
                 ChannelLogoIndex(entries).also { index = it }
             }
         }
-        directory.candidates(epgId, name, guideName)
+        directory.candidates(epgId, name, guideName).ifEmpty {
+            // fIPTV: Anbieter-Namen wie „DE: RTL UHD ▶ UHD“ – mit dem aufgeräumten Namen erneut suchen
+            val cleaned = com.arflix.tv.fiptv.live.FiptvChannelCleanup.displayName(name)
+            if (cleaned.isBlank() || cleaned == name) emptyList() else directory.candidatesCleaned(name, cleaned)
+        }
     }
 
     private fun JsonReader.strings(): List<String> {

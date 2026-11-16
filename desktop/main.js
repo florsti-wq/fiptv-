@@ -278,6 +278,8 @@ app.whenReady().then(() => {
   createWindow();
   launch();
   setTimeout(() => checkUpdates(false), 15000);
+  // fIPTV: läuft die App lange, alle 6 Stunden erneut nachsehen
+  setInterval(() => checkUpdates(false), 6 * 60 * 60 * 1000);
 });
 
 app.on("window-all-closed", () => { quitting = true; stopServer(); app.quit(); });
