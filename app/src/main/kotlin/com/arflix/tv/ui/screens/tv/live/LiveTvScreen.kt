@@ -2300,7 +2300,7 @@ fun LiveTvScreen(
     var sourcesLoading by remember { mutableStateOf(false) }
     var sourcesFailed by remember { mutableStateOf(false) }
     var sourcesVariants by remember { mutableStateOf<List<EnrichedChannel>>(emptyList()) }
-    LaunchedEffect(sourcesChannel, hiddenGroupSet, restrictedGroupSet) {
+    LaunchedEffect(sourcesChannel, hiddenGroupSet, restrictedGroupSet, variantGroups) {
         val channel = sourcesChannel ?: return@LaunchedEffect
         sourcesLoading = true
         sourcesFailed = false
@@ -2316,7 +2316,15 @@ fun LiveTvScreen(
                 // If the database already returns the channel, we use its natural order.
                 // We'll only force it if, for some strange reason, it doesn't appear in the results.
                 val baseList = if (candidates.any { it.id == channel.id }) candidates else listOf(channel) + candidates
-                baseList.distinctBy { it.id }
+                // fIPTV: the row's "N Quellen" comes from the name-based grouping. Variants such
+                // as "RTL UHD" and "RTL FHD" often carry different EPG ids, so the database
+                // lookup above misses them; merge the same group the list shows.
+                val named = variantGroups[variantGroupKey(channel)].orEmpty()
+                if (named.size > 1) {
+                    (named + baseList).distinctBy { it.id }
+                } else {
+                    baseList.distinctBy { it.id }
+                }
             }
         } catch (cancelled: kotlinx.coroutines.CancellationException) {
             throw cancelled
