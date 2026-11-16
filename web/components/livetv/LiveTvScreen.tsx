@@ -1,4 +1,5 @@
 "use client";
+import { channelCleanupEnabled, tidyChannels } from "@/lib/fiptvChannelCleanup";
 import { premiumAllows } from "@/lib/premiumGate";
 import { useTranslation } from "@/lib/i18n";
 import "./livetv.css";
@@ -228,7 +229,15 @@ export function LiveTvScreen() {
   useEffect(() => {
     if (!categories.some((category) => category.id === activeCategory)) setActiveCategory("all");
   }, [categories, activeCategory]);
-  const renderedChannels = visibleChannels;
+  // fIPTV: Senderliste aufräumen (Trenner aus, gleiche Sender zusammengefasst) – abschaltbar in den Einstellungen
+  const [tidyOn, setTidyOn] = useState(() => channelCleanupEnabled());
+  useEffect(() => {
+    const on = () => setTidyOn(channelCleanupEnabled());
+    window.addEventListener("fiptv-channel-cleanup", on);
+    return () => window.removeEventListener("fiptv-channel-cleanup", on);
+  }, []);
+  const renderedChannels = useMemo(() => (tidyOn && activeCategory !== "favorites" && activeCategory !== "recent" ? tidyChannels(visibleChannels).list : visibleChannels),
+    [tidyOn, visibleChannels, activeCategory]);
   const selectedChannel = channelById.get(selectedChannelId ?? "") ?? renderedChannels[0] ?? null;
   // While a channel plays in the docked mini-player the hero describes what is
   // playing; the focused row is a secondary "Selected" line.

@@ -4,6 +4,7 @@ import { Plus, RefreshCw, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "@/lib/i18n";
 import { xtreamPlaylistUrls } from "@/lib/iptvGuide";
+import { channelCleanupEnabled, setChannelCleanupEnabled } from "@/lib/fiptvChannelCleanup";
 import { fetchIptvAccountSummary, iptvPlaylistSignature, normalizeEpgInputs, type IptvAccountSummary } from "@/lib/iptv";
 import { moveIndex } from "@/lib/ordering";
 import { useAppPick } from "@/lib/store";
@@ -147,6 +148,9 @@ export function LiveTvSection() {
           <Select label="Sort order" value={settings.iptvSortOrder ?? "provider"} onChange={(v) => updateSettings({ iptvSortOrder: v as "provider" | "number" | "name" })}
             options={[["provider", "Provider order"], ["number", "Channel number"], ["name", "Alphabetical (A-Z)"]]} />
         </Row>
+        <Row id="fiptv-channel-cleanup" label="Senderliste aufräumen" hint="Gleiche Sender (HD/FHD/4K) zusammenfassen, Länderkürzel und Trenner ausblenden." scope="all">
+          <CleanupToggle />
+        </Row>
         <Row id="iptv-favorites-home" label="Favorite channels on Home" hint="Pin your starred channels to the top of Home." scope="all">
           <Toggle label="Favorite channels on Home" value={settings.iptvFavoritesOnHome !== false} onChange={(v) => updateSettings({ iptvFavoritesOnHome: v })} />
         </Row>
@@ -236,4 +240,9 @@ function IptvAccountBadge({ m3uUrl }: { m3uUrl: string }) {
   }
   const streams = info.max ? ` · ${info.max} ${info.max === 1 ? "Stream" : "Streams"}` : "";
   return <button type="button" className={`st-account-badge ${tone}`} title="Angaben deines Anbieters – klicken zum Aktualisieren" onClick={() => load(true)}>{text}{streams}</button>;
+}
+
+function CleanupToggle() {
+  const [on, setOn] = useState(() => channelCleanupEnabled());
+  return <Toggle label="Senderliste aufräumen" value={on} onChange={(v) => { setChannelCleanupEnabled(v); setOn(v); }} />;
 }

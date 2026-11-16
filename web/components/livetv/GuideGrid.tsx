@@ -1,4 +1,5 @@
 "use client";
+import { channelCleanupEnabled, cleanChannelName } from "@/lib/fiptvChannelCleanup";
 import { useDirection, useTranslation } from "@/lib/i18n";
 import { ChevronLeft, ChevronRight, Play, Star } from "lucide-react";
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent } from "react";
@@ -268,7 +269,7 @@ const GuideRow = memo(function GuideRow({ channel, favorite, guide, settled, sel
         <button type="button" className="livetv-guide-channel" title={channel.name} aria-label={[channel.number, channel.name, favorite ? translateUi("Favorite") : "", playing ? translateUi("Playing") : ""].filter(Boolean).join(", ")} {...press}>
           <small className="tv-guide-channel-number">{channel.number}</small>
           <span className="livetv-row-logo"><ChannelLogo channel={channel} size={16} /></span>
-          <strong>{channel.name}</strong>
+          <strong>{channelCleanupEnabled() ? cleanChannelName(channel.name) : channel.name}</strong>
           {playing && <Play size={13} fill="currentColor" className="livetv-guide-playing" aria-hidden="true" />}
         </button>
         {/* Pointer shortcut; remote users use the long-press menu, so it is not a focus stop. */}
@@ -335,7 +336,7 @@ export const ChannelRow = memo(function ChannelRow({ channel, guide, favorite, s
         <span className="livetv-row-copy">
           <span className="livetv-row-title">
             {channel.number && <small className="tv-guide-channel-number">{channel.number}</small>}
-            <strong>{channel.name}</strong>
+            <strong>{channelCleanupEnabled() ? cleanChannelName(channel.name) : channel.name}</strong>
             {channel.qualityLabel && <i className="livetv-quality">{channel.qualityLabel}</i>}
           </span>
           {now?.title ? (
