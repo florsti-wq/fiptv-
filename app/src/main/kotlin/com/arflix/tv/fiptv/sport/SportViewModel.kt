@@ -194,12 +194,15 @@ class SportViewModel @Inject constructor(
                         val now = System.currentTimeMillis()
                         val followedIds = _state.value.followed.map { it.id }.toSet()
                         // Live und die nächsten Tage; Vereins-Testspiele nur mit gefolgten Teams
-                        val hub = games.filter { it.isLive || (it.state == "pre" && it.startMs - now < 8 * 24 * 3600_000L) }
+                        // fIPTV: auch Ergebnisse von gestern/heute (für die Tagesauswahl „Gestern“)
+                        val yesterday = java.time.LocalDate.now().minusDays(1).atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+                        val hub = games.filter { it.isLive || (it.state == "pre" && it.startMs - now < 8 * 24 * 3600_000L) || (it.isFinished && it.startMs >= yesterday) }
                             .filter { it.league != SportLeague.CLUB_FRIENDLIES || it.home.team.id in followedIds || it.away.team.id in followedIds }
+                            .distinctBy { it.id }
                             .sortedWith(compareByDescending<SportMatch> { it.isLive }.thenBy { it.startMs })
-                            .take(80)
+                            .take(140)
                         _state.update { it.copy(hubGames = hub) }
-                        findSources(hub, force = quiet)
+                        findSources(hub.filter { !it.isFinished }.take(80), force = quiet)
                     }
                     is SportView.Sources -> {
                         if (_state.value.sources[view.match.id] == null) findSources(listOf(view.match))

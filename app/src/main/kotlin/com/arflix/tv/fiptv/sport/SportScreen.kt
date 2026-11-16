@@ -27,6 +27,10 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.ui.draw.clip
+import androidx.tv.material3.Icon
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
@@ -209,32 +213,79 @@ fun SportScreen(
 
 // ---------- Sports-Hub ----------
 
+private enum class HubDay(val label: String) { YESTERDAY("Gestern"), TODAY("Heute"), TOMORROW("Morgen"), LATER("Weitere Tage") }
+
+private val TodayBlue = Color(0xFF38BDF8)
+private val HubCard = Color(0xFF1B1F2A)
+
+private fun dayOffset(ms: Long): Long {
+    val zone = java.time.ZoneId.systemDefault()
+    val d = java.time.Instant.ofEpochMilli(ms).atZone(zone).toLocalDate()
+    return java.time.temporal.ChronoUnit.DAYS.between(java.time.LocalDate.now(zone), d)
+}
+
+/**
+ * fIPTV Sports-Hub: Tagesauswahl, Filter „Alle / Meine Teams“, Abschnitte „Live jetzt“, „Später heute“, „Beendet“
+ * und Karten mit Farbleiste, Status-Plakette, beiden Teams untereinander und Quellen-Zeile.
+ */
 private fun LazyListScope.hubItems(state: SportUiState, onOpen: (SportMatch) -> Unit) {
-    if (state.hubGames.isEmpty()) {
-        item { Text("Keine Spiele in den nächsten Tagen.", color = Muted, fontSize = 15.sp) }
-        return
+    item(key = "hub-controls") { HubControls(state, onOpen) }
+}
+
+@Composable
+private fun HubControls(state: SportUiState, onOpen: (SportMatch) -> Unit) {
+    var day by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(HubDay.TODAY) }
+    var mineOnly by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+    val games = state.hubGames.filter { m ->
+        val off = dayOffset(m.startMs)
+        val dayOk = when (day) {
+            HubDay.YESTERDAY -> off == -1L
+            HubDay.TODAY -> off == 0L || m.isLive
+            HubDay.TOMORROW -> off == 1L && !m.isLive
+            HubDay.LATER -> off >= 2L && !m.isLive
+        }
+        dayOk && (!mineOnly || state.isFollowed(m.home.team.id) || state.isFollowed(m.away.team.id))
     }
-    item {
+    val live = games.filter { it.isLive }
+    val upcoming = games.filter { it.state == "pre" }
+    val done = games.filter { it.isFinished }
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text(
-            if (state.sourcesLoading) "Suche passende Sender und Streams …" else "Spiel auswählen → Quelle wählen (TV-Sender oder Stremio)",
-            color = Muted.copy(alpha = 0.75f), fontSize = 12.sp,
+            buildString {
+                append(day.label); append(" · ${games.size} Spiele")
+                if (live.isNotEmpty()) append(" · ${live.size} live")
+                if (state.sourcesLoading) append(" · suche Sender und Streams …")
+            },
+            color = Muted, fontSize = 13.sp,
         )
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            HubDay.entries.forEach { d -> Pill(d.label, selected = d == day, onClick = { day = d }, small = true) }
+            Spacer(Modifier.width(14.dp))
+            Pill("Alle", selected = !mineOnly, onClick = { mineOnly = false }, small = true)
+            Pill("Meine Teams", selected = mineOnly, onClick = { mineOnly = true }, small = true, icon = com.arflix.tv.fiptv.FiptvIcons.Star)
+        }
+        if (games.isEmpty()) {
+            Text(if (mineOnly) "Keine Spiele deiner Teams an diesem Tag." else "Keine Spiele an diesem Tag.", color = Muted, fontSize = 15.sp,
+                modifier = Modifier.padding(top = 12.dp))
+        }
+        if (live.isNotEmpty()) HubSection("● Live jetzt", live, LiveRed, state, onOpen)
+        if (upcoming.isNotEmpty()) HubSection(
+            when (day) { HubDay.TODAY -> "Später heute"; HubDay.TOMORROW -> "Morgen"; HubDay.LATER -> "Demnächst"; else -> "Spiele" },
+            upcoming, Color.White, state, onOpen,
+        )
+        if (done.isNotEmpty()) HubSection("Beendet", done, Muted, state, onOpen)
     }
-    val sections = linkedMapOf<String, MutableList<SportMatch>>()
-    state.hubGames.forEach { m ->
-        val title = if (m.isLive) "● Jetzt live" else SportRepository.formatDay(m.startMs)
-        sections.getOrPut(title) { mutableListOf() }.add(m)
-    }
-    sections.forEach { (title, games) ->
-        item(key = "h$title") {
-            Column {
-                Text(title, color = if (title.startsWith("●")) LiveRed else Accent, fontSize = 16.sp, fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(top = 10.dp, bottom = 6.dp))
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp), contentPadding = PaddingValues(vertical = 8.dp, horizontal = 16.dp)) {
-                    items(games, key = { it.id }) { m ->
-                        GameCard(m, state.sources[m.id], state.sourcesLoading, followed = state.isFollowed(m.home.team.id) || state.isFollowed(m.away.team.id)) { onOpen(m) }
-                    }
-                }
+}
+
+@Composable
+private fun HubSection(title: String, games: List<SportMatch>, color: Color, state: SportUiState, onOpen: (SportMatch) -> Unit) {
+    Column(Modifier.padding(top = 8.dp)) {
+        Text("$title  ·  ${games.size}", color = color, fontSize = 17.sp, fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(start = 16.dp, bottom = 2.dp))
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(14.dp), contentPadding = PaddingValues(vertical = 10.dp, horizontal = 16.dp)) {
+            items(games, key = { it.id }) { m ->
+                GameCard(m, state.sources[m.id], state.sourcesLoading,
+                    followed = state.isFollowed(m.home.team.id) || state.isFollowed(m.away.team.id)) { onOpen(m) }
             }
         }
     }
@@ -243,45 +294,82 @@ private fun LazyListScope.hubItems(state: SportUiState, onOpen: (SportMatch) -> 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
 private fun GameCard(m: SportMatch, sources: GameSources?, searching: Boolean, followed: Boolean, onClick: () -> Unit) {
+    val today = dayOffset(m.startMs) == 0L
+    val (barA, barB) = when {
+        m.isLive -> LiveRed to Color(0xFFF59E0B)
+        m.isFinished -> Color(0xFF4B5563) to Color(0xFF4B5563)
+        today -> TodayBlue to Color(0xFF8B5CF6)
+        else -> Color(0xFF8B5CF6) to Color(0xFF6366F1)
+    }
     Surface(
         onClick = onClick,
-        modifier = (Modifier.width(250.dp).height(150.dp)).then(Modifier.fiptvTap(onClick)),
-        shape = ClickableSurfaceDefaults.shape(shape = RoundedCornerShape(12.dp)),
+        modifier = Modifier.width(290.dp).height(156.dp).then(Modifier.fiptvTap(onClick)),
+        shape = ClickableSurfaceDefaults.shape(shape = RoundedCornerShape(14.dp)),
         colors = ClickableSurfaceDefaults.colors(
-            containerColor = BackgroundCard, contentColor = Color.White,
-            focusedContainerColor = Color(0xFF2A2E3A), focusedContentColor = Color.White,
+            containerColor = HubCard, contentColor = Color.White,
+            focusedContainerColor = Color(0xFF262B38), focusedContentColor = Color.White,
         ),
-        scale = ClickableSurfaceDefaults.scale(focusedScale = 1.06f),
+        scale = ClickableSurfaceDefaults.scale(focusedScale = 1.05f),
         border = focusBorder(),
     ) {
-        Column(Modifier.fillMaxSize().padding(10.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(m.league.label, color = Muted, fontSize = 11.sp, modifier = Modifier.weight(1f), maxLines = 1)
-                if (followed) Text("★ ", color = Color(0xFFFFC107), fontSize = 12.sp)
-                if (m.isLive) Text("● LIVE ${SportRepository.statusText(m)}", color = LiveRed, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+        Column(Modifier.fillMaxSize()) {
+            Row(Modifier.fillMaxWidth().height(3.dp)) {
+                Box(Modifier.weight(1f).fillMaxHeight().background(barA))
+                Box(Modifier.weight(1f).fillMaxHeight().background(barB))
             }
-            Row(Modifier.fillMaxWidth().weight(1f), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceEvenly) {
-                Logo(m.home.team.logo, 46)
-                Text(
-                    if (m.state == "pre") SportRepository.formatTime(m.startMs) else "${m.home.score ?: "–"}:${m.away.score ?: "–"}",
-                    color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold,
-                )
-                Logo(m.away.team.logo, 46)
+            Column(Modifier.fillMaxSize().padding(horizontal = 12.dp, vertical = 9.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    val (badge, badgeColor) = when {
+                        m.isLive -> "● LIVE" to LiveRed
+                        m.isFinished -> "ENDE" to Color(0xFF4B5563)
+                        today -> "HEUTE" to TodayBlue
+                        else -> SportRepository.formatDay(m.startMs).uppercase().take(10) to Color(0xFF6366F1)
+                    }
+                    Text(badge, color = if (m.isLive || m.isFinished) Color.White else badgeColor, fontSize = 10.sp, fontWeight = FontWeight.Bold,
+                        modifier = Modifier.clip(RoundedCornerShape(5.dp))
+                            .background(if (m.isLive) LiveRed else badgeColor.copy(alpha = if (m.isFinished) 1f else 0.18f))
+                            .padding(horizontal = 6.dp, vertical = 2.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(m.league.label, color = Muted, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                    if (followed) Text("★ ", color = Color(0xFFFFC107), fontSize = 12.sp)
+                    Text(
+                        when { m.isLive -> SportRepository.statusText(m); m.isFinished -> "Ende"; else -> SportRepository.formatTime(m.startMs) },
+                        color = if (m.isLive) Color(0xFFF59E0B) else TodayBlue, fontSize = 12.sp, fontWeight = FontWeight.Bold,
+                    )
+                }
+                Spacer(Modifier.height(8.dp))
+                TeamLine(m.home, showScore = m.state != "pre")
+                Spacer(Modifier.height(5.dp))
+                TeamLine(m.away, showScore = m.state != "pre")
+                Spacer(Modifier.weight(1f))
+                Box(Modifier.fillMaxWidth().height(1.dp).background(Color.White.copy(alpha = 0.07f)))
+                Spacer(Modifier.height(6.dp))
+                val src = when {
+                    m.isFinished -> "Spieldetails ansehen"
+                    sources == null && searching -> "Suche Sender …"
+                    sources == null || sources.count == 0 -> "Sender suchen"
+                    else -> listOfNotNull(
+                        sources.tv.size.takeIf { it > 0 }?.let { "$it Sender" },
+                        sources.addons.size.takeIf { it > 0 }?.let { "$it Stremio" },
+                    ).joinToString(" · ")
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(src, color = if ((sources?.count ?: 0) > 0 && !m.isFinished) Accent else Muted, fontSize = 11.sp, maxLines = 1, modifier = Modifier.weight(1f))
+                    Icon(com.arflix.tv.fiptv.FiptvIcons.Search, contentDescription = null, tint = Muted, modifier = Modifier.size(13.dp))
+                }
             }
-            Text("${m.home.team.name} – ${m.away.team.name}", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 1,
-                overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
-            val src = when {
-                sources == null && searching -> "Quellen werden gesucht …"
-                sources == null -> " "
-                sources.count == 0 -> "keine Quelle gefunden"
-                else -> listOfNotNull(
-                    sources.tv.size.takeIf { it > 0 }?.let { "$it Sender" },
-                    sources.addons.size.takeIf { it > 0 }?.let { "$it Stremio" },
-                ).joinToString("  ")
-            }
-            Text(src, color = if ((sources?.count ?: 0) > 0) Accent else Muted, fontSize = 11.sp, maxLines = 1,
-                textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
         }
+    }
+}
+
+@Composable
+private fun TeamLine(side: SportSide, showScore: Boolean) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Logo(side.team.logo, 22)
+        Spacer(Modifier.width(8.dp))
+        Text(side.team.name, color = Color.White, fontSize = 14.sp, fontWeight = if (side.winner) FontWeight.ExtraBold else FontWeight.SemiBold,
+            maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+        if (showScore) Text(side.score ?: "–", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold)
     }
 }
 
