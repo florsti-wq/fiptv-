@@ -151,6 +151,49 @@ class XtreamVodClient(private val account: XtreamAccount) {
         return movies to shows
     }
 
+    /** fIPTV: die zuletzt hinzugefügten Filme (nur mit TMDB-Nummer), ohne die ganze Liste im Speicher. */
+    fun newestMovies(file: java.io.File, limit: Int): List<VodMovie> {
+        if (!file.exists()) return emptyList()
+        val heap = java.util.PriorityQueue<VodMovie>(limit + 1, compareBy { it.added })
+        val seenTmdb = HashSet<Int>()
+        android.util.JsonReader(java.io.InputStreamReader(java.io.BufferedInputStream(file.inputStream(), 64 * 1024), Charsets.UTF_8)).use { r ->
+            r.isLenient = true
+            if (r.peek() != android.util.JsonToken.BEGIN_ARRAY) return emptyList()
+            r.beginArray()
+            while (r.hasNext()) {
+                if (r.peek() != android.util.JsonToken.BEGIN_OBJECT) { r.skipValue(); continue }
+                var id: Int? = null; var name = ""; var icon: String? = null; var tmdb: Int? = null; var added = 0L; var ext: String? = null; var rating: String? = null
+                r.beginObject()
+                while (r.hasNext()) {
+                    val k = r.nextName()
+                    if (k !in setOf("stream_id", "name", "stream_icon", "tmdb", "tmdb_id", "added", "container_extension", "rating")) { r.skipValue(); continue }
+                    val v = when (r.peek()) {
+                        android.util.JsonToken.NULL -> { r.nextNull(); null }
+                        android.util.JsonToken.STRING, android.util.JsonToken.NUMBER -> r.nextString()
+                        else -> { r.skipValue(); null }
+                    }
+                    when (k) {
+                        "stream_id" -> id = v?.toDoubleOrNull()?.toInt()
+                        "name" -> name = v?.trim().orEmpty()
+                        "stream_icon" -> icon = v?.trim()?.takeIf { it.startsWith("http", true) }
+                        "tmdb", "tmdb_id" -> if (tmdb == null) tmdb = v?.toDoubleOrNull()?.toInt()?.takeIf { it > 0 }
+                        "added" -> added = v?.toLongOrNull() ?: 0L
+                        "container_extension" -> ext = v
+                        "rating" -> rating = v
+                    }
+                }
+                r.endObject()
+                val t = tmdb ?: continue
+                val sid = id ?: continue
+                if (added <= 0L || name.isEmpty() || !seenTmdb.add(t)) continue
+                if (heap.size >= limit && added <= (heap.peek()?.added ?: 0L)) continue
+                heap.add(VodMovie(sid, name, icon, rating, ext ?: "mp4", t, null, added))
+                if (heap.size > limit) heap.poll()
+            }
+        }
+        return heap.sortedByDescending { it.added }
+    }
+
     suspend fun categories(series: Boolean): List<VodCategory> {
         val arr = get(if (series) "get_series_categories" else "get_vod_categories") as? JSONArray ?: return emptyList()
         return arr.objects().mapNotNull { o ->

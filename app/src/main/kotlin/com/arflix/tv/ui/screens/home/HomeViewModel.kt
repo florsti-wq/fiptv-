@@ -2233,11 +2233,30 @@ class HomeViewModel @Inject constructor(
         // Wird „Startseite“ neu geladen, fallen die Zeilen raus → wieder einsetzen (ohne neu zu laden)
         viewModelScope.launch {
             _uiState
-                .map { st -> st.categories.any { it.id == "continue_watching" } && st.categories.none { it.id.startsWith(FIPTV_REC_PREFIX) } }
+                .map { st -> st.categories.isNotEmpty() && st.categories.none { it.id.startsWith(FIPTV_REC_PREFIX) } }
                 .distinctUntilChanged()
-                .collect { missing -> if (missing && fiptvRecRows.isNotEmpty()) insertFiptvRecRows() }
+                .collect { missing -> if (missing && (fiptvRecRows.isNotEmpty() || fiptvNewRow != null)) insertFiptvRecRows() }
+        }
+        // „Neu bei deinem Anbieter“: neueste Filme des IPTV-Anbieters (mit TMDB-Nummer → Detailseite)
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            kotlinx.coroutines.delay(8_000)
+            val row = runCatching {
+                val files = com.arflix.tv.fiptv.vod.FiptvVodFiles.ensure(context, iptvRepository) ?: return@runCatching null
+                val newest = files.client.newestMovies(files.movies, 30)
+                if (newest.size < 5) return@runCatching null
+                Category("${FIPTV_REC_PREFIX}provider_new", "Neu bei deinem Anbieter", newest.map { m ->
+                    MediaItem(id = m.tmdbId ?: 0, title = m.name.replace(Regex("""^\s*[A-Z]{2,3}\s*[|:\-]\s*"""), "").trim(),
+                        mediaType = MediaType.MOVIE, image = m.poster.orEmpty())
+                }.filter { it.id > 0 })
+            }.getOrNull()
+            if (row != null) {
+                fiptvNewRow = row
+                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) { insertFiptvRecRows() }
+            }
         }
     }
+
+    private var fiptvNewRow: Category? = null
 
     private suspend fun buildFiptvRecommendationRows(): List<Category> = coroutineScope {
         val cw = _uiState.value.categories.firstOrNull { it.id == "continue_watching" }?.items.orEmpty()
@@ -2280,13 +2299,14 @@ class HomeViewModel @Inject constructor(
     private fun insertFiptvRecRows() {
         val current = _uiState.value.categories
         val without = current.filterNot { it.id.startsWith(FIPTV_REC_PREFIX) }
-        if (fiptvRecRows.isEmpty()) {
+        val extra = fiptvRecRows + listOfNotNull(fiptvNewRow)
+        if (extra.isEmpty()) {
             if (without.size != current.size) _uiState.value = _uiState.value.copy(categories = without)
             return
         }
         val cwIndex = without.indexOfFirst { it.id == "continue_watching" }
         val at = if (cwIndex >= 0) cwIndex + 1 else 0
-        val updated = without.toMutableList().apply { addAll(at.coerceAtMost(size), fiptvRecRows) }
+        val updated = without.toMutableList().apply { addAll(at.coerceAtMost(size), extra) }
         if (updated.map { it.id } != current.map { it.id } || updated != current) {
             _uiState.value = _uiState.value.copy(categories = updated)
         }

@@ -149,21 +149,13 @@ class FiptvSearchViewModel @Inject constructor(
     private suspend fun searchVod(query: String) {
         val words = normalizeForSearch(query).split(' ').filter { it.isNotBlank() }
         try {
-            val account = iptvRepository.fiptvXtreamAccounts().firstOrNull()
-            if (account == null) {
+            val files = com.arflix.tv.fiptv.vod.FiptvVodFiles.ensure(context, iptvRepository)
+            if (files == null) {
                 _state.update { it.copy(movies = Section(emptyList()), series = Section(emptyList())) }
                 return
             }
-            val key = "${account.sourceId}|${account.username}|${account.baseUrl}"
-            val tag = Integer.toHexString(key.hashCode())
-            val dir = java.io.File(context.cacheDir, "fiptv_vod").apply { mkdirs() }
-            val movieFile = java.io.File(dir, "movies_$tag.json")
-            val seriesFile = java.io.File(dir, "series_$tag.json")
-            val c = VodIndex.client?.takeIf { VodIndex.key == key } ?: XtreamVodClient(account)
-            VodIndex.client = c; VodIndex.key = key
-            val stale = { f: java.io.File -> !f.exists() || f.length() < 3 || System.currentTimeMillis() - f.lastModified() > 6 * 60 * 60_000L }
-            if (stale(movieFile)) runCatching { c.downloadAll(false, movieFile) }
-            if (stale(seriesFile)) runCatching { c.downloadAll(true, seriesFile) }
+            val c = files.client; val movieFile = files.movies; val seriesFile = files.series
+            VodIndex.client = c
             val accept: (String) -> Boolean = { matches(it, words) }
             val movies = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                 runCatching { c.scan(movieFile, false, accept, 400).first }.getOrDefault(emptyList())
