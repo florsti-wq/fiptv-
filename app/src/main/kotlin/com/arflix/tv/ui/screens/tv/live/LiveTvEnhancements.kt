@@ -232,6 +232,9 @@ private fun channelPlaylistId(channel: EnrichedChannel, knownIds: Set<String>): 
 }
 
 fun variantGroupKey(channel: EnrichedChannel): String {
+    // fIPTV: beim Aufräumen eigener Schlüssel (Gruppe + bereinigter Name). Der ARVIO-Schlüssel fällt auf die
+    // EPG-ID zurück, die z. B. „RTL HD/FHD/RAW“ mit RTL-Einträgen anderer Gruppen teilt → falsche Varianten.
+    if (com.arflix.tv.fiptv.live.FiptvChannelCleanup.enabled) return fiptvVariantKey(channel)
     return channel.source.variantKey
         ?.trim()
         ?.takeIf { it.isNotBlank() }
@@ -252,13 +255,13 @@ fun buildVariantGroups(channels: List<EnrichedChannel>): Map<String, List<Enrich
         byKey.getOrPut(key) { ArrayList(2) }.add(ch)
     }
     val out = HashMap<String, List<EnrichedChannel>>()
-    byKey.forEach { (_, list) ->
+    byKey.forEach { (key, list) ->
         if (list.size < 2) return@forEach
         val sorted = list.sortedByDescending { ch ->
             val real = com.arflix.tv.fiptv.live.FiptvChannelCleanup.measuredQuality(ch.id)
             com.arflix.tv.fiptv.live.FiptvChannelCleanup.rank(real ?: ch.quality) * 10 + if (real != null) 1 else 0
         }
-        list.forEach { ch -> out[variantGroupKey(ch)] = sorted }
+        out[key] = sorted
     }
     return out
 }
