@@ -1434,6 +1434,7 @@ fun HomeScreen(
         }
         // On mobile, the hero backdrop is rendered inline inside MobileHomeRowsLayer — skip the fixed backdrop.
         // On TV, fill the entire screen with the backdrop.
+        if (isMobile || netflixHome) com.arflix.tv.fiptv.FiptvSpaceBackground()
         if (!isMobile && !netflixHome) {
             val backdropModifier = Modifier.fillMaxSize()
             Box(modifier = backdropModifier) {
@@ -1545,6 +1546,8 @@ fun HomeScreen(
                 )
             }
         } // end if (!isMobile) backdrop
+        // fIPTV: Weltraum-Hintergrund – auf dem TV unter den Reihen, oben blendet er ins Titelbild aus
+        if (!isMobile && !netflixHome) com.arflix.tv.fiptv.FiptvSpaceBackground(fadeTop = true)
 
         // Netflix mode has no backdrop, but a focused service card still previews behind
         // the rows, as on the classic Home. Channels preview inside their expanded card.

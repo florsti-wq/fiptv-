@@ -25,7 +25,10 @@ object AvatarRegistry {
      * IDs 1-24 are the original set (backward compatible).
      * IDs 25-84 are the expanded set.
      */
-    val categories: List<Pair<String, List<Int>>> = listOf(
+    /** fIPTV: Auswahl zeigt die animierten Profilbilder (alte IDs bleiben gültig). */
+    val categories: List<Pair<String, List<Int>>> get() = FiptvAnimatedAvatars.categories
+
+    val legacyCategories: List<Pair<String, List<Int>>> = listOf(
         "Animals" to listOf(1, 2, 3, 4, 5, 6, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39),
         "Characters" to listOf(7, 8, 9, 10, 11, 12, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54),
         "Media" to listOf(13, 14, 15, 16, 17, 18, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69),
@@ -134,7 +137,10 @@ object AvatarRegistry {
     /**
      * Gradient background colors per avatar - dark tones that complement each 3D icon.
      */
-    fun gradientColors(avatarId: Int): Pair<Color, Color> = when (avatarId) {
+    fun gradientColors(avatarId: Int): Pair<Color, Color> =
+        FiptvAnimatedAvatars.resolve(avatarId)?.let { FiptvAnimatedAvatars.gradient(it) } ?: legacyGradient(avatarId)
+
+    private fun legacyGradient(avatarId: Int): Pair<Color, Color> = when (avatarId) {
         // Original Animals
         1  -> Color(0xFF2A1800) to Color(0xFF3D2508)  // Cat
         2  -> Color(0xFF1A1508) to Color(0xFF2D2010)  // Dog
@@ -249,7 +255,23 @@ fun avatarCategoryLabel(raw: String): String = when (raw) {
  * Renders an avatar image from drawable resources.
  */
 @Composable
-fun AvatarIcon(avatarId: Int, modifier: Modifier = Modifier) {
+fun AvatarIcon(avatarId: Int, modifier: Modifier = Modifier, animated: Boolean = false) {
+    // fIPTV: animierte Fluent-Version, falls vorhanden
+    val anim = FiptvAnimatedAvatars.resolve(avatarId)
+    if (anim != null) {
+        val context = androidx.compose.ui.platform.LocalContext.current
+        val play = animated && com.arflix.tv.fiptv.FiptvEffects.animations
+        coil.compose.AsyncImage(
+            model = coil.request.ImageRequest.Builder(context)
+                .data(FiptvAnimatedAvatars.assetUri(anim, play))
+                .crossfade(false)
+                .build(),
+            contentDescription = stringResource(R.string.component_avatar),
+            modifier = modifier.fillMaxSize(),
+            contentScale = ContentScale.Fit,
+        )
+        return
+    }
     Image(
         painter = painterResource(id = AvatarRegistry.getDrawableRes(avatarId)),
         contentDescription = stringResource(R.string.component_avatar),

@@ -1,3 +1,5 @@
+import { ANIM_AVATAR_CATEGORIES, animAvatarGradient, animAvatarSrc, resolveAnimAvatar } from "@/lib/fiptvAvatars";
+import { animationsEnabled } from "@/lib/fiptvEffects";
 import type { Profile } from "./types";
 
 /** Cloud shares profiles, not which person is currently using this device. */
@@ -26,14 +28,12 @@ export function colorToCss(argb: number): string {
 
 export const TOTAL_AVATARS = 84;
 
-export const avatarCategories: Array<{ label: string; ids: number[] }> = [
-  { label: "Animals", ids: [1, 2, 3, 4, 5, 6, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39] },
-  { label: "Characters", ids: [7, 8, 9, 10, 11, 12, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54] },
-  { label: "Media", ids: [13, 14, 15, 16, 17, 18, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69] },
-  { label: "Nature", ids: [19, 20, 21, 22, 23, 24, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84] }
-];
+/** fIPTV: Auswahl zeigt die animierten Profilbilder (alte IDs bleiben gültig). */
+export const avatarCategories: Array<{ label: string; ids: number[] }> = ANIM_AVATAR_CATEGORIES;
 
-export function avatarSrc(avatarId: number): string {
+export function avatarSrc(avatarId: number, animated = false): string {
+  const anim = resolveAnimAvatar(avatarId);
+  if (anim != null) return animAvatarSrc(anim, animated && animationsEnabled());
   return `/avatars/avatar_${avatarId}.png`;
 }
 
@@ -63,6 +63,8 @@ const AVATAR_GRADIENTS: Record<number, [string, string]> = {
 };
 
 export function avatarGradient(avatarId: number): [string, string] {
+  const anim = resolveAnimAvatar(avatarId);
+  if (anim != null) return animAvatarGradient(anim);
   return AVATAR_GRADIENTS[avatarId] ?? ["#1a1a1a", "#2d2d2d"];
 }
 

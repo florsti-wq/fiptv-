@@ -37,7 +37,8 @@ fun ProfileAvatarVisual(
     profile: Profile,
     modifier: Modifier = Modifier,
     letterFontSize: TextUnit = 14.sp,
-    iconPadding: Dp = 4.dp
+    iconPadding: Dp = 4.dp,
+    animated: Boolean = false,
 ) {
     val context = LocalContext.current
     val avatarManager = remember(context) {
@@ -98,7 +99,8 @@ fun ProfileAvatarVisual(
             ) {
                 AvatarIcon(
                     avatarId = profile.avatarId,
-                    modifier = Modifier.fillMaxSize().padding(iconPadding)
+                    modifier = Modifier.fillMaxSize().padding(iconPadding),
+                    animated = animated,
                 )
             }
         } else {

@@ -6,7 +6,7 @@ import { CONTENT_LANGUAGE_OPTIONS } from "@/lib/i18n/languageOptions";
 import { languageCode, TRACK_LANGUAGES, trackLanguageName } from "@/lib/languages";
 import { useApp, useAppPick } from "@/lib/store";
 import type { AppSettings, QualityFilterConfig } from "@/lib/types";
-import { animationsEnabled, setAnimations, setSounds, soundsEnabled } from "@/lib/fiptvEffects";
+import { animationsEnabled, setAnimations, setSounds, setSpaceMode, setSpacePalette, soundsEnabled, SPACE_PALETTES, spaceMode, spacePalette } from "@/lib/fiptvEffects";
 import { Group, Row, SecretInput, Segmented, Select, SectionHeader, Slider, Status, Swatches, Toggle, safeArray } from "../ui";
 
 type Set = (patch: Partial<AppSettings>) => void;
@@ -62,6 +62,12 @@ export function PlaybackSection() {
       <Group title="Animationen und Töne">
         <Row id="fiptv-animations" label="Animationen" hint="Startanimation, Profile, Kachel-Fokus, Senderwechsel und Favoriten-Stern." scope="all">
           <EffectToggle kind="anim" />
+        </Row>
+        <Row id="fiptv-space" label="Hintergrund" hint="Animierter Weltraum hinter Profilauswahl, Startseite und Einstellungen." scope="all">
+          <SpaceSelect kind="mode" />
+        </Row>
+        <Row id="fiptv-space-palette" label="Farbstimmung" hint="Farben der Nebel im Weltraum-Hintergrund." scope="all">
+          <SpaceSelect kind="palette" />
         </Row>
         <Row id="fiptv-sounds" label="Töne" hint="Startklang, leises Klicken beim Navigieren, Ton bei OK und beim Merken von Favoriten." scope="all">
           <EffectToggle kind="sound" />
@@ -378,4 +384,13 @@ export function AiSubtitlesSection({ openSection }: { openSection: (id: string) 
 function EffectToggle({ kind }: { kind: "anim" | "sound" }) {
   const [on, setOn] = useState(() => kind === "anim" ? animationsEnabled() : soundsEnabled());
   return <Toggle label={kind === "anim" ? "Animationen" : "Töne"} value={on} onChange={(v) => { if (kind === "anim") setAnimations(v); else setSounds(v); setOn(v); }} />;
+}
+
+function SpaceSelect({ kind }: { kind: "mode" | "palette" }) {
+  const [value, setValue] = useState(() => String(kind === "mode" ? spaceMode() : spacePalette()));
+  const options: Array<[string, string]> = kind === "mode"
+    ? [["0", "Aus"], ["1", "Galaxie"]]
+    : SPACE_PALETTES.map((name, i) => [String(i), name]);
+  return <Select label={kind === "mode" ? "Hintergrund" : "Farbstimmung"} value={value} options={options}
+    onChange={(v) => { if (kind === "mode") setSpaceMode(Number(v)); else setSpacePalette(Number(v)); setValue(v); }} />;
 }

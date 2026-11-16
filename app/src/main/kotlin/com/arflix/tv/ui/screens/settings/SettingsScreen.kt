@@ -341,7 +341,7 @@ internal fun tvGeneralRowsForSection(section: String): List<Int> {
             listOf(39, 9, 45)
         "ai_subtitles" -> listOf(28, 29, 30, 31, 32, 33) + LIVE_AI_SUBS_ROWS
         "playback" -> listOf(64, 10, 11, 12, 43, 44, 13, 14, 34, 37, 16, 15, 40, 27, 53, 54)
-        "appearance" -> listOf(62, 63, 65, 66, 17, 49, 50, 18, 20, 60, 21, 24, 23, 22, 41, 46, 36, 47)
+        "appearance" -> listOf(62, 63, 65, 67, 68, 66, 17, 49, 50, 18, 20, 60, 21, 24, 23, 22, 41, 46, 36, 47)
         "profiles" -> listOf(19, 61)
         "network" -> listOf(25, 26, 35)
         else -> emptyList()
@@ -1471,6 +1471,8 @@ fun SettingsScreen(
                                                 63 -> com.arflix.tv.fiptv.live.FiptvChannelCleanup.toggle()
                                                 65 -> com.arflix.tv.fiptv.FiptvEffects.toggleAnimations()
                                                 66 -> com.arflix.tv.fiptv.FiptvEffects.toggleSounds()
+                                                67 -> com.arflix.tv.fiptv.FiptvSpace.cycleMode()
+                                                68 -> com.arflix.tv.fiptv.FiptvSpace.cyclePalette()
                                                 64 -> com.arflix.tv.fiptv.FiptvSleepTimer.cycle()
                                                 20 -> viewModel.setOledBlackBackground(!uiState.oledBlackBackground)
                                                 21 -> viewModel.cycleClockFormat()
@@ -1888,6 +1890,8 @@ fun SettingsScreen(
                 } else false
             }
     ) {
+        // fIPTV: Weltraum-Hintergrund
+        com.arflix.tv.fiptv.FiptvSpaceBackground()
         if (isTouchDevice) {
             MobileSettingsLayout(
                 page = mobilePage,
@@ -6976,6 +6980,8 @@ private fun TvGeneralSettingsRows(
                 // fIPTV: Hauptmenü links oder oben
                 64 -> SettingsRow(Icons.Default.Schedule, "Schlaf-Timer", "Wiedergabe automatisch beenden (Aus, 30, 60, 90, 120 Minuten)", com.arflix.tv.fiptv.FiptvSleepTimer.minutes.value.let { com.arflix.tv.fiptv.FiptvSleepTimer.label() }, focusedIndex == localIndex, { com.arflix.tv.fiptv.FiptvSleepTimer.cycle() }, Modifier.settingsFocusSlot(localIndex))
                 65 -> SettingsToggleRow("Animationen", "Startanimation, Profile, Kachel-Fokus, Senderwechsel und Favoriten-Stern", com.arflix.tv.fiptv.FiptvEffects.animations, focusedIndex == localIndex, { com.arflix.tv.fiptv.FiptvEffects.toggleAnimations() }, Modifier.settingsFocusSlot(localIndex))
+                67 -> SettingsRow(Icons.Default.Star, "Hintergrund", "Animierter Weltraum hinter Profilauswahl, Startseite und Einstellungen", com.arflix.tv.fiptv.FiptvSpace.mode.let { com.arflix.tv.fiptv.FiptvSpace.modeLabel() }, focusedIndex == localIndex, { com.arflix.tv.fiptv.FiptvSpace.cycleMode() }, Modifier.settingsFocusSlot(localIndex))
+                68 -> SettingsRow(Icons.Default.Star, "Farbstimmung", "Farben der Nebel im Weltraum-Hintergrund", com.arflix.tv.fiptv.FiptvSpace.palette.let { com.arflix.tv.fiptv.FiptvSpace.paletteLabel() }, focusedIndex == localIndex, { com.arflix.tv.fiptv.FiptvSpace.cyclePalette() }, Modifier.settingsFocusSlot(localIndex))
                 66 -> SettingsToggleRow("Töne", "Startklang, leises Klicken beim Navigieren, Ton bei OK und beim Merken von Favoriten", com.arflix.tv.fiptv.FiptvEffects.sounds, focusedIndex == localIndex, { com.arflix.tv.fiptv.FiptvEffects.toggleSounds() }, Modifier.settingsFocusSlot(localIndex))
                 63 -> SettingsToggleRow("Senderliste aufräumen", "Gleiche Sender zusammenfassen, Länderkürzel und Trenner ausblenden, echte Auflösung anzeigen", com.arflix.tv.fiptv.live.FiptvChannelCleanup.enabledState.value, focusedIndex == localIndex, { com.arflix.tv.fiptv.live.FiptvChannelCleanup.toggle() }, Modifier.settingsFocusSlot(localIndex))
                 62 -> SettingsToggleRow("Menü links", "Hauptmenü als schmale Leiste links (nur Icons) statt oben", com.arflix.tv.ui.components.FiptvTvRail.enabled, focusedIndex == localIndex, { com.arflix.tv.ui.components.FiptvTvRail.toggle() }, Modifier.settingsFocusSlot(localIndex))

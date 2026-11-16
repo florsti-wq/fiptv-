@@ -3,9 +3,11 @@
 import { avatarGradient, avatarSrc, colorToCss, customAvatarSrc } from "@/lib/profiles";
 import type { Profile } from "@/lib/types";
 
-export function ProfileAvatarVisual({ profile, avatarImages = {} }: {
+export function ProfileAvatarVisual({ profile, avatarImages = {}, animated = false }: {
   profile: Profile;
   avatarImages?: Record<string, string>;
+  /** fIPTV: animierte Version zeigen (Profilauswahl) */
+  animated?: boolean;
 }) {
   const custom = customAvatarSrc(profile, avatarImages);
   if (custom) {
@@ -20,7 +22,7 @@ export function ProfileAvatarVisual({ profile, avatarImages = {} }: {
     const [c1, c2] = avatarGradient(profile.avatarId);
     return (
       <div className="avatar-visual" style={{ background: `linear-gradient(180deg, ${c1}, ${c2})` }}>
-        <img className="avatar-emoji" src={avatarSrc(profile.avatarId)} alt="" />
+        <img className="avatar-emoji" src={avatarSrc(profile.avatarId, animated)} alt="" />
       </div>
     );
   }

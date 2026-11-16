@@ -45,3 +45,7 @@ html:not([data-fiptv-anim="off"]) .livetv-zap-info { animation: fiptv-banner-in 
 @media (prefers-reduced-motion: reduce) {
   .fiptv-intro-logo span, .fiptv-intro-bar { animation-duration: 1ms; animation-delay: 0ms; }
 }
+
+/* Weltraum-Hintergrund */
+.fiptv-space-bg { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none; display: block; }
+.profile-shell > .profile-center { position: relative; z-index: 1; }

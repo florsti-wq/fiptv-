@@ -270,6 +270,7 @@ class MainActivity : ComponentActivity() {
         com.arflix.tv.fiptv.live.FiptvChannelCleanup.init(this)
         com.arflix.tv.fiptv.FiptvSleepTimer.attach(this)
         com.arflix.tv.fiptv.FiptvEffects.init(this)
+        com.arflix.tv.fiptv.FiptvSpace.init(this)
         if (savedInstanceState == null) com.arflix.tv.fiptv.FiptvIntro.start()
         // fIPTV: erster Start nach einem Update → Hinweis, kurz zu warten (Fire OS beendet die App danach einmal;
         // läuft dabei ein Video, kann der Decoder des Fire TV bis zum Neustart hängen bleiben)

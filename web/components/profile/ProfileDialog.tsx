@@ -112,7 +112,7 @@ export function ProfileDialog({ mode, initial, avatarImages = {}, error: externa
     ? <img className="avatar-visual" src={photo} alt="" />
     : avatarId > 0
       ? <div className="avatar-visual" style={{ background: `linear-gradient(180deg, ${avatarGradient(avatarId)[0]}, ${avatarGradient(avatarId)[1]})` }}>
-          <img className="avatar-emoji" src={avatarSrc(avatarId)} alt="" />
+          <img className="avatar-emoji" src={avatarSrc(avatarId, true)} alt="" />
         </div>
       : <div className="avatar-visual avatar-letter" style={{ background: colorToCss(avatarColor) }}>
           <span>{name.charAt(0)?.toUpperCase() || "?"}</span>
@@ -168,7 +168,7 @@ export function ProfileDialog({ mode, initial, avatarImages = {}, error: externa
                       className={`avatar-cell ${!usePhoto && avatarId === id ? "is-active" : ""}`}
                       style={{ background: `linear-gradient(180deg, ${avatarGradient(id)[0]}, ${avatarGradient(id)[1]})` }}
                       onClick={() => { setAvatarId(id); setUsePhoto(false); }}>
-                      <img src={avatarSrc(id)} alt="" loading="lazy" />
+                      <img src={avatarSrc(id, id === avatarId)} alt="" loading="lazy" />
                     </button>
                   ))}
                 </div>

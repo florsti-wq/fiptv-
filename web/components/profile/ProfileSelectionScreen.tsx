@@ -1,4 +1,5 @@
 "use client";
+import { SpaceBackground } from "@/components/fiptv/SpaceBackground";
 import "./profiles.css";
 import { useTranslation } from "@/lib/i18n";
 
@@ -52,6 +53,7 @@ export function ProfileSelectionScreen() {
 
   return (
     <main className="profile-shell">
+      <SpaceBackground />
       <div className="profile-center">
         <div className="profile-brand-lockup">
           <img className="profile-brand-logo" src="/arvio-icon-512.png" alt="" width={56} height={56} />
@@ -71,7 +73,7 @@ export function ProfileSelectionScreen() {
               aria-busy={openingProfileId === profile.id}
             >
               <div className="avatar-tile">
-                <ProfileAvatarVisual profile={profile} avatarImages={avatarImages} />
+                <ProfileAvatarVisual profile={profile} avatarImages={avatarImages} animated />
                 {manageMode && (
                   <div className="avatar-edit-overlay"><Pencil size={26} /></div>
                 )}

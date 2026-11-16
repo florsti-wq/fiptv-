@@ -314,6 +314,8 @@ internal fun ProfileSelectionContent(
             .onGloballyPositioned { rootCoordinates = it },
         contentAlignment = Alignment.Center
     ) {
+        // fIPTV: Weltraum-Hintergrund
+        com.arflix.tv.fiptv.FiptvSpaceBackground()
         val contentWidth = if (isTouchDevice) (maxWidth - 48.dp).coerceAtMost(560.dp) else maxWidth - 96.dp
         val columns = if (isTouchDevice && maxWidth >= 600.dp) 3 else 2
         val avatarSize = if (isTouchDevice) ((contentWidth - 24.dp * (columns - 1)) / columns).coerceIn(92.dp, 108.dp)
@@ -541,7 +543,8 @@ internal fun ProfileSelectionContent(
                     ProfileAvatarVisual(
                         profile = transitionProfile!!,
                         letterFontSize = 48.sp,
-                        iconPadding = 12.dp
+                        iconPadding = 12.dp,
+                        animated = true,
                     )
                 }
 
@@ -755,7 +758,8 @@ private fun ProfileAvatar(
                 ProfileAvatarVisual(
                     profile = profile,
                     letterFontSize = if (isTouchDevice) 36.sp else 48.sp,
-                    iconPadding = if (isTouchDevice) 10.dp else 12.dp
+                    iconPadding = if (isTouchDevice) 10.dp else 12.dp,
+                    animated = true,
                 )
             }
 

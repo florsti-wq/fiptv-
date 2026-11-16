@@ -945,7 +945,8 @@ private fun ProfileAvatarPreview(
         if (selectedAvatarId > 0) {
             AvatarIcon(
                 avatarId = selectedAvatarId,
-                modifier = Modifier.fillMaxSize().padding(iconPadding)
+                modifier = Modifier.fillMaxSize().padding(iconPadding),
+                animated = true,
             )
         } else {
             Text(
@@ -1273,7 +1274,8 @@ private fun AvatarGridItem(
             } else {
                 AvatarIcon(
                     avatarId = avatarId,
-                    modifier = Modifier.fillMaxSize().padding(5.dp)
+                    modifier = Modifier.fillMaxSize().padding(5.dp),
+                    animated = isFocused > 0 || (isTouchDevice && isSelected),
                 )
             }
             // Selected checkmark

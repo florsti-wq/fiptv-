@@ -1,4 +1,3 @@
-"use client";
 
 /**
  * fIPTV: Animationen und Töne (Web / Windows).
@@ -41,6 +40,34 @@ export function setSounds(on: boolean) {
   try { localStorage.setItem(SOUND_KEY, on ? "1" : "0"); } catch { /* ignore */ }
   listeners.forEach((l) => l());
   if (on) playEffect("ok", true);
+}
+
+const SPACE_MODE_KEY = "fiptv.space.mode";
+const SPACE_PAL_KEY = "fiptv.space.palette";
+export const SPACE_PALETTES = ["Magenta und Türkis", "Feuer und Eis", "Smaragd und Violett", "Bei jedem Start anders"];
+const sessionPalette = Math.floor(Math.random() * 3);
+
+/** 0 = aus, 1 = Galaxie */
+export function spaceMode(): number {
+  if (typeof window === "undefined") return 0;
+  try { const v = localStorage.getItem(SPACE_MODE_KEY); return v === null ? 1 : Number(v) || 0; } catch { return 1; }
+}
+export function setSpaceMode(v: number) {
+  try { localStorage.setItem(SPACE_MODE_KEY, String(v)); } catch { /* ignore */ }
+  listeners.forEach((l) => l());
+}
+/** gewählte Farbstimmung 0..2, 3 = zufällig */
+export function spacePalette(): number {
+  if (typeof window === "undefined") return 3;
+  try { const v = localStorage.getItem(SPACE_PAL_KEY); return v === null ? 3 : Number(v) || 0; } catch { return 3; }
+}
+export function setSpacePalette(v: number) {
+  try { localStorage.setItem(SPACE_PAL_KEY, String(v)); } catch { /* ignore */ }
+  listeners.forEach((l) => l());
+}
+export function spacePaletteIndex(): number {
+  const p = spacePalette();
+  return p === 3 ? sessionPalette : p;
 }
 
 export function subscribeEffects(l: Listener): () => void {

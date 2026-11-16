@@ -31,6 +31,7 @@ import { PartnerLinkHandler as PartnerLinkHandlerView } from "./PartnerLinkHandl
 import { ScreenBoundary } from "./ErrorBoundary";
 import { GoalAlerts } from "@/components/fiptv/GoalAlerts";
 import { FiptvIntro } from "@/components/fiptv/FiptvIntro";
+import { SpaceBackground } from "@/components/fiptv/SpaceBackground";
 import { OnScreenKeyboard } from "./OnScreenKeyboard";
 import { UpdateBanner } from "./UpdateBanner";
 import { notifySectionNavigation } from "./UpdateWatcher";
@@ -235,6 +236,8 @@ export function AppShell() {
         ...(!settings.oledBlack && settings.fiptvBackground && settings.fiptvBackground !== "default" ? fiptvBackgroundStyle(settings.fiptvBackground) : {})
       }}
     >
+      {/* fIPTV: Weltraum-Hintergrund auf Start- und Einstellungsseite */}
+      {!activeStream && !selected && (section === "home" || section === "settings") && !settings.oledBlack && <SpaceBackground />}
       {(!activeStream || (section === "tv" && activeChannel)) && <TopNav />}
       <PartnerLinkHandler />
 
