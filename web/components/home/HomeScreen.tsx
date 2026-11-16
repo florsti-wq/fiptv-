@@ -18,6 +18,7 @@ import type { CatalogConfig, Category, MediaItem } from "@/lib/types";
 import { RowBoundary } from "@/components/shell/ErrorBoundary";
 import { HomeHero } from "./HomeHero";
 import { buildRecommendationRows } from "@/lib/fiptvRecommendations";
+import { loadVodItems, vodProviders } from "@/lib/fiptvProviderVod";
 import "@/app/home.css";
 
 type ViewAll = { catalog: CatalogConfig | null; category: Category };
@@ -60,14 +61,34 @@ export function HomeScreen({ onCollectionOpenChange }: { onCollectionOpenChange?
     }, 1500);
     return () => { alive = false; clearTimeout(timer); };
   }, [recSignature]); // eslint-disable-line react-hooks/exhaustive-deps
+  // fIPTV: „Neu bei deinem Anbieter“ – neueste Filme des IPTV-Anbieters (mit TMDB-Nummer → Detailseite)
+  const [providerNew, setProviderNew] = useState<Category | null>(null);
+  const providerKey = (settings.iptvPlaylists ?? []).filter((p) => p.enabled).map((p) => p.m3uUrl).join("|");
+  useEffect(() => {
+    const provider = vodProviders(settings.iptvPlaylists ?? [], "movies")[0];
+    if (!provider) { setProviderNew(null); return undefined; }
+    let alive = true;
+    const timer = setTimeout(() => {
+      loadVodItems(provider, "movies").then((items) => {
+        if (!alive) return;
+        const seen = new Set<number>();
+        const newest = items.filter((i) => i.tmdb && i.added && !seen.has(i.tmdb) && (seen.add(i.tmdb), true))
+          .sort((a, b) => (b.added ?? 0) - (a.added ?? 0)).slice(0, 30)
+          .map((i): MediaItem => ({ id: i.tmdb!, title: i.name.replace(/^\s*[A-Z]{2,3}\s*[|:-]\s*/, ""), mediaType: "movie", image: i.poster ?? "", year: i.year } as MediaItem));
+        setProviderNew(newest.length >= 5 ? { id: "fiptv_rec_provider_new", title: "Neu bei deinem Anbieter", items: newest } : null);
+      }).catch(() => {});
+    }, 4000);
+    return () => { alive = false; clearTimeout(timer); };
+  }, [providerKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const homeRows = useMemo(() => {
-    const rows = recRows.map((row) => ({ ...row, items: row.items.filter((item) => kids.allows(item)) })).filter((row) => row.items.length >= 5);
+    const rows = [...recRows, ...(providerNew ? [providerNew] : [])].map((row) => ({ ...row, items: row.items.filter((item) => kids.allows(item)) })).filter((row) => row.items.length >= 5);
     if (!rows.length) return dedupedCategories;
     const at = dedupedCategories.findIndex((c) => c.id === "continue_watching");
     const out = [...dedupedCategories];
     out.splice(at >= 0 ? at + 1 : 0, 0, ...rows);
     return out;
-  }, [dedupedCategories, recRows, kids]);
+  }, [dedupedCategories, recRows, providerNew, kids]);
 
   // Stable callbacks: MediaCard is memoised on them.
   const onCardFocus = useCallback((item: MediaItem) => {
