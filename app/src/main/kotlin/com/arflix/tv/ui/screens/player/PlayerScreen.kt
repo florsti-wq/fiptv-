@@ -1303,7 +1303,8 @@ private fun PlayerScreenContent(args: PlayerScreenArgs, viewModel: PlayerViewMod
         }
     }
 
-    val exoPlayer = remember(isConstrainedPlaybackDevice, preferExtensionDecoder, playbackBufferProfile) {
+    val fiptvDecoderGeneration = com.arflix.tv.fiptv.player.FiptvDecoderGuard.generation.intValue
+    val exoPlayer = remember(isConstrainedPlaybackDevice, preferExtensionDecoder, playbackBufferProfile, fiptvDecoderGeneration) {
         val loadControl = DefaultLoadControl.Builder()
             .setBufferDurationsMs(
                 playbackBufferProfile.minBufferMs,
@@ -1337,6 +1338,8 @@ private fun PlayerScreenContent(args: PlayerScreenArgs, viewModel: PlayerViewMod
                     .experimentalSetEnableMediaCodecVideoRendererPrewarming(false)
                     // Enable fallback decoders for any format issues
                     .setEnableDecoderFallback(true)
+                    // fIPTV: nach eingefrorenem Bild Software-Decoder zuerst (bis zum Geräte-Neustart)
+                    .let { com.arflix.tv.fiptv.player.FiptvDecoderGuard.apply(it, context) }
             )
             .setLoadControl(loadControl)
             // Configure track selection for maximum compatibility

@@ -269,6 +269,24 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         com.arflix.tv.fiptv.live.FiptvChannelCleanup.init(this)
         com.arflix.tv.fiptv.FiptvSleepTimer.attach(this)
+        // fIPTV: erster Start nach einem Update → Hinweis, kurz zu warten (Fire OS beendet die App danach einmal;
+        // läuft dabei ein Video, kann der Decoder des Fire TV bis zum Neustart hängen bleiben)
+        run {
+            val p = getSharedPreferences("fiptv_update", MODE_PRIVATE)
+            val last = p.getLong("version", 0L)
+            if (last != 0L && last != BuildConfig.VERSION_CODE.toLong()) {
+                window.decorView.postDelayed({
+                    if (!isFinishing) runCatching {
+                        android.app.AlertDialog.Builder(this)
+                            .setTitle("fIPTV wurde aktualisiert")
+                            .setMessage("Fire TV optimiert die neue Version gerade. Bitte warte etwa 2 Minuten, bevor du einen Sender oder Film startest. Schließt sich fIPTV in dieser Zeit von selbst, einfach neu öffnen.")
+                            .setPositiveButton("OK", null)
+                            .show()
+                    }
+                }, 1_500)
+            }
+            p.edit().putLong("version", BuildConfig.VERSION_CODE.toLong()).apply()
+        }
         com.arflix.tv.ui.components.FiptvTvRail.load(this)
         if (BuildConfig.PARTNER_MANAGEMENT_ENABLED) {
             lifecycleScope.launch {

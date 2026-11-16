@@ -3155,8 +3155,11 @@ fun LiveTvScreen(
         // Holds playback back so AI subtitles get audio ahead of time; a no-op until asked to.
         SubtitleLookaheadLoadControl(loadControl)
     }
-    val exoPlayer = remember(liveLoadControl) {
+    val fiptvDecoderGeneration = com.arflix.tv.fiptv.player.FiptvDecoderGuard.generation.intValue
+    val exoPlayer = remember(liveLoadControl, fiptvDecoderGeneration) {
         ExoPlayer.Builder(context)
+            // fIPTV: Decoder-Rückfall; nach eingefrorenem Bild Software-Decoder (FiptvDecoderGuard)
+            .setRenderersFactory(com.arflix.tv.fiptv.player.FiptvDecoderGuard.apply(androidx.media3.exoplayer.DefaultRenderersFactory(context), context))
             .setMediaSourceFactory(mediaSourceFactory)
             .setLoadControl(liveLoadControl)
             // A live stream whose buffer stops moving while buffering raises an error after
@@ -3615,6 +3618,23 @@ fun LiveTvScreen(
                 "anchor=$catchupUrlAnchorOffsetMs inSegment=$initialPositionMs " +
                 "target=$catchupPlaybackOffsetMs url=${redactPlaybackUrl(stream)}"
         )
+    }
+
+    // fIPTV: eingefrorenes Bild erkennen und den Stream neu aufbauen; neuer Player (Software-Decoder) → Stream neu starten
+    LaunchedEffect(exoPlayer) {
+        if (fiptvDecoderGeneration > 0) {
+            kotlinx.coroutines.delay(300)
+            lastPreparedStreamUrl?.let { prepared ->
+                prepareStream(prepared, isHls = lastPreparedIsHls, headers = lastPreparedHeaders, resetRetry = false,
+                    drmInfo = playingChannel?.source?.drmInfo, forcePrepare = true, resolvedMimeType = lastPreparedMimeType)
+            }
+        }
+        com.arflix.tv.fiptv.player.FiptvDecoderGuard.watch(exoPlayer, context) {
+            lastPreparedStreamUrl?.let { prepared ->
+                prepareStream(prepared, isHls = lastPreparedIsHls, headers = lastPreparedHeaders, resetRetry = false,
+                    drmInfo = playingChannel?.source?.drmInfo, forcePrepare = true, resolvedMimeType = lastPreparedMimeType)
+            }
+        }
     }
 
     // AI subtitles switched on mid-channel: restart the stream (see liveAiRestartRequest).
