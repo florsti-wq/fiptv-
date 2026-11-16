@@ -3,7 +3,7 @@
 // Pokal, Europapokal, Nationalteams, Testspiele) mit Tabellen und Statistik, Formel 1, Tennis, Wrestling.
 import "./sport.css";
 
-import { ArrowLeft, Loader2, RefreshCw, Star } from "lucide-react";
+import { ArrowLeft, Loader2, RefreshCw, Search, Star } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { findGameSources, type GameSources } from "@/lib/fiptvSportSources";
 import { resolveSportsAddon, type SportsAddonEvent, type SportsAddonStream } from "@/lib/sportsAddons";
@@ -74,31 +74,44 @@ function Logo({ src, size = 28 }: { src: string; size?: number }) {
   return src ? <img className="sp-logo" src={src} alt="" width={size} height={size} loading="lazy" /> : <span className="sp-logo" style={{ width: size, height: size }} />;
 }
 
-function MatchCard({ m, onOpen, sources }: { m: SportMatch; onOpen: (m: SportMatch) => void; sources?: GameSources }) {
-  const live = m.state === "in";
+const dayOffset = (iso: string) => {
+  const d = new Date(iso); const t = new Date();
+  const a = Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()); const b = Date.UTC(t.getFullYear(), t.getMonth(), t.getDate());
+  return Math.round((a - b) / 86_400_000);
+};
+
+/** fIPTV-Karte: Farbleiste, Status-Plakette, Teams untereinander, Quellen-Zeile (wie Fire TV). */
+function MatchCard({ m, onOpen, sources, followed }: { m: SportMatch; onOpen: (m: SportMatch) => void; sources?: GameSources; followed?: boolean }) {
+  const live = m.state === "in", done = m.state === "post", today = dayOffset(m.date) === 0;
   const count = sourceCount(sources);
+  const tone = live ? "is-live" : done ? "is-done" : today ? "is-today" : "is-later";
+  const badge = live ? "● LIVE" : done ? "ENDE" : today ? "HEUTE" : new Date(m.date).toLocaleDateString("de-DE", { weekday: "short", day: "2-digit", month: "2-digit" }).toUpperCase();
+  const src = done ? "Spieldetails ansehen" : !sources ? "Sender suchen" : count === 0 ? "Sender suchen"
+    : [sources.tv.length ? `${sources.tv.length} Sender` : "", sources.addons.length ? `${sources.addons.length} Stremio` : ""].filter(Boolean).join(" · ");
   return (
-    <button type="button" className={`sp-match ${live ? "live" : ""}`} onClick={() => onOpen(m)}>
-      <div className="sp-match-top">
-        <span>{leagueLabel(m.league)}</span>
-        <span className={live ? "sp-live" : ""}>{live ? `● LIVE ${m.clock}` : m.state === "post" ? "Beendet" : kickoff(m)}</span>
+    <button type="button" className={`sp-card ${tone}`} onClick={() => onOpen(m)}>
+      <div className="sp-card-head">
+        <span className="sp-card-badge">{badge}</span>
+        <span className="sp-card-league">{leagueLabel(m.league)}</span>
+        {followed && <span className="sp-card-star">★</span>}
+        <span className="sp-card-time">{live ? m.clock : done ? "Ende" : kickoff(m)}</span>
       </div>
-      {[m.home, m.away].map((s) => (
-        <div key={s.id || s.name} className={`sp-side ${m.state === "post" && s.winner ? "win" : ""}`}>
-          <Logo src={s.logo} /> <span>{s.name}</span> <b>{m.state === "pre" ? "" : s.score}</b>
+      {[m.home, m.away].map((side) => (
+        <div key={side.id || side.name} className={`sp-card-team ${done && side.winner ? "win" : ""}`}>
+          <Logo src={side.logo} /> <span>{side.name}</span> <b>{m.state === "pre" ? "" : side.score}</b>
         </div>
       ))}
-      {count > 0 && m.state !== "post" && <div className="sp-match-src">▶ {count} {count === 1 ? "Quelle" : "Quellen"}</div>}
+      <div className={`sp-card-foot ${count > 0 && !done ? "has" : ""}`}><span>{src}</span><Search size={13} /></div>
     </button>
   );
 }
 
-function MatchList({ title, list, onOpen, sources }: { title: string; list: SportMatch[]; onOpen: (m: SportMatch) => void; sources?: Record<string, GameSources> }) {
+function MatchList({ title, list, onOpen, sources, tone, isMine }: { title: string; list: SportMatch[]; onOpen: (m: SportMatch) => void; sources?: Record<string, GameSources>; tone?: string; isMine?: (m: SportMatch) => boolean }) {
   if (!list.length) return null;
   return (
     <section className="sp-section">
-      <h2>{title}</h2>
-      <div className="sp-row">{list.map((m) => <MatchCard key={`${m.league}-${m.id}`} m={m} onOpen={onOpen} sources={sources?.[m.id]} />)}</div>
+      <h2 className={tone}>{title} <small>· {list.length}</small></h2>
+      <div className="sp-grid">{list.map((m) => <MatchCard key={`${m.league}-${m.id}`} m={m} onOpen={onOpen} sources={sources?.[m.id]} followed={isMine?.(m)} />)}</div>
     </section>
   );
 }
@@ -109,8 +122,13 @@ function Status({ loading, error, reload }: { loading: boolean; error: string; r
   return null;
 }
 
+type HubDay = "y" | "t" | "m" | "l";
+const HUB_DAYS: Array<[HubDay, string]> = [["y", "Gestern"], ["t", "Heute"], ["m", "Morgen"], ["l", "Weitere Tage"]];
+
 function Hub({ myTeams, onOpen }: { myTeams: SportTeam[]; onOpen: (m: SportMatch) => void }) {
   const { data, loading, error, reload } = useLoad(allMatches, []);
+  const [day, setDay] = useState<HubDay>("t");
+  const [mineOnly, setMineOnly] = useState(false);
   useEffect(() => {
     if (!data?.some((m) => m.state === "in")) return;
     const t = window.setInterval(reload, 60_000);
@@ -121,20 +139,29 @@ function Hub({ myTeams, onOpen }: { myTeams: SportTeam[]; onOpen: (m: SportMatch
   if (!data) return <Status loading={loading} error={error} reload={reload} />;
   const mine = new Set(myTeams.map((t) => t.id));
   const isMine = (m: SportMatch) => mine.has(m.home.id) || mine.has(m.away.id);
-  const games = data.filter((m) => m.league !== "club.friendly" || isMine(m));
+  const games = data.filter((m) => m.league !== "club.friendly" || isMine(m)).filter((m) => {
+    const off = dayOffset(m.date), live = m.state === "in";
+    const ok = day === "y" ? off === -1 : day === "t" ? off === 0 || live : day === "m" ? off === 1 && !live : off >= 2 && !live;
+    return ok && (!mineOnly || isMine(m));
+  });
   const live = games.filter((m) => m.state === "in");
-  const today = games.filter((m) => m.state === "pre" && isToday(m));
-  const next = games.filter((m) => m.state === "pre" && !isToday(m));
-  const results = games.filter((m) => m.state === "post").reverse();
-  const myNext = games.filter((m) => isMine(m) && m.state !== "post");
+  const upcoming = games.filter((m) => m.state === "pre");
+  const done = games.filter((m) => m.state === "post");
+  const dayLabel = HUB_DAYS.find(([k]) => k === day)?.[1] ?? "";
   return (
     <>
-      <MatchList title="Jetzt live" list={live} onOpen={onOpen} sources={sources} />
-      <MatchList title="Meine Teams" list={myNext.slice(0, 12)} onOpen={onOpen} sources={sources} />
-      <MatchList title="Heute" list={today} onOpen={onOpen} sources={sources} />
-      <MatchList title="Nächste Spiele" list={next.slice(0, 30)} onOpen={onOpen} sources={sources} />
-      <MatchList title="Ergebnisse" list={results.slice(0, 30)} onOpen={onOpen} />
-      {!games.length && <div className="sp-empty">Gerade keine Spiele in den nächsten Tagen.</div>}
+      <div className="sp-hub-summary">{dayLabel} · {games.length} Spiele{live.length ? ` · ${live.length} live` : ""}</div>
+      <div className="sp-hub-bar">
+        <div className="sp-seg">{HUB_DAYS.map(([k, label]) => <button key={k} type="button" className={day === k ? "on" : ""} onClick={() => setDay(k)}>{label}</button>)}</div>
+        <div className="sp-seg">
+          <button type="button" className={!mineOnly ? "on" : ""} onClick={() => setMineOnly(false)}>Alle</button>
+          <button type="button" className={mineOnly ? "on" : ""} onClick={() => setMineOnly(true)}>★ Meine Teams</button>
+        </div>
+      </div>
+      <MatchList title="● Live jetzt" tone="is-live" list={live} onOpen={onOpen} sources={sources} isMine={isMine} />
+      <MatchList title={day === "t" ? "Später heute" : day === "m" ? "Morgen" : day === "l" ? "Demnächst" : "Spiele"} list={upcoming.slice(0, 60)} onOpen={onOpen} sources={sources} isMine={isMine} />
+      <MatchList title="Beendet" tone="is-done" list={day === "y" ? done : done.reverse()} onOpen={onOpen} isMine={isMine} />
+      {!games.length && <div className="sp-empty">{mineOnly ? "Keine Spiele deiner Teams an diesem Tag." : "Keine Spiele an diesem Tag."}</div>}
     </>
   );
 }

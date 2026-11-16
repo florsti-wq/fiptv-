@@ -90,3 +90,39 @@
 .sp-source b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sp-source small { opacity: .7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sp-source-sub { margin-left: 18px; }
+
+/* fIPTV Sports-Hub (Tagesauswahl + Karten mit Farbleiste) */
+.sp-hub-summary { color: #a0a6b4; font-size: 13px; margin: 2px 0 10px; }
+.sp-hub-bar { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 8px; }
+.sp-seg { display: inline-flex; gap: 4px; padding: 4px; border-radius: 999px; background: rgba(255,255,255,.06); }
+.sp-seg button { border: 0; background: transparent; color: #d4d8e0; padding: 7px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.sp-seg button.on { background: #fff; color: #111; }
+.sp-seg button:focus-visible { outline: 2px solid var(--accent, #4f8cff); }
+.sp-section h2.is-live { color: #ef4444; }
+.sp-section h2.is-done { color: #a0a6b4; }
+.sp-section h2 small { font-size: .8em; opacity: .7; font-weight: 600; }
+.sp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+.sp-card { position: relative; display: flex; flex-direction: column; gap: 8px; text-align: left; color: #fff; cursor: pointer;
+  background: #1b1f2a; border: 1px solid rgba(255,255,255,.06); border-radius: 14px; padding: 14px 14px 10px; overflow: hidden; }
+.sp-card::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 3px; background: linear-gradient(90deg, var(--bar-a) 50%, var(--bar-b) 50%); }
+.sp-card.is-live { --bar-a: #ef4444; --bar-b: #f59e0b; }
+.sp-card.is-today { --bar-a: #38bdf8; --bar-b: #8b5cf6; }
+.sp-card.is-later { --bar-a: #8b5cf6; --bar-b: #6366f1; }
+.sp-card.is-done { --bar-a: #4b5563; --bar-b: #4b5563; }
+.sp-card:hover, .sp-card:focus-visible { background: #262b38; outline: 2px solid var(--accent, #4f8cff); }
+.sp-card-head { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.sp-card-badge { font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 5px; background: rgba(56,189,248,.16); color: #38bdf8; white-space: nowrap; }
+.sp-card.is-live .sp-card-badge { background: #ef4444; color: #fff; }
+.sp-card.is-done .sp-card-badge { background: #4b5563; color: #fff; }
+.sp-card.is-later .sp-card-badge { background: rgba(99,102,241,.2); color: #a5b4fc; }
+.sp-card-league { flex: 1; min-width: 0; color: #a0a6b4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sp-card-star { color: #ffc107; }
+.sp-card-time { font-weight: 800; color: #38bdf8; }
+.sp-card.is-live .sp-card-time { color: #f59e0b; }
+.sp-card.is-done .sp-card-time { color: #a0a6b4; }
+.sp-card-team { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 600; }
+.sp-card-team span { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sp-card-team.win { font-weight: 800; }
+.sp-card-team b { font-size: 16px; }
+.sp-card-foot { display: flex; align-items: center; justify-content: space-between; border-top: 1px solid rgba(255,255,255,.07); padding-top: 8px; margin-top: 2px; font-size: 12px; color: #a0a6b4; }
+.sp-card-foot.has { color: #22c55e; }
