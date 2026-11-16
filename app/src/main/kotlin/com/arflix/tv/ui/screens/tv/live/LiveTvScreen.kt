@@ -1267,7 +1267,7 @@ fun LiveTvScreen(
     // = janky nav + live-TV buffering + the guide unable to render). Above this
     // threshold we skip variant work entirely and show channels uncollapsed, reusing
     // the existing lists (no extra copies). Smaller lists keep variant collapsing.
-    val variantCollapseLimit = 8_000
+    val variantCollapseLimit = 40_000 // fIPTV: auch große Listen aufräumen
     val variantGroupsState = remember { mutableStateOf<Map<String, List<EnrichedChannel>>>(emptyMap()) }
     val allDisplayChannelsState = remember { mutableStateOf<List<EnrichedChannel>>(emptyList()) }
     LaunchedEffect(accessibleVisibleChannels) {
@@ -1298,8 +1298,10 @@ fun LiveTvScreen(
         val scopeKey = filteredChannelsScopeKey
         val source = filteredChannelsState.value
         // No variant groups (large list) → reuse the source list as-is, no extra copy.
-        val collapsed = if (variantGroups.isEmpty() || categoryKey == "fav" || categoryKey == "recent") {
+        val collapsed = if (categoryKey == "fav" || categoryKey == "recent") {
             source
+        } else if (variantGroups.isEmpty()) {
+            if (com.arflix.tv.fiptv.live.FiptvChannelCleanup.enabled) source.filterNot { com.arflix.tv.fiptv.live.FiptvChannelCleanup.isSeparator(it.name) } else source
         } else {
             withContext(Dispatchers.Default) { collapseChannelVariants(source, variantGroups) }
         }

@@ -241,7 +241,7 @@ fun ChannelRow(
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = channel.name,
+                    text = com.arflix.tv.fiptv.live.FiptvChannelCleanup.displayName(channel.name),
                     style = LiveType.CellTitle.copy(
                         color = foreground,
                         fontSize = 11.sp,
@@ -293,7 +293,9 @@ fun ChannelRow(
             horizontalAlignment = Alignment.End,
         ) {
             if (displayQuality != Quality.UNKNOWN) {
-                SmallPillBadge(if (variantCount > 1) stringResource(R.string.live_label_quality_variants, displayQuality.label, variantCount) else displayQuality.label, visuallyFocused)
+                // fIPTV: gemessener Wert; „≠4K“ wenn der Name mehr verspricht
+                val fiptvLabel = displayQuality.label + if (com.arflix.tv.fiptv.live.FiptvChannelCleanup.overLabeled(channel.quality, com.arflix.tv.fiptv.live.FiptvChannelCleanup.measuredQuality(channel.id))) " ≠${channel.quality.label}" else ""
+                SmallPillBadge(if (variantCount > 1) stringResource(R.string.live_label_quality_variants, fiptvLabel, variantCount) else fiptvLabel, visuallyFocused)
             } else if (variantCount > 1) {
                 SmallPillBadge(stringResource(R.string.live_label_sources, variantCount), visuallyFocused)
             }

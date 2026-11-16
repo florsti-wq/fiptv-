@@ -341,7 +341,7 @@ internal fun tvGeneralRowsForSection(section: String): List<Int> {
             listOf(39, 9, 45)
         "ai_subtitles" -> listOf(28, 29, 30, 31, 32, 33) + LIVE_AI_SUBS_ROWS
         "playback" -> listOf(10, 11, 12, 43, 44, 13, 14, 34, 37, 16, 15, 40, 27, 53, 54)
-        "appearance" -> listOf(62, 17, 49, 50, 18, 20, 60, 21, 24, 23, 22, 41, 46, 36, 47)
+        "appearance" -> listOf(62, 63, 17, 49, 50, 18, 20, 60, 21, 24, 23, 22, 41, 46, 36, 47)
         "profiles" -> listOf(19, 61)
         "network" -> listOf(25, 26, 35)
         else -> emptyList()
@@ -1468,6 +1468,7 @@ fun SettingsScreen(
                                                 19 -> viewModel.setSkipProfileSelection(!uiState.skipProfileSelection)
                                                 61 -> com.arflix.tv.fiptv.kids.KidsLimitBus.open()
                                                 62 -> com.arflix.tv.ui.components.FiptvTvRail.toggle()
+                                                63 -> com.arflix.tv.fiptv.live.FiptvChannelCleanup.toggle()
                                                 20 -> viewModel.setOledBlackBackground(!uiState.oledBlackBackground)
                                                 21 -> viewModel.cycleClockFormat()
                                                 22 -> viewModel.setShowBudget(!uiState.showBudget)
@@ -6970,6 +6971,7 @@ private fun TvGeneralSettingsRows(
                 19 -> SettingsToggleRow(stringResource(R.string.skip_profile), stringResource(R.string.skip_profile_desc), skipProfileSelection, focusedIndex == localIndex, onSkipProfileSelectionToggle, Modifier.settingsFocusSlot(localIndex))
                 // fIPTV: Tageslimit für Kinderprofile
                 // fIPTV: Hauptmenü links oder oben
+                63 -> SettingsToggleRow("Senderliste aufräumen", "Gleiche Sender zusammenfassen, Länderkürzel und Trenner ausblenden, echte Auflösung anzeigen", com.arflix.tv.fiptv.live.FiptvChannelCleanup.enabledState.value, focusedIndex == localIndex, { com.arflix.tv.fiptv.live.FiptvChannelCleanup.toggle() }, Modifier.settingsFocusSlot(localIndex))
                 62 -> SettingsToggleRow("Menü links", "Hauptmenü als schmale Leiste links (nur Icons) statt oben", com.arflix.tv.ui.components.FiptvTvRail.enabled, focusedIndex == localIndex, { com.arflix.tv.ui.components.FiptvTvRail.toggle() }, Modifier.settingsFocusSlot(localIndex))
                 61 -> SettingsRow(Icons.Default.Schedule, "Kinder-Zeitlimit", "Tägliche Fernsehzeit für Kinderprofile (Eltern-PIN)", "Einstellen", focusedIndex == localIndex, { com.arflix.tv.fiptv.kids.KidsLimitBus.open() }, Modifier.settingsFocusSlot(localIndex))
                 20 -> SettingsToggleRow(stringResource(R.string.oled_black_background), stringResource(R.string.oled_black_background_desc), oledBlackBackground, focusedIndex == localIndex, onOledBlackBackgroundToggle, Modifier.settingsFocusSlot(localIndex))

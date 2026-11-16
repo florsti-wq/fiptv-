@@ -267,7 +267,8 @@ class MainActivity : ComponentActivity() {
         }
 
         super.onCreate(savedInstanceState)
-        com.arflix.tv.ui.components.FiptvTvRail.load(this)
+        com.arflix.tv.fiptv.live.FiptvChannelCleanup.init(this)
+        FiptvTvRail.load(this)
         if (BuildConfig.PARTNER_MANAGEMENT_ENABLED) {
             lifecycleScope.launch {
                 repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {

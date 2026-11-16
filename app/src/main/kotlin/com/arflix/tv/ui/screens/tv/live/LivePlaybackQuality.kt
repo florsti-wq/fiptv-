@@ -15,7 +15,9 @@ internal fun qualityFromVideoSize(width: Int, height: Int): Quality = when {
 }
 
 internal fun EnrichedChannel.displayQuality(playback: LivePlaybackQuality?): Quality =
-    playback?.takeIf { it.channelId == id && it.quality != Quality.UNKNOWN }?.quality ?: quality
+    playback?.takeIf { it.channelId == id && it.quality != Quality.UNKNOWN }?.quality
+        ?: com.arflix.tv.fiptv.live.FiptvChannelCleanup.measuredQuality(id)
+        ?: quality
 
 /** Observes only the stream already playing; never probes other provider streams. */
 internal class LivePlaybackQualityListener(
@@ -38,6 +40,8 @@ internal class LivePlaybackQualityListener(
     private fun update(size: VideoSize) {
         val channelId = player.currentMediaItem?.mediaId?.takeIf { it.isNotBlank() }
         val quality = qualityFromVideoSize(size.width, size.height)
+        // fIPTV: gemessene Auflösung merken – das Schild zeigt künftig den echten Wert
+        if (channelId != null && quality != Quality.UNKNOWN) com.arflix.tv.fiptv.live.FiptvChannelCleanup.rememberQuality(channelId, quality)
         onQuality(
             if (channelId != null && quality != Quality.UNKNOWN) LivePlaybackQuality(channelId, quality)
             else null

@@ -243,11 +243,32 @@ fun variantGroupKey(channel: EnrichedChannel): String {
 }
 
 fun buildVariantGroups(channels: List<EnrichedChannel>): Map<String, List<EnrichedChannel>> {
-    // Keep IPTV channel rows exactly as the provider supplied them. Collapsing
-    // variants hides provider-specific HD/SD/catchup rows and mixes playlists,
-    // which makes EPG and catchup selection unpredictable.
-    return emptyMap()
+    // ARVIO zeigte jede Zeile einzeln. fIPTV fasst – wenn „Senderliste aufräumen“ an ist – gleiche
+    // Sender derselben Gruppe zusammen; vorne steht die Variante mit der besten (gemessenen) Qualität.
+    if (!com.arflix.tv.fiptv.live.FiptvChannelCleanup.enabled) return emptyMap()
+    val byKey = LinkedHashMap<String, MutableList<EnrichedChannel>>()
+    channels.forEach { ch ->
+        val key = fiptvVariantKey(ch)
+        byKey.getOrPut(key) { ArrayList(2) }.add(ch)
+    }
+    val out = HashMap<String, List<EnrichedChannel>>()
+    byKey.forEach { (_, list) ->
+        if (list.size < 2) return@forEach
+        val sorted = list.sortedByDescending { ch ->
+            val real = com.arflix.tv.fiptv.live.FiptvChannelCleanup.measuredQuality(ch.id)
+            com.arflix.tv.fiptv.live.FiptvChannelCleanup.rank(real ?: ch.quality) * 10 + if (real != null) 1 else 0
+        }
+        list.forEach { ch -> out[variantGroupKey(ch)] = sorted }
+    }
+    return out
 }
+
+/** Schlüssel für „gleicher Sender“: Gruppe + aufgeräumter Name (ohne Qualität/Kürzel). */
+private fun fiptvVariantKey(ch: EnrichedChannel): String =
+    ch.source.group.trim().lowercase() + "|" +
+        com.arflix.tv.fiptv.live.FiptvChannelCleanup.displayName(ch.name).lowercase().replace(FIPTV_NON_ALNUM, "")
+
+private val FIPTV_NON_ALNUM = Regex("[^\\p{L}\\p{N}]+")
 
 fun collapseChannelVariants(
     channels: List<EnrichedChannel>,
@@ -260,8 +281,8 @@ fun collapseChannelVariants(
             val key = variantGroupKey(channel)
             val group = variantGroups[key]
             if (group == null) {
-                add(channel)
-            } else if (emitted.add(key)) {
+                if (!com.arflix.tv.fiptv.live.FiptvChannelCleanup.isSeparator(channel.name)) add(channel)
+            } else if (emitted.add(group.first().id)) {
                 add(group.first())
             }
         }
