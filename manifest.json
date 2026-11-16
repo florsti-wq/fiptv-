@@ -1,0 +1,464 @@
+[
+ {
+  "cat": "Tiere",
+  "name": "Cat face",
+  "slug": "cat_face",
+  "kb": 181
+ },
+ {
+  "cat": "Tiere",
+  "name": "Dog face",
+  "slug": "dog_face",
+  "kb": 149
+ },
+ {
+  "cat": "Tiere",
+  "name": "Fox",
+  "slug": "fox",
+  "kb": 190
+ },
+ {
+  "cat": "Tiere",
+  "name": "Owl",
+  "slug": "owl",
+  "kb": 184
+ },
+ {
+  "cat": "Tiere",
+  "name": "Penguin",
+  "slug": "penguin",
+  "kb": 233
+ },
+ {
+  "cat": "Tiere",
+  "name": "Panda",
+  "slug": "panda",
+  "kb": 181
+ },
+ {
+  "cat": "Tiere",
+  "name": "Bear",
+  "slug": "bear",
+  "kb": 178
+ },
+ {
+  "cat": "Tiere",
+  "name": "Polar bear",
+  "slug": "polar_bear",
+  "kb": 164
+ },
+ {
+  "cat": "Tiere",
+  "name": "Rabbit face",
+  "slug": "rabbit_face",
+  "kb": 199
+ },
+ {
+  "cat": "Tiere",
+  "name": "Hamster",
+  "slug": "hamster",
+  "kb": 195
+ },
+ {
+  "cat": "Tiere",
+  "name": "Mouse face",
+  "slug": "mouse_face",
+  "kb": 193
+ },
+ {
+  "cat": "Tiere",
+  "name": "Frog",
+  "slug": "frog",
+  "kb": 210
+ },
+ {
+  "cat": "Tiere",
+  "name": "Monkey face",
+  "slug": "monkey_face",
+  "kb": 228
+ },
+ {
+  "cat": "Tiere",
+  "name": "Lion",
+  "slug": "lion",
+  "kb": 205
+ },
+ {
+  "cat": "Tiere",
+  "name": "Tiger face",
+  "slug": "tiger_face",
+  "kb": 201
+ },
+ {
+  "cat": "Tiere",
+  "name": "Koala",
+  "slug": "koala",
+  "kb": 158
+ },
+ {
+  "cat": "Tiere",
+  "name": "Raccoon",
+  "slug": "raccoon",
+  "kb": 159
+ },
+ {
+  "cat": "Tiere",
+  "name": "Hedgehog",
+  "slug": "hedgehog",
+  "kb": 164
+ },
+ {
+  "cat": "Tiere",
+  "name": "Sloth",
+  "slug": "sloth",
+  "kb": 271
+ },
+ {
+  "cat": "Tiere",
+  "name": "Otter",
+  "slug": "otter",
+  "kb": 197
+ },
+ {
+  "cat": "Tiere",
+  "name": "Wolf",
+  "slug": "wolf",
+  "kb": 171
+ },
+ {
+  "cat": "Tiere",
+  "name": "Pig face",
+  "slug": "pig_face",
+  "kb": 173
+ },
+ {
+  "cat": "Tiere",
+  "name": "Cow face",
+  "slug": "cow_face",
+  "kb": 183
+ },
+ {
+  "cat": "Tiere",
+  "name": "Horse face",
+  "slug": "horse_face",
+  "kb": 168
+ },
+ {
+  "cat": "Tiere",
+  "name": "Unicorn",
+  "slug": "unicorn",
+  "kb": 198
+ },
+ {
+  "cat": "Tiere",
+  "name": "Dragon face",
+  "slug": "dragon_face",
+  "kb": 270
+ },
+ {
+  "cat": "Tiere",
+  "name": "T-rex",
+  "slug": "t-rex",
+  "kb": 200
+ },
+ {
+  "cat": "Tiere",
+  "name": "Dolphin",
+  "slug": "dolphin",
+  "kb": 210
+ },
+ {
+  "cat": "Tiere",
+  "name": "Octopus",
+  "slug": "octopus",
+  "kb": 184
+ },
+ {
+  "cat": "Tiere",
+  "name": "Turtle",
+  "slug": "turtle",
+  "kb": 111
+ },
+ {
+  "cat": "Tiere",
+  "name": "Butterfly",
+  "slug": "butterfly",
+  "kb": 265
+ },
+ {
+  "cat": "Tiere",
+  "name": "Parrot",
+  "slug": "parrot",
+  "kb": 186
+ },
+ {
+  "cat": "Tiere",
+  "name": "Front-facing baby chick",
+  "slug": "front-facing_baby_chick",
+  "kb": 161
+ },
+ {
+  "cat": "Tiere",
+  "name": "Phoenix",
+  "slug": "phoenix",
+  "kb": 234
+ },
+ {
+  "cat": "Figuren",
+  "name": "Robot",
+  "slug": "robot",
+  "kb": 271
+ },
+ {
+  "cat": "Figuren",
+  "name": "Alien",
+  "slug": "alien",
+  "kb": 187
+ },
+ {
+  "cat": "Figuren",
+  "name": "Alien monster",
+  "slug": "alien_monster",
+  "kb": 164
+ },
+ {
+  "cat": "Figuren",
+  "name": "Ghost",
+  "slug": "ghost",
+  "kb": 179
+ },
+ {
+  "cat": "Figuren",
+  "name": "Disguised face",
+  "slug": "disguised_face",
+  "kb": 224
+ },
+ {
+  "cat": "Figuren",
+  "name": "Skull",
+  "slug": "skull",
+  "kb": 185
+ },
+ {
+  "cat": "Figuren",
+  "name": "Smiling face with sunglasses",
+  "slug": "smiling_face_with_sunglasses",
+  "kb": 209
+ },
+ {
+  "cat": "Figuren",
+  "name": "Nerd face",
+  "slug": "nerd_face",
+  "kb": 225
+ },
+ {
+  "cat": "Figuren",
+  "name": "Clown face",
+  "slug": "clown_face",
+  "kb": 231
+ },
+ {
+  "cat": "Figuren",
+  "name": "Cowboy hat face",
+  "slug": "cowboy_hat_face",
+  "kb": 262
+ },
+ {
+  "cat": "Figuren",
+  "name": "Partying face",
+  "slug": "partying_face",
+  "kb": 237
+ },
+ {
+  "cat": "Figuren",
+  "name": "Zany face",
+  "slug": "zany_face",
+  "kb": 222
+ },
+ {
+  "cat": "Figuren",
+  "name": "Smiling face with heart-eyes",
+  "slug": "smiling_face_with_heart-eyes",
+  "kb": 195
+ },
+ {
+  "cat": "Figuren",
+  "name": "Star-struck",
+  "slug": "star-struck",
+  "kb": 221
+ },
+ {
+  "cat": "Figuren",
+  "name": "Smiling face with halo",
+  "slug": "smiling_face_with_halo",
+  "kb": 249
+ },
+ {
+  "cat": "Figuren",
+  "name": "Shushing face",
+  "slug": "shushing_face",
+  "kb": 193
+ },
+ {
+  "cat": "Figuren",
+  "name": "Smiling face with horns",
+  "slug": "smiling_face_with_horns",
+  "kb": 217
+ },
+ {
+  "cat": "Figuren",
+  "name": "Ogre",
+  "slug": "ogre",
+  "kb": 349
+ },
+ {
+  "cat": "Figuren",
+  "name": "Goblin",
+  "slug": "goblin",
+  "kb": 190
+ },
+ {
+  "cat": "Figuren",
+  "name": "Cold face",
+  "slug": "cold_face",
+  "kb": 193
+ },
+ {
+  "cat": "Figuren",
+  "name": "Exploding head",
+  "slug": "exploding_head",
+  "kb": 257
+ },
+ {
+  "cat": "Figuren",
+  "name": "Hugging face",
+  "slug": "hugging_face",
+  "kb": 219
+ },
+ {
+  "cat": "Figuren",
+  "name": "Face with monocle",
+  "slug": "face_with_monocle",
+  "kb": 189
+ },
+ {
+  "cat": "Figuren",
+  "name": "Grinning cat",
+  "slug": "grinning_cat",
+  "kb": 195
+ },
+ {
+  "cat": "Figuren",
+  "name": "Sleeping face",
+  "slug": "sleeping_face",
+  "kb": 218
+ },
+ {
+  "cat": "Spass",
+  "name": "Rocket",
+  "slug": "rocket",
+  "kb": 203
+ },
+ {
+  "cat": "Spass",
+  "name": "Flying saucer",
+  "slug": "flying_saucer",
+  "kb": 164
+ },
+ {
+  "cat": "Spass",
+  "name": "Fire",
+  "slug": "fire",
+  "kb": 213
+ },
+ {
+  "cat": "Spass",
+  "name": "Rainbow",
+  "slug": "rainbow",
+  "kb": 165
+ },
+ {
+  "cat": "Spass",
+  "name": "Snowman",
+  "slug": "snowman",
+  "kb": 253
+ },
+ {
+  "cat": "Spass",
+  "name": "Comet",
+  "slug": "comet",
+  "kb": 153
+ },
+ {
+  "cat": "Spass",
+  "name": "Glowing star",
+  "slug": "glowing_star",
+  "kb": 244
+ },
+ {
+  "cat": "Spass",
+  "name": "Ringed planet",
+  "slug": "ringed_planet",
+  "kb": 184
+ },
+ {
+  "cat": "Spass",
+  "name": "Sun with face",
+  "slug": "sun_with_face",
+  "kb": 215
+ },
+ {
+  "cat": "Spass",
+  "name": "Full moon face",
+  "slug": "full_moon_face",
+  "kb": 195
+ },
+ {
+  "cat": "Spass",
+  "name": "Jack-o-lantern",
+  "slug": "jack-o-lantern",
+  "kb": 184
+ },
+ {
+  "cat": "Spass",
+  "name": "Teddy bear",
+  "slug": "teddy_bear",
+  "kb": 203
+ },
+ {
+  "cat": "Spass",
+  "name": "Crystal ball",
+  "slug": "crystal_ball",
+  "kb": 119
+ },
+ {
+  "cat": "Spass",
+  "name": "Party popper",
+  "slug": "party_popper",
+  "kb": 201
+ },
+ {
+  "cat": "Spass",
+  "name": "Birthday cake",
+  "slug": "birthday_cake",
+  "kb": 186
+ },
+ {
+  "cat": "Spass",
+  "name": "Hot beverage",
+  "slug": "hot_beverage",
+  "kb": 180
+ },
+ {
+  "cat": "Spass",
+  "name": "Musical notes",
+  "slug": "musical_notes",
+  "kb": 231
+ },
+ {
+  "cat": "Spass",
+  "name": "Christmas tree",
+  "slug": "christmas_tree",
+  "kb": 155
+ }
+]
