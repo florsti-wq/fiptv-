@@ -1,0 +1,464 @@
+[
+ {
+  "cat": "Tiere",
+  "name": "Cat face",
+  "file": "assets/Cat face/animated/cat_face_animated.png",
+  "slug": "cat_face"
+ },
+ {
+  "cat": "Tiere",
+  "name": "Dog face",
+  "file": "assets/Dog face/animated/dog_face_animated.png",
+  "slug": "dog_face"
+ },
+ {
+  "cat": "Tiere",
+  "name": "Fox",
+  "file": "assets/Fox/animated/fox_animated.png",
+  "slug": "fox"
+ },
+ {
+  "cat": "Tiere",
+  "name": "Owl",
+  "file": "assets/Owl/animated/owl_animated.png",
+  "slug": "owl"
+ },
+ {
+  "cat": "Tiere",
+  "name": "Penguin",
+  "file": "assets/Penguin/animated/penguin_animated.png",
+  "slug": "penguin"
+ },
+ {
+  "cat": "Tiere",
+  "name": "Panda",
+  "file": "assets/Panda/animated/panda_animated.png",
+  "slug": "panda"
+ },
+ {
+  "cat": "Tiere",
+  "name": "Bear",
+  "file": "assets/Bear/animated/bear_animated.png",
+  "slug": "bear"
+ },
+ {
+  "cat": "Tiere",
+  "name": "Polar bear",
+  "file": "assets/Polar bear/animated/polar_bear_animated.png",
+  "slug": "polar_bear"
+ },
+ {
+  "cat": "Tiere",
+  "name": "Rabbit face",
+  "file": "assets/Rabbit face/animated/rabbit_face_animated.png",
+  "slug": "rabbit_face"
+ },
+ {
+  "cat": "Tiere",
+  "name": "Hamster",
+  "file": "assets/Hamster/animated/hamster_animated.png",
+  "slug": "hamster"
+ },
+ {
+  "cat": "Tiere",
+  "name": "Mouse face",
+  "file": "assets/Mouse face/animated/mouse_face_animated.png",
+  "slug": "mouse_face"
+ },
+ {
+  "cat": "Tiere",
+  "name": "Frog",
+  "file": "assets/Frog/animated/frog_animated.png",
+  "slug": "frog"
+ },
+ {
+  "cat": "Tiere",
+  "name": "Monkey face",
+  "file": "assets/Monkey face/animated/monkey_face_animated.png",
+  "slug": "monkey_face"
+ },
+ {
+  "cat": "Tiere",
+  "name": "Lion",
+  "file": "assets/Lion/animated/lion_animated.png",
+  "slug": "lion"
+ },
+ {
+  "cat": "Tiere",
+  "name": "Tiger face",
+  "file": "assets/Tiger face/animated/tiger_face_animated.png",
+  "slug": "tiger_face"
+ },
+ {
+  "cat": "Tiere",
+  "name": "Koala",
+  "file": "assets/Koala/animated/koala_animated.png",
+  "slug": "koala"
+ },
+ {
+  "cat": "Tiere",
+  "name": "Raccoon",
+  "file": "assets/Raccoon/animated/raccoon_animated.png",
+  "slug": "raccoon"
+ },
+ {
+  "cat": "Tiere",
+  "name": "Hedgehog",
+  "file": "assets/Hedgehog/animated/hedgehog_animated.png",
+  "slug": "hedgehog"
+ },
+ {
+  "cat": "Tiere",
+  "name": "Sloth",
+  "file": "assets/Sloth/animated/sloth_animated.png",
+  "slug": "sloth"
+ },
+ {
+  "cat": "Tiere",
+  "name": "Otter",
+  "file": "assets/Otter/animated/otter_animated.png",
+  "slug": "otter"
+ },
+ {
+  "cat": "Tiere",
+  "name": "Wolf",
+  "file": "assets/Wolf/animated/wolf_animated.png",
+  "slug": "wolf"
+ },
+ {
+  "cat": "Tiere",
+  "name": "Pig face",
+  "file": "assets/Pig face/animated/pig_face_animated.png",
+  "slug": "pig_face"
+ },
+ {
+  "cat": "Tiere",
+  "name": "Cow face",
+  "file": "assets/Cow face/animated/cow_face_animated.png",
+  "slug": "cow_face"
+ },
+ {
+  "cat": "Tiere",
+  "name": "Horse face",
+  "file": "assets/Horse face/animated/horse_face_animated.png",
+  "slug": "horse_face"
+ },
+ {
+  "cat": "Tiere",
+  "name": "Unicorn",
+  "file": "assets/Unicorn/animated/unicorn_animated.png",
+  "slug": "unicorn"
+ },
+ {
+  "cat": "Tiere",
+  "name": "Dragon face",
+  "file": "assets/Dragon face/animated/dragon_face_animated.png",
+  "slug": "dragon_face"
+ },
+ {
+  "cat": "Tiere",
+  "name": "T-rex",
+  "file": "assets/T-rex/animated/t-rex_animated.png",
+  "slug": "t-rex"
+ },
+ {
+  "cat": "Tiere",
+  "name": "Dolphin",
+  "file": "assets/Dolphin/animated/dolphin_animated.png",
+  "slug": "dolphin"
+ },
+ {
+  "cat": "Tiere",
+  "name": "Octopus",
+  "file": "assets/Octopus/animated/octopus_animated.png",
+  "slug": "octopus"
+ },
+ {
+  "cat": "Tiere",
+  "name": "Turtle",
+  "file": "assets/Turtle/animated/turtle_animated.png",
+  "slug": "turtle"
+ },
+ {
+  "cat": "Tiere",
+  "name": "Butterfly",
+  "file": "assets/Butterfly/animated/butterfly_animated.png",
+  "slug": "butterfly"
+ },
+ {
+  "cat": "Tiere",
+  "name": "Parrot",
+  "file": "assets/Parrot/animated/parrot_animated.png",
+  "slug": "parrot"
+ },
+ {
+  "cat": "Tiere",
+  "name": "Front-facing baby chick",
+  "file": "assets/Front-facing baby chick/animated/front-facing_baby_chick_animated.png",
+  "slug": "front-facing_baby_chick"
+ },
+ {
+  "cat": "Tiere",
+  "name": "Phoenix",
+  "file": "assets/Phoenix/animated/phoenix_animated.png",
+  "slug": "phoenix"
+ },
+ {
+  "cat": "Figuren",
+  "name": "Robot",
+  "file": "assets/Robot/animated/robot_animated.png",
+  "slug": "robot"
+ },
+ {
+  "cat": "Figuren",
+  "name": "Alien",
+  "file": "assets/Alien/animated/alien_animated.png",
+  "slug": "alien"
+ },
+ {
+  "cat": "Figuren",
+  "name": "Alien monster",
+  "file": "assets/Alien monster/animated/alien_monster_animated.png",
+  "slug": "alien_monster"
+ },
+ {
+  "cat": "Figuren",
+  "name": "Ghost",
+  "file": "assets/Ghost/animated/ghost_animated.png",
+  "slug": "ghost"
+ },
+ {
+  "cat": "Figuren",
+  "name": "Disguised face",
+  "file": "assets/Disguised face/animated/disguised_face_animated.png",
+  "slug": "disguised_face"
+ },
+ {
+  "cat": "Figuren",
+  "name": "Skull",
+  "file": "assets/Skull/animated/skull_animated.png",
+  "slug": "skull"
+ },
+ {
+  "cat": "Figuren",
+  "name": "Smiling face with sunglasses",
+  "file": "assets/Smiling face with sunglasses/animated/smiling_face_with_sunglasses_animated.png",
+  "slug": "smiling_face_with_sunglasses"
+ },
+ {
+  "cat": "Figuren",
+  "name": "Nerd face",
+  "file": "assets/Nerd face/animated/nerd_face_animated.png",
+  "slug": "nerd_face"
+ },
+ {
+  "cat": "Figuren",
+  "name": "Clown face",
+  "file": "assets/Clown face/animated/clown_face_animated.png",
+  "slug": "clown_face"
+ },
+ {
+  "cat": "Figuren",
+  "name": "Cowboy hat face",
+  "file": "assets/Cowboy hat face/animated/cowboy_hat_face_animated.png",
+  "slug": "cowboy_hat_face"
+ },
+ {
+  "cat": "Figuren",
+  "name": "Partying face",
+  "file": "assets/Partying face/animated/partying_face_animated.png",
+  "slug": "partying_face"
+ },
+ {
+  "cat": "Figuren",
+  "name": "Zany face",
+  "file": "assets/Zany face/animated/zany_face_animated.png",
+  "slug": "zany_face"
+ },
+ {
+  "cat": "Figuren",
+  "name": "Smiling face with heart-eyes",
+  "file": "assets/Smiling face with heart-eyes/animated/smiling_face_with_heart-eyes_animated.png",
+  "slug": "smiling_face_with_heart-eyes"
+ },
+ {
+  "cat": "Figuren",
+  "name": "Star-struck",
+  "file": "assets/Star-struck/animated/star-struck_animated.png",
+  "slug": "star-struck"
+ },
+ {
+  "cat": "Figuren",
+  "name": "Smiling face with halo",
+  "file": "assets/Smiling face with halo/animated/smiling_face_with_halo_animated.png",
+  "slug": "smiling_face_with_halo"
+ },
+ {
+  "cat": "Figuren",
+  "name": "Shushing face",
+  "file": "assets/Shushing face/animated/shushing_face_animated.png",
+  "slug": "shushing_face"
+ },
+ {
+  "cat": "Figuren",
+  "name": "Smiling face with horns",
+  "file": "assets/Smiling face with horns/animated/smiling_face_with_horns_animated.png",
+  "slug": "smiling_face_with_horns"
+ },
+ {
+  "cat": "Figuren",
+  "name": "Ogre",
+  "file": "assets/Ogre/animated/ogre_animated.png",
+  "slug": "ogre"
+ },
+ {
+  "cat": "Figuren",
+  "name": "Goblin",
+  "file": "assets/Goblin/animated/goblin_animated.png",
+  "slug": "goblin"
+ },
+ {
+  "cat": "Figuren",
+  "name": "Cold face",
+  "file": "assets/Cold face/animated/cold_face_animated.png",
+  "slug": "cold_face"
+ },
+ {
+  "cat": "Figuren",
+  "name": "Exploding head",
+  "file": "assets/Exploding head/animated/exploding_head_animated.png",
+  "slug": "exploding_head"
+ },
+ {
+  "cat": "Figuren",
+  "name": "Hugging face",
+  "file": "assets/Hugging face/animated/hugging_face_animated.png",
+  "slug": "hugging_face"
+ },
+ {
+  "cat": "Figuren",
+  "name": "Face with monocle",
+  "file": "assets/Face with monocle/animated/face_with_monocle_animated.png",
+  "slug": "face_with_monocle"
+ },
+ {
+  "cat": "Figuren",
+  "name": "Grinning cat",
+  "file": "assets/Grinning cat/animated/grinning_cat_animated.png",
+  "slug": "grinning_cat"
+ },
+ {
+  "cat": "Figuren",
+  "name": "Sleeping face",
+  "file": "assets/Sleeping face/animated/sleeping_face_animated.png",
+  "slug": "sleeping_face"
+ },
+ {
+  "cat": "Spass",
+  "name": "Rocket",
+  "file": "assets/Rocket/animated/rocket_animated.png",
+  "slug": "rocket"
+ },
+ {
+  "cat": "Spass",
+  "name": "Flying saucer",
+  "file": "assets/Flying saucer/animated/flying_saucer_animated.png",
+  "slug": "flying_saucer"
+ },
+ {
+  "cat": "Spass",
+  "name": "Fire",
+  "file": "assets/Fire/animated/fire_animated.png",
+  "slug": "fire"
+ },
+ {
+  "cat": "Spass",
+  "name": "Rainbow",
+  "file": "assets/Rainbow/animated/rainbow_animated.png",
+  "slug": "rainbow"
+ },
+ {
+  "cat": "Spass",
+  "name": "Snowman",
+  "file": "assets/Snowman/animated/snowman_animated.png",
+  "slug": "snowman"
+ },
+ {
+  "cat": "Spass",
+  "name": "Comet",
+  "file": "assets/Comet/animated/comet_animated.png",
+  "slug": "comet"
+ },
+ {
+  "cat": "Spass",
+  "name": "Glowing star",
+  "file": "assets/Glowing star/animated/glowing_star_animated.png",
+  "slug": "glowing_star"
+ },
+ {
+  "cat": "Spass",
+  "name": "Ringed planet",
+  "file": "assets/Ringed planet/animated/ringed_planet_animated.png",
+  "slug": "ringed_planet"
+ },
+ {
+  "cat": "Spass",
+  "name": "Sun with face",
+  "file": "assets/Sun with face/animated/sun_with_face_animated.png",
+  "slug": "sun_with_face"
+ },
+ {
+  "cat": "Spass",
+  "name": "Full moon face",
+  "file": "assets/Full moon face/animated/full_moon_face_animated.png",
+  "slug": "full_moon_face"
+ },
+ {
+  "cat": "Spass",
+  "name": "Jack-o-lantern",
+  "file": "assets/Jack-o-lantern/animated/jack-o-lantern_animated.png",
+  "slug": "jack-o-lantern"
+ },
+ {
+  "cat": "Spass",
+  "name": "Teddy bear",
+  "file": "assets/Teddy bear/animated/teddy_bear_animated.png",
+  "slug": "teddy_bear"
+ },
+ {
+  "cat": "Spass",
+  "name": "Crystal ball",
+  "file": "assets/Crystal ball/animated/crystal_ball_animated.png",
+  "slug": "crystal_ball"
+ },
+ {
+  "cat": "Spass",
+  "name": "Party popper",
+  "file": "assets/Party popper/animated/party_popper_animated.png",
+  "slug": "party_popper"
+ },
+ {
+  "cat": "Spass",
+  "name": "Birthday cake",
+  "file": "assets/Birthday cake/animated/birthday_cake_animated.png",
+  "slug": "birthday_cake"
+ },
+ {
+  "cat": "Spass",
+  "name": "Hot beverage",
+  "file": "assets/Hot beverage/animated/hot_beverage_animated.png",
+  "slug": "hot_beverage"
+ },
+ {
+  "cat": "Spass",
+  "name": "Musical notes",
+  "file": "assets/Musical notes/animated/musical_notes_animated.png",
+  "slug": "musical_notes"
+ },
+ {
+  "cat": "Spass",
+  "name": "Christmas tree",
+  "file": "assets/Christmas tree/animated/christmas_tree_animated.png",
+  "slug": "christmas_tree"
+ }
+]

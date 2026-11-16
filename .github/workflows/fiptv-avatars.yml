@@ -1,0 +1,30 @@
+name: fIPTV Profilbilder (animiert) aufbereiten
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Microsoft Fluent Emoji Animated (nur ausgewählte Dateien)
+        run: |
+          git clone --depth 1 --filter=blob:none --no-checkout https://github.com/microsoft/fluentui-emoji-animated ms
+          cd ms
+          git sparse-checkout init --no-cone
+          python3 -c "import json;print('\n'.join('/'+i['file'] for i in json.load(open('../.github/avatars/list.json'))))" > .git/info/sparse-checkout
+          echo /LICENSE >> .git/info/sparse-checkout
+          git lfs install --local
+          git checkout
+          git lfs pull --include="$(python3 -c "import json;print(','.join(i['file'] for i in json.load(open('../.github/avatars/list.json'))))")"
+      - run: pip install pillow
+      - run: python3 .github/avatars/convert.py ms .github/avatars/list.json out
+      - name: In Branch avatars ablegen
+        run: |
+          cp ms/LICENSE out/LICENSE-fluentui-emoji.txt
+          cd out
+          git init -q -b avatars
+          git config user.name "github-actions"; git config user.email "github-actions@users.noreply.github.com"
+          git add -A; git commit -qm "Animierte Profilbilder (Microsoft Fluent Emoji Animated, MIT)"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}" avatars
