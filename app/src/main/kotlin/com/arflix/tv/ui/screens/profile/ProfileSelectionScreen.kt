@@ -417,7 +417,8 @@ internal fun ProfileSelectionContent(
                                         onAvatarPositioned = { avatarCoordinatesMap[profile.id] = it },
                                         onClick = { handleProfileClick(profile) },
                                         onFocus = { viewModel.preloadForProfile(profile) },
-                                        onDelete = { viewModel.deleteProfile(profile) }
+                                        onDelete = { viewModel.deleteProfile(profile) },
+                                        entranceIndex = index,
                                     ) else AddProfileButton(avatarSize = avatarSize,
                                         onClick = { if (!isTransitioning) viewModel.showAddDialog() })
                                 }
@@ -443,7 +444,8 @@ internal fun ProfileSelectionContent(
                                 },
                                 onClick = { handleProfileClick(profile) },
                                 onFocus = { viewModel.preloadForProfile(profile) },
-                                onDelete = { viewModel.deleteProfile(profile) }
+                                onDelete = { viewModel.deleteProfile(profile) },
+                                entranceIndex = index,
                             )
 
                             if (index < uiState.profiles.size - 1 || uiState.profiles.size < 5) {
@@ -716,9 +718,18 @@ private fun ProfileAvatar(
     onAvatarPositioned: (LayoutCoordinates) -> Unit = {},
     onClick: () -> Unit,
     onFocus: () -> Unit = {},
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    entranceIndex: Int = 0,
 ) {
     var isFocused by remember { mutableIntStateOf(0) }
+    // fIPTV: Profile kommen nacheinander herein
+    val appear = remember { androidx.compose.animation.core.Animatable(if (com.arflix.tv.fiptv.FiptvEffects.animations) 0f else 1f) }
+    LaunchedEffect(Unit) {
+        if (appear.value < 1f) {
+            delay(80L + entranceIndex * 110L)
+            appear.animateTo(1f, androidx.compose.animation.core.spring(dampingRatio = 0.6f, stiffness = androidx.compose.animation.core.Spring.StiffnessMediumLow))
+        }
+    }
     val scale by animateFloatAsState(
         targetValue = if (isFocused > 0) 1.04f else 1f,
         animationSpec = tween(150),
@@ -729,7 +740,11 @@ private fun ProfileAvatar(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier.graphicsLayer {
-            alpha = if (isTransitionSelected) 0f else 1f
+            val a = appear.value
+            alpha = if (isTransitionSelected) 0f else a.coerceIn(0f, 1f)
+            val sc = 0.6f + 0.4f * a
+            scaleX = sc; scaleY = sc
+            translationY = (1f - a) * 40f
         }
     ) {
         Box(

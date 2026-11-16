@@ -4263,6 +4263,15 @@ internal fun ContentRow(
                         rowState.firstVisibleItemScrollOffset == 0))
         }
     }
+    // fIPTV: fokussierte Kachel wächst mit leichtem Nachfedern
+    val fiptvFocusScale = remember { androidx.compose.animation.core.Animatable(1f) }
+    LaunchedEffect(focusedItemIndex, isCurrentRow) {
+        val target = if (isCurrentRow && com.arflix.tv.fiptv.FiptvEffects.animations) 1.06f else 1f
+        if (target == 1f) { fiptvFocusScale.animateTo(1f, androidx.compose.animation.core.tween(120)); return@LaunchedEffect }
+        if (isFastScrolling) { fiptvFocusScale.snapTo(target); return@LaunchedEffect }
+        fiptvFocusScale.snapTo(1f)
+        fiptvFocusScale.animateTo(target, androidx.compose.animation.core.spring(dampingRatio = 0.5f, stiffness = 520f))
+    }
     val focusedCardIndex = if (railFocusOverlayActive) {
         -1
     } else {
@@ -4476,6 +4485,7 @@ internal fun ContentRow(
                                 showTitle = isCollectionRow && !item.collectionHideTitle,
                                 isFocusedOverride = itemIsFocused && !railFocusOverlayActive,
                                 focusedScale = 1f,
+                                modifier = Modifier.graphicsLayer { if (itemIsFocused) { scaleX = fiptvFocusScale.value; scaleY = fiptvFocusScale.value } },
                                 enableFocusedImageSwap = !isCollectionRow && !isFastScrolling,
                                 animateFocus = false,
                                 enableSystemFocus = false,
@@ -4529,6 +4539,7 @@ internal fun ContentRow(
                             showTitle = isCollectionRow && !item.collectionHideTitle,
                             isFocusedOverride = itemIsFocused && !railFocusOverlayActive,
                             focusedScale = 1f,
+                            modifier = Modifier.graphicsLayer { if (itemIsFocused) { scaleX = fiptvFocusScale.value; scaleY = fiptvFocusScale.value } },
                             enableFocusedImageSwap = !isCollectionRow && !isFastScrolling,
                             animateFocus = false,
                             enableSystemFocus = false,
@@ -4557,7 +4568,8 @@ internal fun ContentRow(
                         .width(itemWidth)
                         .aspectRatio(cardAspectRatio)
                         .testTag("home_focus_${category.id}")
-                        .zIndex(4f),
+                        .zIndex(4f)
+                        .graphicsLayer { scaleX = fiptvFocusScale.value; scaleY = fiptvFocusScale.value },
                     shape = railFocusShape,
                     backgroundColor = Color.Transparent,
                     outlineColor = ArvioSkin.colors.focusOutline,

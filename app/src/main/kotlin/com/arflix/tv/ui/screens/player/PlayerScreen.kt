@@ -464,6 +464,10 @@ private fun PlayerScreenContent(args: PlayerScreenArgs, viewModel: PlayerViewMod
 
     // Keep playback in landscape while the player is visible, regardless of the
     // device's auto-rotate lock. Restore the app's prior orientation afterward.
+    DisposableEffect(Unit) {
+        com.arflix.tv.fiptv.FiptvEffects.playbackActive = true
+        onDispose { com.arflix.tv.fiptv.FiptvEffects.playbackActive = false }
+    }
     DisposableEffect(activity) {
         activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
         onDispose {

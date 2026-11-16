@@ -2399,6 +2399,10 @@ fun LiveTvScreen(
 
     var hudPokeSignal by remember { mutableStateOf(0) }
     var isHudVisible by remember { mutableStateOf(false) }
+    // fIPTV: Senderwechsel-Effekte (Schieben + Infoleiste)
+    var fiptvZapSignal by remember { mutableStateOf(0) }
+    var fiptvZapDirection by remember { mutableStateOf(1) }
+    var fiptvFirstFrame by remember { mutableStateOf(0) }
     // Bumped to dismiss the HUD from outside, so Back can close it without
     // leaving fullscreen.
     var hudHideSignal by remember { mutableStateOf(0) }
@@ -2593,6 +2597,8 @@ fun LiveTvScreen(
         val index = filteredChannelIndexById[targetId] ?: return
         val target = filteredChannels.getOrNull(index)?.takeIf { it.id == targetId } ?: return
         if (!complete && index >= filteredChannels.size - 16) requestGuideWindowAfter()
+        fiptvZapDirection = if (delta >= 0) 1 else -1
+        fiptvZapSignal++
         tuneToDisplayChannel(target)
     }
 
@@ -2603,6 +2609,7 @@ fun LiveTvScreen(
         val target = previousChannelId
             ?.let { id -> visibleChannelsById[id] ?: allDisplayChannels.firstOrNull { channel -> channel.id == id } }
             ?: return false
+        if (isFullScreen) { fiptvZapDirection = 1; fiptvZapSignal++ }
         tuneToDisplayChannel(target)
         return true
     }
@@ -3244,6 +3251,15 @@ fun LiveTvScreen(
         onDispose { exoPlayer.removeListener(listener) }
     }
 
+    DisposableEffect(exoPlayer) {
+        val listener = object : Player.Listener {
+            override fun onRenderedFirstFrame() { fiptvFirstFrame++ }
+        }
+        exoPlayer.addListener(listener)
+        onDispose { exoPlayer.removeListener(listener) }
+    }
+    SideEffect { com.arflix.tv.fiptv.FiptvEffects.playbackActive = isFullScreen }
+    DisposableEffect(Unit) { onDispose { com.arflix.tv.fiptv.FiptvEffects.playbackActive = false } }
     var streamStats by remember(exoPlayer) { mutableStateOf(LiveStreamTechInfo()) }
     DisposableEffect(exoPlayer) {
         val listener = LivePlaybackQualityListener(exoPlayer) { playbackQuality = it }
@@ -4930,7 +4946,8 @@ fun LiveTvScreen(
                                     if (nowMs - lastZapAtMs >= MinZapIntervalMs) {
                                         lastZapAtMs = nowMs
                                         zap(zapDelta)
-                                        hudPokeSignal++
+                                        // fIPTV: Infoleiste statt der ganzen Bedienleiste
+                                        if (isHudVisible) hudPokeSignal++
                                     }
                                 }
                                 return@onPreviewKeyEvent true
@@ -4946,7 +4963,7 @@ fun LiveTvScreen(
                                         return@onPreviewKeyEvent true
                                     }
                                     Key.DirectionRight -> {
-                                        if (tunePreviousChannel()) hudPokeSignal++
+                                        if (tunePreviousChannel() && isHudVisible) hudPokeSignal++
                                         return@onPreviewKeyEvent true
                                     }
                                     Key.DirectionCenter, Key.Enter -> {
@@ -5024,6 +5041,16 @@ fun LiveTvScreen(
                     },
                     modifier = Modifier.fillMaxSize(),
                 )
+                if (isFullScreen && !fullscreenGuideOpen && !quickZapOpen) {
+                    FiptvZapOverlay(
+                        zapSignal = fiptvZapSignal,
+                        direction = fiptvZapDirection,
+                        channel = playingDisplayChannel,
+                        nowNext = currentNowNext,
+                        firstFrameSignal = fiptvFirstFrame,
+                        showBanner = !isHudVisible,
+                    )
+                }
                 if (isFullScreen && !fullscreenGuideOpen && !quickZapOpen && liveAiShows) {
                     LiveAiSubtitleOverlay(
                         cue = liveAiCue,

@@ -65,7 +65,8 @@ fun Modifier.arvioFocusable(
     val visualFocused = isFocusedOverride || (useSystemFocusForVisuals && isFocused)
     val targetScale = when {
         isPressed -> pressedScale
-        visualFocused -> focusedScale
+        // fIPTV: mit Animationen etwas deutlicher vergrößern
+        visualFocused -> if (com.arflix.tv.fiptv.FiptvEffects.animations && focusedScale > 1f) focusedScale + 0.025f else focusedScale
         else -> 1f
     }
 
@@ -73,7 +74,11 @@ fun Modifier.arvioFocusable(
     val animatedScale = if (animateFocus) {
         animateFloatAsState(
             targetValue = targetScale,
-            animationSpec = tween(durationMillis = 105, easing = tokens.easing),
+            animationSpec = if (com.arflix.tv.fiptv.FiptvEffects.animations && targetScale > 1f) {
+                androidx.compose.animation.core.spring(dampingRatio = 0.55f, stiffness = 600f)
+            } else {
+                tween(durationMillis = 105, easing = tokens.easing)
+            },
             label = "arvio_focus_scale",
         )
     } else {

@@ -269,6 +269,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         com.arflix.tv.fiptv.live.FiptvChannelCleanup.init(this)
         com.arflix.tv.fiptv.FiptvSleepTimer.attach(this)
+        com.arflix.tv.fiptv.FiptvEffects.init(this)
+        if (savedInstanceState == null) com.arflix.tv.fiptv.FiptvIntro.start()
         // fIPTV: erster Start nach einem Update → Hinweis, kurz zu warten (Fire OS beendet die App danach einmal;
         // läuft dabei ein Video, kann der Decoder des Fire TV bis zum Neustart hängen bleiben)
         run {
@@ -467,6 +469,7 @@ class MainActivity : ComponentActivity() {
                     accentColorName = accentColorName
                 ) {
                     val startupState by startupViewModel.state.collectAsStateWithLifecycle()
+                    androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.fillMaxSize()) {
                     ArflixApp(
                         authRepository = authRepository.get(),
                         profileRepository = profileRepository.get(),
@@ -493,6 +496,8 @@ class MainActivity : ComponentActivity() {
                         preloadedLogoCache = startupState.logoCache,
                         onExitApp = { finish() }
                     )
+                    com.arflix.tv.fiptv.FiptvIntroOverlay()
+                    }
                 }
             }
         }
@@ -544,6 +549,22 @@ class MainActivity : ComponentActivity() {
             if (idleReturnCoordinator.isPlayerOpen && idleReturnCoordinator.shouldDiscardPlayer) {
                 swallowedIdleKeys.add(event.keyCode)
                 return true
+            }
+        }
+        // fIPTV: Startanimation – jede Taste überspringt sie
+        if (com.arflix.tv.fiptv.FiptvIntro.consumeKey()) return true
+        // fIPTV: Navigationsklick und OK-Ton
+        if (event.action == android.view.KeyEvent.ACTION_DOWN) {
+            when (event.keyCode) {
+                android.view.KeyEvent.KEYCODE_DPAD_UP, android.view.KeyEvent.KEYCODE_DPAD_DOWN,
+                android.view.KeyEvent.KEYCODE_DPAD_LEFT, android.view.KeyEvent.KEYCODE_DPAD_RIGHT ->
+                    com.arflix.tv.fiptv.FiptvEffects.navClick()
+            }
+        } else if (event.action == android.view.KeyEvent.ACTION_UP && !event.isCanceled &&
+            event.eventTime - event.downTime < 450) {
+            when (event.keyCode) {
+                android.view.KeyEvent.KEYCODE_DPAD_CENTER, android.view.KeyEvent.KEYCODE_ENTER,
+                android.view.KeyEvent.KEYCODE_NUMPAD_ENTER -> com.arflix.tv.fiptv.FiptvEffects.okClick()
             }
         }
         // fIPTV: Menü-Taste (☰) öffnet das Menü links

@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -253,13 +254,33 @@ fun ChannelRow(
                         iterations = Int.MAX_VALUE, initialDelayMillis = 1000,
                     ) else Modifier),
                 )
+                // fIPTV: neu gemerkter Favorit → Stern ploppt kurz auf, mit Klang
+                val starPop = remember { androidx.compose.animation.core.Animatable(1f) }
+                var starWasFavorite by remember(channel.id) { mutableStateOf(isFavorite) }
+                LaunchedEffect(channel.id, isFavorite) {
+                    if (isFavorite && !starWasFavorite) {
+                        com.arflix.tv.fiptv.FiptvEffects.play(com.arflix.tv.fiptv.FiptvEffects.STAR)
+                        if (com.arflix.tv.fiptv.FiptvEffects.animations) {
+                            starPop.snapTo(0.2f)
+                            starPop.animateTo(1f, androidx.compose.animation.core.keyframes {
+                                durationMillis = 520
+                                2.4f at 180
+                                0.85f at 360
+                                1f at 520
+                            })
+                        }
+                    }
+                    starWasFavorite = isFavorite
+                }
                 if (isFavorite) {
                     Spacer(Modifier.width(4.dp))
                     Icon(
                         imageVector = Icons.Filled.Star,
                         contentDescription = null,
-                        tint = foreground,
-                        modifier = Modifier.size(11.dp),
+                        tint = if (starPop.value > 1.05f) Color(0xFFF2C94C) else foreground,
+                        modifier = Modifier.size(11.dp).graphicsLayer {
+                            scaleX = starPop.value; scaleY = starPop.value
+                        },
                     )
                 }
                 if (channel.catchupDays > 0 && rowHeight >= 48.dp) {
