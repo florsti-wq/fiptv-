@@ -2903,6 +2903,19 @@ fun LiveTvScreen(
         )
     }
 
+    fun playVariant(channel: EnrichedChannel) {
+        noteGuideUserNavigation()
+        val displayId = displayChannelIdFor(channel.id, visibleEnrichedState.value.index.byId, variantGroups) ?: channel.id
+        playingChannelId = channel.id
+        focusedChannelId = displayId
+        epgPrefetchAnchorId = displayId
+        rememberedChannelByCategory[categoryScope] = displayId
+        playingCatchupProgram = null
+        catchupPlaybackOffsetMs = 0L
+        fullscreenGuideOpen = false
+        focusChannelList(displayId)
+    }
+
     /** fIPTV: Stream ist endgültig ausgefallen → nächste Variante desselben Senders probieren. */
     fun fiptvTryFailover(): Boolean {
         val ch = playingChannel ?: return false
@@ -2926,19 +2939,6 @@ fun LiveTvScreen(
         playVariant(next)
         fiptvFailoverGroup = keepGroup
         return true
-    }
-
-    fun playVariant(channel: EnrichedChannel) {
-        noteGuideUserNavigation()
-        val displayId = displayChannelIdFor(channel.id, visibleEnrichedState.value.index.byId, variantGroups) ?: channel.id
-        playingChannelId = channel.id
-        focusedChannelId = displayId
-        epgPrefetchAnchorId = displayId
-        rememberedChannelByCategory[categoryScope] = displayId
-        playingCatchupProgram = null
-        catchupPlaybackOffsetMs = 0L
-        fullscreenGuideOpen = false
-        focusChannelList(displayId)
     }
 
     fun playProgramInMini(channel: EnrichedChannel, program: IptvProgram?) {
