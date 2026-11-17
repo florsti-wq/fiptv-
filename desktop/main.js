@@ -272,6 +272,135 @@ function allowProviderCors() {
   });
 }
 
+
+// ---------------------------------------------------------------------------
+// fIPTV: Aufnahmen unter Windows – Live-Streams (TS oder HLS) in „Videos\fIPTV“ speichern
+// ---------------------------------------------------------------------------
+const crypto = require("node:crypto");
+const recordings = new Map(); // id -> { id, title, path, endsAt, bytes, running, error, stop }
+
+function recordingsDir() {
+  const dir = path.join(app.getPath("videos"), "fIPTV");
+  fs.mkdirSync(dir, { recursive: true });
+  return dir;
+}
+
+function safeName(name) {
+  return String(name || "fIPTV").replace(/[\\/:*?"<>|]/g, " ").replace(/\s+/g, " ").trim().slice(0, 80) || "fIPTV";
+}
+
+async function recFetch(url, headers, signal) {
+  const h = { "User-Agent": "fIPTV", ...(headers || {}) };
+  const res = await fetch(url, { headers: h, signal, redirect: "follow" });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res;
+}
+
+function attr(line, name) {
+  const m = new RegExp(`${name}=("([^"]*)"|[^,]*)`).exec(line);
+  return m ? (m[2] !== undefined ? m[2] : m[1]) : null;
+}
+
+async function recordHls(rec, url, headers, out, signal) {
+  let playlistUrl = url;
+  let body = await (await recFetch(playlistUrl, headers, signal)).text();
+  if (body.includes("#EXT-X-STREAM-INF")) {
+    const lines = body.split(/\r?\n/);
+    let best = null;
+    lines.forEach((l, i) => {
+      if (!l.startsWith("#EXT-X-STREAM-INF")) return;
+      const bw = Number(attr(l, "BANDWIDTH") || 0);
+      const uri = lines.slice(i + 1).find((x) => x.trim() && !x.startsWith("#"));
+      if (uri && (!best || bw > best.bw)) best = { bw, uri: uri.trim() };
+    });
+    if (!best) throw new Error("keine Variante");
+    playlistUrl = new URL(best.uri, playlistUrl).toString();
+    body = await (await recFetch(playlistUrl, headers, signal)).text();
+  }
+  let lastSeq = -1, initDone = false, keyUrl = null, keyBytes = null;
+  while (rec.running && Date.now() < rec.endsAt) {
+    const lines = body.split(/\r?\n/);
+    let seq = Number((lines.find((l) => l.startsWith("#EXT-X-MEDIA-SEQUENCE")) || ":0").split(":")[1]) || 0;
+    const target = Number((lines.find((l) => l.startsWith("#EXT-X-TARGETDURATION")) || ":6").split(":")[1]) || 6;
+    let method = null, kUri = null, iv = null, pending = false;
+    for (const raw of lines) {
+      const line = raw.trim();
+      if (line.startsWith("#EXT-X-MAP") && !initDone) {
+        const u = attr(line, "URI");
+        if (u) { const b = Buffer.from(await (await recFetch(new URL(u, playlistUrl).toString(), headers, signal)).arrayBuffer()); out.write(b); rec.bytes += b.length; initDone = true; }
+      } else if (line.startsWith("#EXT-X-KEY")) {
+        method = attr(line, "METHOD"); const u = attr(line, "URI"); kUri = u ? new URL(u, playlistUrl).toString() : null; iv = attr(line, "IV");
+      } else if (line.startsWith("#EXTINF")) {
+        pending = true;
+      } else if (line && !line.startsWith("#") && pending) {
+        pending = false;
+        const thisSeq = seq++;
+        if (thisSeq <= lastSeq) continue;
+        if (!rec.running || Date.now() >= rec.endsAt) break;
+        let data;
+        try { data = Buffer.from(await (await recFetch(new URL(line, playlistUrl).toString(), headers, signal)).arrayBuffer()); } catch { continue; }
+        if (method && method.toUpperCase() === "AES-128" && kUri) {
+          if (kUri !== keyUrl) { keyBytes = Buffer.from(await (await recFetch(kUri, headers, signal)).arrayBuffer()); keyUrl = kUri; }
+          let ivBuf;
+          if (iv) ivBuf = Buffer.from(iv.replace(/^0x/i, "").padStart(32, "0"), "hex");
+          else { ivBuf = Buffer.alloc(16); ivBuf.writeBigUInt64BE(BigInt(thisSeq), 8); }
+          const d = crypto.createDecipheriv("aes-128-cbc", keyBytes, ivBuf);
+          data = Buffer.concat([d.update(data), d.final()]);
+        } else if (method && method.toUpperCase() !== "NONE") {
+          throw new Error("verschlüsselter Stream wird nicht unterstützt");
+        }
+        out.write(data); rec.bytes += data.length; lastSeq = thisSeq;
+      }
+    }
+    if (body.includes("#EXT-X-ENDLIST")) break;
+    await new Promise((r) => setTimeout(r, Math.min(6000, Math.max(1000, target * 500))));
+    try { body = await (await recFetch(playlistUrl, headers, signal)).text(); } catch { await new Promise((r) => setTimeout(r, 2000)); }
+  }
+}
+
+async function recordProgressive(rec, url, headers, out, signal) {
+  const res = await recFetch(url, headers, signal);
+  const reader = res.body.getReader();
+  while (rec.running && Date.now() < rec.endsAt) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    out.write(Buffer.from(value)); rec.bytes += value.length;
+  }
+  try { await reader.cancel(); } catch { /* egal */ }
+}
+
+ipcMain.handle("fiptv:record-start", async (_e, input) => {
+  const { url, isHls, headers, title, endsAt } = input || {};
+  if (!url || !/^https?:/i.test(url)) throw new Error("Für diesen Sender ist keine Aufnahme möglich");
+  const id = "rec_" + Date.now().toString(36);
+  const stamp = new Date().toISOString().slice(0, 16).replace("T", " ").replace(":", "-");
+  const file = path.join(recordingsDir(), `${safeName(`${title} ${stamp}`)}.ts`);
+  const controller = new AbortController();
+  const rec = { id, title, path: file, endsAt: Number(endsAt) || Date.now() + 3600_000, bytes: 0, running: true, error: null,
+    stop: () => { rec.running = false; controller.abort(); } };
+  recordings.set(id, rec);
+  const out = fs.createWriteStream(file);
+  const hls = isHls || /\.m3u8(\?|$)/i.test(url);
+  (async () => {
+    try {
+      if (hls) await recordHls(rec, url, headers, out, controller.signal);
+      else await recordProgressive(rec, url, headers, out, controller.signal);
+    } catch (err) {
+      if (rec.running) rec.error = String((err && err.message) || err);
+    } finally {
+      rec.running = false;
+      out.end();
+    }
+  })();
+  // Ende zur geplanten Zeit sicherstellen
+  setTimeout(() => rec.stop(), Math.max(0, rec.endsAt - Date.now()) + 1000);
+  return { id, path: file };
+});
+
+ipcMain.handle("fiptv:record-stop", (_e, id) => { recordings.get(id)?.stop(); return true; });
+ipcMain.handle("fiptv:record-list", () => [...recordings.values()].map(({ stop, ...r }) => r));
+ipcMain.handle("fiptv:record-open-folder", () => shell.openPath(recordingsDir()));
+
 app.whenReady().then(() => {
   allowProviderCors();
   buildMenu();

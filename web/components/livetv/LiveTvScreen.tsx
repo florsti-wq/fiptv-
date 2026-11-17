@@ -1,6 +1,14 @@
 "use client";
 import { channelCleanupEnabled, cleanChannelName, tidyChannels } from "@/lib/fiptvChannelCleanup";
 import { animationsEnabled, takeStartLive } from "@/lib/fiptvEffects";
+
+/** fIPTV: Aufnahme-Funktionen der Windows-App (nur in Electron vorhanden). */
+type DesktopRecorder = { recordStart: (input: { url: string; isHls: boolean; headers: Record<string, string>; title: string; endsAt: number }) => Promise<{ id: string; path: string }> };
+function desktopRecorder(): DesktopRecorder | null {
+  if (typeof window === "undefined") return null;
+  const d = (window as unknown as { fiptvDesktop?: Partial<DesktopRecorder> }).fiptvDesktop;
+  return d?.recordStart ? (d as DesktopRecorder) : null;
+}
 import { premiumAllows } from "@/lib/premiumGate";
 import { useTranslation } from "@/lib/i18n";
 import "./livetv.css";
@@ -113,6 +121,7 @@ export function LiveTvScreen() {
   const [catchup, setCatchup] = useState<{ channelId: string; programs: CatchupProgram[]; loading: boolean } | null>(null);
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [menu, setMenu] = useState<ChannelMenuState | null>(null);
+  const [recordToast, setRecordToast] = useState<string | null>(null);
   const [zapDigits, setZapDigits] = useState("");
   const [zapInfo, setZapInfo] = useState<IptvChannel | null>(null);
   const tvSession = useMemo(() => normalizeTvSession(settings.iptvTvSession), [settings.iptvTvSession]);
@@ -748,7 +757,19 @@ export function LiveTvScreen() {
         onMove={(direction) => moveFavorite(menu.channel.id, direction)}
         onHideGroup={() => hideChannelGroup(menu.channel)}
         onClose={() => setMenu(null)}
+        programmeEnd={nowNext[menu.channel.id]?.now?.endUtcMillis}
+        onRecord={desktopRecorder() ? (minutes) => {
+          const ch = menu.channel;
+          const now = nowNext[ch.id]?.now;
+          const endsAt = minutes === null && now?.endUtcMillis ? now.endUtcMillis + 5 * 60_000 : Date.now() + (minutes ?? 60) * 60_000;
+          const name = channelCleanupEnabled() ? cleanChannelName(ch.name) : ch.name;
+          const title = now?.title ? `${name} – ${now.title}` : name;
+          desktopRecorder()!.recordStart({ url: ch.streamUrl, isHls: /\.m3u8(\?|$)/i.test(ch.streamUrl), headers: {}, title, endsAt })
+            .then(() => setRecordToast(`Aufnahme gestartet: ${title}`))
+            .catch((err: unknown) => setRecordToast(`Aufnahme nicht möglich: ${err instanceof Error ? err.message : String(err)}`));
+        } : undefined}
       />}
+      {recordToast && <div className="fiptv-record-toast" role="status" onAnimationEnd={() => setRecordToast(null)}>{recordToast}</div>}
       <LiveZapOverlay curtain={zapCurtain} digits={zapDigits} digitMatch={zapDigitMatch} info={zapInfo} guide={zapInfo ? nowNext[zapInfo.id] : undefined} clockFormat={settings.clockFormat} />
     </div>
   );

@@ -1,6 +1,6 @@
 "use client";
 import { useTranslation } from "@/lib/i18n";
-import { ArrowDown, ArrowUp, EyeOff, Play, Star, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Circle, EyeOff, FolderOpen, Play, Star, X } from "lucide-react";
 import { useEffect, useRef } from "react";
 import type { IptvChannel } from "@/lib/types";
 
@@ -10,7 +10,7 @@ export type ChannelMenuState = { channel: IptvChannel; anchor: HTMLElement | nul
  * Channel context menu (long-press / right-click / menu key), like Android's
  * ChannelContextMenu: favourite, reorder favourites, hide the channel's group.
  */
-export function ChannelMenu({ state, groupName, favorite, canMoveUp, canMoveDown, onPlay, onToggleFavorite, onMove, onHideGroup, onClose }: {
+export function ChannelMenu({ state, groupName, favorite, canMoveUp, canMoveDown, onPlay, onToggleFavorite, onMove, onHideGroup, onClose, onRecord, programmeEnd }: {
   state: ChannelMenuState;
   /** The channel's category as shown on the Live TV page (the user's own name when set). */
   groupName?: string;
@@ -22,6 +22,9 @@ export function ChannelMenu({ state, groupName, favorite, canMoveUp, canMoveDown
   onMove: (direction: -1 | 1) => void;
   onHideGroup: () => void;
   onClose: () => void;
+  /** fIPTV (Windows): aufnehmen – Minuten oder null = bis Sendungsende */
+  onRecord?: (minutes: number | null) => void;
+  programmeEnd?: number;
 }) {
   const translateUi = useTranslation();
   const dialog = useRef<HTMLDialogElement>(null);
@@ -46,6 +49,10 @@ export function ChannelMenu({ state, groupName, favorite, canMoveUp, canMoveDown
         {favorite && <button type="button" role="menuitem" disabled={!canMoveUp} onClick={run(() => onMove(-1))}><ArrowUp size={17} />{translateUi("Move favorite up")}</button>}
         {favorite && <button type="button" role="menuitem" disabled={!canMoveDown} onClick={run(() => onMove(1))}><ArrowDown size={17} />{translateUi("Move favorite down")}</button>}
         <button type="button" role="menuitem" onClick={run(onHideGroup)}><EyeOff size={17} />{translateUi("Hide category {value0}", { value0: group })}</button>
+        {onRecord && programmeEnd && programmeEnd > Date.now() && <button type="button" role="menuitem" onClick={run(() => onRecord(null))}><Circle size={17} fill="#e5484d" color="#e5484d" />Aufnehmen bis Sendungsende ({new Date(programmeEnd + 5 * 60_000).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })})</button>}
+        {onRecord && <button type="button" role="menuitem" onClick={run(() => onRecord(60))}><Circle size={17} color="#e5484d" />1 Stunde aufnehmen</button>}
+        {onRecord && <button type="button" role="menuitem" onClick={run(() => onRecord(120))}><Circle size={17} color="#e5484d" />2 Stunden aufnehmen</button>}
+        {onRecord && <button type="button" role="menuitem" onClick={run(() => { void (window as unknown as { fiptvDesktop?: { openRecordingsFolder?: () => Promise<unknown> } }).fiptvDesktop?.openRecordingsFolder?.(); })}><FolderOpen size={17} />Aufnahmen-Ordner öffnen</button>}
       </div>
     </dialog>
   );

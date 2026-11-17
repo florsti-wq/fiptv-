@@ -49,3 +49,7 @@ html:not([data-fiptv-anim="off"]) .livetv-zap-info { animation: fiptv-banner-in 
 /* Weltraum-Hintergrund */
 .fiptv-space-bg { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none; display: block; }
 .profile-shell > .profile-center { position: relative; z-index: 1; }
+
+/* Aufnahme-Hinweis (Windows) */
+.fiptv-record-toast { position: fixed; left: 50%; bottom: 48px; transform: translateX(-50%); z-index: 200; background: rgba(20,20,22,.94); color: #fff; padding: 10px 18px; border-radius: 10px; font-size: 15px; animation: fiptv-toast 4.5s ease forwards; pointer-events: none; }
+@keyframes fiptv-toast { 0% { opacity: 0; transform: translate(-50%, 12px); } 8% { opacity: 1; transform: translate(-50%, 0); } 85% { opacity: 1; } 100% { opacity: 0; } }
