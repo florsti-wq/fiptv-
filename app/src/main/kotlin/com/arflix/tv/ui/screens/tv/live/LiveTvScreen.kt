@@ -2400,6 +2400,7 @@ fun LiveTvScreen(
     var hudPokeSignal by remember { mutableStateOf(0) }
     var isHudVisible by remember { mutableStateOf(false) }
     // fIPTV: Senderwechsel-Effekte (Schieben + Infoleiste)
+    var fiptvSwallowSelectUp by remember { mutableStateOf(false) }
     var fiptvZapSignal by remember { mutableStateOf(0) }
     var fiptvZapDirection by remember { mutableStateOf(1) }
     var fiptvFirstFrame by remember { mutableStateOf(0) }
@@ -4872,6 +4873,13 @@ fun LiveTvScreen(
                     .focusRequester(fsFocus)
                     .focusable()
                     .onPreviewKeyEvent { ev ->
+                        // fIPTV: Das Loslassen der OK-Taste, die gerade die Leiste geöffnet hat, darf nicht
+                        // beim Pause-Knopf ankommen (sonst pausiert der Stream schon beim ersten Druck).
+                        if (ev.type == KeyEventType.KeyUp && fiptvSwallowSelectUp &&
+                            (ev.key == Key.DirectionCenter || ev.key == Key.Enter)) {
+                            fiptvSwallowSelectUp = false
+                            return@onPreviewKeyEvent true
+                        }
                         if (!isFullScreen || ev.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
                         if (fullscreenGuideOpen) {
                             when (ev.key) {
@@ -4969,6 +4977,7 @@ fun LiveTvScreen(
                                     Key.DirectionCenter, Key.Enter -> {
                                         // After a dismissed Busy nothing plays, so OK tunes again rather than opening controls.
                                         if (liveRetuneOnSelect) liveRetuneSignal++ else hudEngaged = true
+                                        fiptvSwallowSelectUp = true
                                         hudPokeSignal++
                                         return@onPreviewKeyEvent true
                                     }
