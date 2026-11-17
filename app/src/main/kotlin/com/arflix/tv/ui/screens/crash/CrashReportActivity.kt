@@ -121,7 +121,18 @@ fun CrashReportScreen(
     val context = LocalContext.current
     val deviceType = detectDeviceType(context)
     // Shown on screen only; the report sent out keeps the stable English [crashMsg].
-    val displayCrashMsg = if (hasReportedCrashMsg) crashMsg else stringResource(R.string.crash_error_unexpected)
+    // fIPTV: lange Fehlertexte (z. B. mit „Here are some possible fixes“) kürzen, darunter die Fehlerstelle
+    val fiptvCtx = LocalContext.current
+    val fiptvWhere = remember(crashId) {
+        val stack = fiptvCtx.getSharedPreferences("arvio_crash_store", Context.MODE_PRIVATE)
+            .getString("fiptv_last_crash_stack", null).orEmpty()
+        val lines = stack.lines().map { it.trim() }.filter { it.startsWith("at ") }
+        val own = lines.filter { "com.arflix" in it || "fiptv" in it }.take(6)
+        own.ifEmpty { lines.take(4) }.joinToString("\n") { it.removePrefix("at ").take(110) }
+    }
+    val displayCrashMsg = (if (hasReportedCrashMsg) crashMsg else stringResource(R.string.crash_error_unexpected))
+        .substringBefore(" Here are some").substringBefore("\n").take(160) +
+        (if (fiptvWhere.isNotBlank()) "\n\nStelle:\n$fiptvWhere" else "")
     val hasTouch = deviceHasTouchScreen(context)
     val isTv = deviceType == DeviceType.TV || !hasTouch
 
