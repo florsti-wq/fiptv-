@@ -5312,7 +5312,13 @@ fun LiveTvScreen(
                         .focusable(enabled = focusZone == LiveTvFocusZone.TOPBAR),
                 )
                 LaunchedEffect(focusZone) {
-                    if (focusZone == LiveTvFocusZone.TOPBAR) topBarFocusRequester.requestFocus()
+                    // fIPTV: Menüleiste ist evtl. noch nicht aufgebaut – nicht abstürzen, kurz erneut versuchen
+                    if (focusZone == LiveTvFocusZone.TOPBAR) {
+                        repeat(6) {
+                            if (runCatching { topBarFocusRequester.requestFocus() }.isSuccess) return@LaunchedEffect
+                            kotlinx.coroutines.delay(50)
+                        }
+                    }
                 }
             }
         }
