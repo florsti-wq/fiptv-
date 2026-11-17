@@ -1,4 +1,5 @@
 package com.arflix.tv.ui.screens.settings
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.filled.TableRows
@@ -341,7 +342,7 @@ internal fun tvGeneralRowsForSection(section: String): List<Int> {
             listOf(39, 9, 45)
         "ai_subtitles" -> listOf(28, 29, 30, 31, 32, 33) + LIVE_AI_SUBS_ROWS
         "playback" -> listOf(64, 10, 11, 12, 43, 44, 13, 14, 34, 37, 16, 15, 40, 27, 53, 54)
-        "appearance" -> listOf(62, 63, 65, 67, 68, 66, 17, 49, 50, 18, 20, 60, 21, 24, 23, 22, 41, 46, 36, 47)
+        "appearance" -> listOf(62, 63, 65, 67, 68, 66, 17, 49, 50, 18, 20, 60, 21, 24, 23, 22, 41, 46, 36, 47, 69)
         "profiles" -> listOf(19, 61)
         "network" -> listOf(25, 26, 35)
         else -> emptyList()
@@ -1473,6 +1474,7 @@ fun SettingsScreen(
                                                 66 -> com.arflix.tv.fiptv.FiptvEffects.toggleSounds()
                                                 67 -> com.arflix.tv.fiptv.FiptvSpace.cycleMode()
                                                 68 -> com.arflix.tv.fiptv.FiptvSpace.cyclePalette()
+                                                69 -> com.arflix.tv.fiptv.FiptvEffects.openLastCrash()
                                                 64 -> com.arflix.tv.fiptv.FiptvSleepTimer.cycle()
                                                 20 -> viewModel.setOledBlackBackground(!uiState.oledBlackBackground)
                                                 21 -> viewModel.cycleClockFormat()
@@ -6982,6 +6984,7 @@ private fun TvGeneralSettingsRows(
                 65 -> SettingsToggleRow("Animationen", "Startanimation, Profile, Kachel-Fokus, Senderwechsel und Favoriten-Stern", com.arflix.tv.fiptv.FiptvEffects.animations, focusedIndex == localIndex, { com.arflix.tv.fiptv.FiptvEffects.toggleAnimations() }, Modifier.settingsFocusSlot(localIndex))
                 67 -> SettingsRow(Icons.Default.Star, "Hintergrund", "Animierter Weltraum hinter Profilauswahl, Startseite und Einstellungen", com.arflix.tv.fiptv.FiptvSpace.mode.let { com.arflix.tv.fiptv.FiptvSpace.modeLabel() }, focusedIndex == localIndex, { com.arflix.tv.fiptv.FiptvSpace.cycleMode() }, Modifier.settingsFocusSlot(localIndex))
                 68 -> SettingsRow(Icons.Default.Star, "Farbstimmung", "Farben der Nebel im Weltraum-Hintergrund", com.arflix.tv.fiptv.FiptvSpace.palette.let { com.arflix.tv.fiptv.FiptvSpace.paletteLabel() }, focusedIndex == localIndex, { com.arflix.tv.fiptv.FiptvSpace.cyclePalette() }, Modifier.settingsFocusSlot(localIndex))
+                69 -> SettingsRow(Icons.Default.Info, "Letzter Absturzbericht", "Angaben zum letzten Absturz anzeigen, falls du einen Fehler melden möchtest", com.arflix.tv.fiptv.FiptvEffects.lastCrashLabel(), focusedIndex == localIndex, { com.arflix.tv.fiptv.FiptvEffects.openLastCrash() }, Modifier.settingsFocusSlot(localIndex))
                 66 -> SettingsToggleRow("Töne", "Startklang, leises Klicken beim Navigieren, Ton bei OK und beim Merken von Favoriten", com.arflix.tv.fiptv.FiptvEffects.sounds, focusedIndex == localIndex, { com.arflix.tv.fiptv.FiptvEffects.toggleSounds() }, Modifier.settingsFocusSlot(localIndex))
                 63 -> SettingsToggleRow("Senderliste aufräumen", "Gleiche Sender zusammenfassen, Länderkürzel und Trenner ausblenden, echte Auflösung anzeigen", com.arflix.tv.fiptv.live.FiptvChannelCleanup.enabledState.value, focusedIndex == localIndex, { com.arflix.tv.fiptv.live.FiptvChannelCleanup.toggle() }, Modifier.settingsFocusSlot(localIndex))
                 62 -> SettingsToggleRow("Menü links", "Hauptmenü als schmale Leiste links (nur Icons) statt oben", com.arflix.tv.ui.components.FiptvTvRail.enabled, focusedIndex == localIndex, { com.arflix.tv.ui.components.FiptvTvRail.toggle() }, Modifier.settingsFocusSlot(localIndex))

@@ -62,6 +62,27 @@ object FiptvEffects {
         if (on) play(OK, force = true)
     }
 
+    /** fIPTV: letzter Absturz – Datum für die Einstellungen, Bericht auf Wunsch öffnen. */
+    fun lastCrashLabel(): String {
+        val ctx = appContext ?: return "Keiner"
+        val at = ctx.getSharedPreferences("arvio_crash_store", Context.MODE_PRIVATE).getLong("last_crash_time", 0L)
+        if (at <= 0L) return "Keiner"
+        return java.text.SimpleDateFormat("dd.MM. HH:mm", java.util.Locale.GERMANY).format(java.util.Date(at))
+    }
+
+    fun openLastCrash() {
+        val ctx = appContext ?: return
+        val at = ctx.getSharedPreferences("arvio_crash_store", Context.MODE_PRIVATE).getLong("last_crash_time", 0L)
+        if (at <= 0L) {
+            android.widget.Toast.makeText(ctx, "Bisher kein Absturz gespeichert", android.widget.Toast.LENGTH_SHORT).show()
+            return
+        }
+        ctx.startActivity(
+            android.content.Intent(ctx, com.arflix.tv.ui.screens.crash.CrashReportActivity::class.java)
+                .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+        )
+    }
+
     fun toggleAnimations() { appContext?.let { setAnimations(it, !animations) } }
     fun toggleSounds() { appContext?.let { setSounds(it, !sounds) } }
 

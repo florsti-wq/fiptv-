@@ -353,26 +353,7 @@ internal fun ProfileSelectionContent(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                // fIPTV: Absturz der letzten 15 Minuten anzeigen, damit er sich ohne Entwicklerwerkzeuge melden lässt
-                val fiptvCrash = remember {
-                    val prefs = context.getSharedPreferences("arvio_crash_store", android.content.Context.MODE_PRIVATE)
-                    val at = prefs.getLong("last_crash_time", 0L)
-                    if (at > 0L && System.currentTimeMillis() - at < 24 * 60 * 60_000L) {
-                        val st = prefs.getString("fiptv_last_crash_stack", null) ?: prefs.getString("last_crash_msg", "") ?: ""
-                        val where = st.lines().map { it.trim() }.filter { it.startsWith("at ") && ("com.arflix" in it || "fiptv" in it) }.take(6)
-                        "Letzter Absturz (" + (prefs.getString("last_crash_version", "") ?: "") + "):\n" +
-                            st.lineSequence().firstOrNull().orEmpty().substringBefore(" Here are some").take(160) + "\n" +
-                            where.joinToString("\n") { it.removePrefix("at ").take(110) }
-                    } else null
-                }
-                if (fiptvCrash != null) {
-                    Text(
-                        text = fiptvCrash,
-                        fontSize = 11.sp,
-                        color = Color(0xFFFF8A80),
-                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
-                    )
-                }
+                // fIPTV: Absturzangaben stehen jetzt unter Einstellungen → Darstellung → Letzter Absturzbericht
                 // fIPTV: ohne Profile (z. B. nach fehlgeschlagener Anmeldung) das lokale Protokoll zeigen
                 if (uiState.profiles.isEmpty() && !uiState.isLoading) {
                     val fiptvLog = remember(uiState.isCloudConnected) { com.arflix.tv.util.FiptvDiagnostics.read(context) }
