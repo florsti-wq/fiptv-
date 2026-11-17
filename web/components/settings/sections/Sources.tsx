@@ -238,7 +238,8 @@ function IptvAccountBadge({ m3uUrl }: { m3uUrl: string }) {
     text = days <= 0 ? `Endet heute (${date})` : days === 1 ? `Noch 1 Tag · bis ${date}` : `Noch ${days} Tage · bis ${date}`;
     tone = days <= 14 ? "is-warn" : "is-ok";
   }
-  const streams = info.max ? ` · ${info.max} ${info.max === 1 ? "Stream" : "Streams"}` : "";
+  // fIPTV: belegte und erlaubte Verbindungen
+  const streams = info.max ? (info.active !== undefined ? ` · Verbindungen ${info.active} von ${info.max} belegt` : ` · ${info.max} ${info.max === 1 ? "Stream" : "Streams"}`) : "";
   return <button type="button" className={`st-account-badge ${tone}`} title="Angaben deines Anbieters – klicken zum Aktualisieren" onClick={() => load(true)}>{text}{streams}</button>;
 }
 

@@ -153,3 +153,70 @@ export function installEffects() {
     }
   }, { capture: true });
 }
+
+// fIPTV: Nachtmodus (Ton) – Kompressor gleicht laute und leise Stellen an.
+const NIGHT_KEY = "fiptv.nightMode";
+export function nightModeEnabled(): boolean {
+  if (typeof window === "undefined") return false;
+  try { return localStorage.getItem(NIGHT_KEY) === "1"; } catch { return false; }
+}
+export function setNightMode(on: boolean) {
+  try { localStorage.setItem(NIGHT_KEY, on ? "1" : "0"); } catch { /* ignore */ }
+  listeners.forEach((l) => l());
+}
+
+type NightChain = { ctx: AudioContext; source: MediaElementAudioSourceNode; comp: DynamicsCompressorNode; gain: GainNode };
+const nightChains = new WeakMap<HTMLVideoElement, NightChain>();
+
+/**
+ * Hängt den Kompressor an ein Video. Nur bei Streams über Media Source (blob:), sonst
+ * würde fremder Ton ohne CORS stumm. Einmal verbunden, wird nur noch umgeschaltet.
+ */
+export function applyNightMode(video: HTMLVideoElement | null) {
+  if (!video) return;
+  const on = nightModeEnabled();
+  let chain = nightChains.get(video);
+  if (!chain) {
+    if (!on || !video.currentSrc.startsWith("blob:")) return;
+    try {
+      const Ctor = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (!Ctor) return;
+      const ctx = new Ctor();
+      const source = ctx.createMediaElementSource(video);
+      const comp = ctx.createDynamicsCompressor();
+      comp.threshold.value = -30; comp.knee.value = 8; comp.ratio.value = 4; comp.attack.value = 0.008; comp.release.value = 0.25;
+      const gain = ctx.createGain();
+      chain = { ctx, source, comp, gain };
+      nightChains.set(video, chain);
+    } catch { return; }
+  }
+  const c = chain;
+  try {
+    c.source.disconnect(); c.comp.disconnect(); c.gain.disconnect();
+    if (on) { c.source.connect(c.comp).connect(c.gain).connect(c.ctx.destination); c.gain.gain.value = 1.8; }
+    else c.source.connect(c.ctx.destination);
+    if (c.ctx.state === "suspended") void c.ctx.resume().catch(() => undefined);
+  } catch { /* ignore */ }
+}
+
+// fIPTV: nach der Profilauswahl direkt mit dem letzten Sender starten
+const START_LIVE_KEY = "fiptv.startLive";
+export function startLiveEnabled(): boolean {
+  if (typeof window === "undefined") return false;
+  try { return localStorage.getItem(START_LIVE_KEY) === "1"; } catch { return false; }
+}
+export function setStartLive(on: boolean) {
+  try { localStorage.setItem(START_LIVE_KEY, on ? "1" : "0"); } catch { /* ignore */ }
+  listeners.forEach((l) => l());
+}
+let startLivePending = false;
+let startLiveUsed = false;
+/** Einmal pro App-Start: true, wenn Live TV den letzten Sender gleich abspielen soll. */
+export function requestStartLive(): boolean {
+  if (startLiveUsed || !startLiveEnabled()) return false;
+  startLiveUsed = true; startLivePending = true;
+  return true;
+}
+export function takeStartLive(): boolean {
+  const p = startLivePending; startLivePending = false; return p;
+}

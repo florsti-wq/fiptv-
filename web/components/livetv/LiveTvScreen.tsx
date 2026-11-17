@@ -1,6 +1,6 @@
 "use client";
 import { channelCleanupEnabled, cleanChannelName, tidyChannels } from "@/lib/fiptvChannelCleanup";
-import { animationsEnabled } from "@/lib/fiptvEffects";
+import { animationsEnabled, takeStartLive } from "@/lib/fiptvEffects";
 import { premiumAllows } from "@/lib/premiumGate";
 import { useTranslation } from "@/lib/i18n";
 import "./livetv.css";
@@ -397,6 +397,16 @@ export function LiveTvScreen() {
     void playChannel(channel);
     showInfo(channel, 3500);
   }, [lastChannelKey, playChannel, showInfo]);
+  // fIPTV: beim App-Start direkt den zuletzt gesehenen Sender abspielen (Einstellung)
+  const startLiveDone = useRef(false);
+  useEffect(() => {
+    if (startLiveDone.current || channelById.size === 0) return;
+    const lastId = tvSession.lastChannelId || loadStored<string | null>(lastChannelKey, null);
+    const channel = lastId ? channelById.get(lastId) : undefined;
+    if (!channel) return;
+    startLiveDone.current = true;
+    if (takeStartLive()) tune(channel);
+  }, [channelById, tvSession.lastChannelId, lastChannelKey, tune]);
   useEffect(() => registerLiveZap((action) => {
     const state = zapState.current;
     if (!state.active || state.active.id.startsWith("sports-addon:")) return false;

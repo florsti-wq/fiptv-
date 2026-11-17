@@ -6,7 +6,7 @@ import { CONTENT_LANGUAGE_OPTIONS } from "@/lib/i18n/languageOptions";
 import { languageCode, TRACK_LANGUAGES, trackLanguageName } from "@/lib/languages";
 import { useApp, useAppPick } from "@/lib/store";
 import type { AppSettings, QualityFilterConfig } from "@/lib/types";
-import { animationsEnabled, setAnimations, setSounds, setSpaceMode, setSpacePalette, soundsEnabled, SPACE_PALETTES, spaceMode, spacePalette } from "@/lib/fiptvEffects";
+import { startLiveEnabled, setStartLive, nightModeEnabled, setNightMode, animationsEnabled, setAnimations, setSounds, setSpaceMode, setSpacePalette, soundsEnabled, SPACE_PALETTES, spaceMode, spacePalette } from "@/lib/fiptvEffects";
 import { Group, Row, SecretInput, Segmented, Select, SectionHeader, Slider, Status, Swatches, Toggle, safeArray } from "../ui";
 
 type Set = (patch: Partial<AppSettings>) => void;
@@ -68,6 +68,12 @@ export function PlaybackSection() {
         </Row>
         <Row id="fiptv-space-palette" label="Farbstimmung" hint="Farben der Nebel im Weltraum-Hintergrund." scope="all">
           <SpaceSelect kind="palette" />
+        </Row>
+        <Row id="fiptv-start-live" label="Mit letztem Sender starten" hint="Nach der Profilauswahl direkt den zuletzt gesehenen Sender abspielen." scope="all">
+          <StartLiveToggle />
+        </Row>
+        <Row id="fiptv-night" label="Nachtmodus (Ton)" hint="Gleicht laute und leise Stellen an – Werbung leiser, Dialoge verständlicher." scope="all">
+          <NightToggle />
         </Row>
         <Row id="fiptv-sounds" label="Töne" hint="Startklang, leises Klicken beim Navigieren, Ton bei OK und beim Merken von Favoriten." scope="all">
           <EffectToggle kind="sound" />
@@ -393,4 +399,14 @@ function SpaceSelect({ kind }: { kind: "mode" | "palette" }) {
     : SPACE_PALETTES.map((name, i) => [String(i), name]);
   return <Select label={kind === "mode" ? "Hintergrund" : "Farbstimmung"} value={value} options={options}
     onChange={(v) => { if (kind === "mode") setSpaceMode(Number(v)); else setSpacePalette(Number(v)); setValue(v); }} />;
+}
+
+function NightToggle() {
+  const [on, setOn] = useState(() => nightModeEnabled());
+  return <Toggle label="Nachtmodus" value={on} onChange={(v) => { setNightMode(v); setOn(v); }} />;
+}
+
+function StartLiveToggle() {
+  const [on, setOn] = useState(() => startLiveEnabled());
+  return <Toggle label="Mit letztem Sender starten" value={on} onChange={(v) => { setStartLive(v); setOn(v); }} />;
 }

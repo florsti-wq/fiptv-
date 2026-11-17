@@ -2,6 +2,7 @@
 import type { MediaItem, StreamSource, AppSettings, InstalledAddon } from "@/lib/types";
 import { useTranslation } from "@/lib/i18n";
 import { useRef, useMemo, useCallback, useState, useEffect } from "react";
+import { applyNightMode, subscribeEffects } from "@/lib/fiptvEffects";
 import { getPriorityConfig, authClient } from "@/lib/store";
 import { usePlayerEpisodeMetadata } from "../usePlayerEpisodeMetadata";
 import { useLivePlayerDock } from "../useLivePlayerDock";
@@ -162,6 +163,15 @@ export function VideoPlayer({
   const [upNextDismissed, setUpNextDismissed] = useState(false);
   const [ended, setEnded] = useState(false);
   useEffect(() => { setNextCountdown(null); nextDismissed.current = false; setUpNextDismissed(false); setEnded(false); }, [stream.url]);
+  // fIPTV: Nachtmodus (Ton) – beim Abspielen und bei Änderung der Einstellung anwenden
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return undefined;
+    const apply = () => applyNightMode(video);
+    video.addEventListener("playing", apply);
+    const off = subscribeEffects(apply);
+    return () => { video.removeEventListener("playing", apply); off(); };
+  }, [stream.url]);
   useEffect(() => {
     if (nextCountdown === null) return;
     if (nextCountdown <= 0) {

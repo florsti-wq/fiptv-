@@ -31,6 +31,7 @@ import { PartnerLinkHandler as PartnerLinkHandlerView } from "./PartnerLinkHandl
 import { ScreenBoundary } from "./ErrorBoundary";
 import { GoalAlerts } from "@/components/fiptv/GoalAlerts";
 import { FiptvIntro } from "@/components/fiptv/FiptvIntro";
+import { requestStartLive } from "@/lib/fiptvEffects";
 import { SpaceBackground } from "@/components/fiptv/SpaceBackground";
 import { OnScreenKeyboard } from "./OnScreenKeyboard";
 import { UpdateBanner } from "./UpdateBanner";
@@ -152,6 +153,10 @@ const ShellOverlays = memo(function ShellOverlays() {
 export function AppShell() {
   const { auth, goToLogin, signOut, view, section, setSection, settings, selected, activeStream, activeChannel, activeProfile, closePlayer } = useAppPick("auth", "goToLogin", "signOut", "view", "section", "setSection", "settings", "selected", "activeStream", "activeChannel", "activeProfile", "closePlayer");
   const kidsProfile = Boolean(kidsLevelOf(activeProfile));
+  // fIPTV: „Mit letztem Sender starten“ – nach der Profilauswahl einmal ins Live TV
+  useEffect(() => {
+    if (activeProfile && !kidsProfile && requestStartLive()) setSection("tv");
+  }, [activeProfile?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   // A kids profile never stays on Live TV, however it got there (a saved section, a link).
   useEffect(() => {
     if (kidsProfile && (section === "tv" || section === "vod" || section === "youtube" || section === "sport")) setSection("home");
