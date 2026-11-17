@@ -1,6 +1,7 @@
 @file:Suppress("UnsafeOptInUsageError")
 
 package com.arflix.tv.ui.screens.tv.live
+import androidx.compose.material.icons.filled.FiberManualRecord
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -2448,8 +2449,13 @@ fun LiveTvScreen(
     var isHudVisible by remember { mutableStateOf(false) }
     // fIPTV: Senderwechsel-Effekte (Schieben + Infoleiste)
     var fiptvSwallowSelectUp by remember { mutableStateOf(false) }
+    // fIPTV: Live-Pause (zeitversetztes Fernsehen)
+    val fiptvTimeshift = remember { com.arflix.tv.fiptv.rec.FiptvTimeshift() }
+    DisposableEffect(Unit) { onDispose { fiptvTimeshift.stop() } }
+    LaunchedEffect(playingChannelId) { fiptvTimeshift.stop() }
     var fiptvEpgPickerFor by remember { mutableStateOf<EnrichedChannel?>(null) }
     var fiptvGroupPickerFor by remember { mutableStateOf<EnrichedChannel?>(null) }
+    var fiptvRecordPickerFor by remember { mutableStateOf<EnrichedChannel?>(null) }
     // fIPTV: Programmdaten der Quell-Sender selbst zugeordneter Sender laden
     LaunchedEffect(fiptvEpgMapVersion, state.snapshot.channels.size) {
         if (state.snapshot.channels.isEmpty()) return@LaunchedEffect
@@ -3600,6 +3606,7 @@ fun LiveTvScreen(
                     if (!(inPip && ev == Lifecycle.Event.ON_PAUSE)) {
                         playbackForeground = false
                         playbackSession.suspend()
+                        if (ev == Lifecycle.Event.ON_STOP) fiptvTimeshift.stop()
                     }
                 }
                 Lifecycle.Event.ON_RESUME -> {
@@ -4025,6 +4032,8 @@ fun LiveTvScreen(
 
             override fun onPlayerError(error: PlaybackException) {
                 playerIsBuffering = false
+                // fIPTV: Fehler in der Live-Pause → Zwischenspeicher beenden, normal live weiter
+                if (exoPlayer.currentMediaItem?.mediaId == "fiptv-timeshift") fiptvTimeshift.stop()
                 // This device closed that session on purpose, so it says nothing about the source.
                 if (com.arflix.tv.network.isIptvStreamSessionClosed(error)) return
                 if (!playbackForeground || sportsHiddenPlayback) return
@@ -4264,6 +4273,10 @@ fun LiveTvScreen(
                 channelMenu = null
                 fiptvGroupPickerFor = fiptvChannelById(menu.channelId)
             }, label = "Eigene Gruppen …"))
+            add(ChannelMenuAction(0, androidx.compose.material.icons.Icons.Filled.FiberManualRecord, {
+                channelMenu = null
+                fiptvRecordPickerFor = fiptvChannelById(menu.channelId)
+            }, label = "Aufnehmen …"))
             com.arflix.tv.fiptv.live.FiptvCustomGroups.byCategoryId(selectedCategoryId)?.let { g ->
                 add(ChannelMenuAction(0, androidx.compose.material.icons.Icons.Filled.KeyboardArrowUp, {
                     channelMenu = null
@@ -5120,6 +5133,12 @@ fun LiveTvScreen(
 
                             when (ev.key) {
                                 Key.Back, Key.Escape -> {
+                                    if (firstPress && !hudEngaged && fiptvTimeshift.active) {
+                                        // fIPTV: aus der Live-Pause zurück zum Live-Bild
+                                        fiptvTimeshift.stop()
+                                        liveRetuneSignal++
+                                        return@onPreviewKeyEvent true
+                                    }
                                     if (firstPress) {
                                         if (hudEngaged) {
                                             // Put the controls away and keep watching.
@@ -5183,6 +5202,20 @@ fun LiveTvScreen(
                     },
                     modifier = Modifier.fillMaxSize(),
                 )
+                // fIPTV: Hinweis während der Live-Pause
+                if (isFullScreen && fiptvTimeshift.active) {
+                    Box(Modifier.fillMaxSize().padding(top = 24.dp, start = 32.dp), contentAlignment = Alignment.TopStart) {
+                        androidx.tv.material3.Text(
+                            text = if (fiptvTimeshift.playing) "● Zeitversetzt  ·  Zurück-Taste: wieder live"
+                                else "❚❚ Pausiert – wird zwischengespeichert",
+                            color = Color.White,
+                            fontSize = 14.sp,
+                            modifier = Modifier
+                                .background(Color(0xB3141416), RoundedCornerShape(8.dp))
+                                .padding(horizontal = 12.dp, vertical = 6.dp),
+                        )
+                    }
+                }
                 // fIPTV: Verbindungsanzeige oben rechts, solange die Bedienleiste offen ist
                 if (isFullScreen && isHudVisible) {
                     LaunchedEffect(Unit) { com.arflix.tv.fiptv.FiptvConnections.refresh(viewModel.iptvRepository) }
@@ -5272,9 +5305,26 @@ fun LiveTvScreen(
                                 if (exoPlayer.isPlaying) {
                                     exoPlayer.pause()
                                     playerPlayWhenReady = false
+                                    // fIPTV: Live-Pause – ab jetzt zwischenspeichern
+                                    val liveUrl = lastPreparedStreamUrl
+                                    if (com.arflix.tv.fiptv.rec.FiptvTimeshift.enabled && !fiptvTimeshift.active && liveUrl != null &&
+                                        exoPlayer.currentMediaItem?.mediaId != "fiptv-timeshift"
+                                    ) {
+                                        exoPlayer.stop() // Verbindung für den Zwischenspeicher freigeben
+                                        if (fiptvTimeshift.begin(context, coroutineScope, liveUrl, lastPreparedIsHls, lastPreparedHeaders)) {
+                                            android.widget.Toast.makeText(context, "Pausiert – die Sendung wird zwischengespeichert", android.widget.Toast.LENGTH_SHORT).show()
+                                        } else {
+                                            android.widget.Toast.makeText(context, "Zu wenig Speicher für die Live-Pause", android.widget.Toast.LENGTH_SHORT).show()
+                                            liveRetuneSignal++
+                                        }
+                                    }
                                 } else {
-                                    exoPlayer.playWhenReady = true
-                                    exoPlayer.play()
+                                    if (fiptvTimeshift.active && !fiptvTimeshift.playing) {
+                                        fiptvTimeshift.play(exoPlayer)
+                                    } else {
+                                        exoPlayer.playWhenReady = true
+                                        exoPlayer.play()
+                                    }
                                     playerPlayWhenReady = true
                                 }
                                 hudPokeSignal++
@@ -5619,6 +5669,26 @@ fun LiveTvScreen(
         }
         fiptvGroupPickerFor?.let { ch ->
             FiptvGroupPicker(channel = ch, onDismiss = { fiptvGroupPickerFor = null })
+        }
+        fiptvRecordPickerFor?.let { ch ->
+            FiptvRecordPicker(
+                channel = ch,
+                nowNext = state.snapshot.nowNext[ch.id],
+                onStart = { endsAt, title ->
+                    fiptvRecordPickerFor = null
+                    coroutineScope.launch {
+                        val target = runCatching { viewModel.resolvePlayableStreamUrl(ch.source, null, catchupAttempt = 0) }.getOrNull()
+                        if (target == null) {
+                            android.widget.Toast.makeText(context, "Aufnahme nicht möglich: Stream nicht erreichbar", android.widget.Toast.LENGTH_LONG).show()
+                        } else {
+                            com.arflix.tv.fiptv.rec.FiptvRecordService.start(context, title, target.url, target.isHls, ch.source.requestHeaders, endsAt)
+                            android.widget.Toast.makeText(context, "Aufnahme gestartet: $title", android.widget.Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                },
+                onOpenLibrary = { fiptvRecordPickerFor = null; com.arflix.tv.fiptv.rec.FiptvLibraryActivity.open(context) },
+                onDismiss = { fiptvRecordPickerFor = null },
+            )
         }
         channelMenu?.let { menu ->
             if (channelMenuActions.isNotEmpty()) {

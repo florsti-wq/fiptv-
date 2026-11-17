@@ -237,6 +237,7 @@ import dagger.hilt.android.EntryPointAccessors
 import androidx.compose.material.icons.filled.Cast
 import androidx.compose.material.icons.filled.CastConnected
 import androidx.compose.material.icons.filled.PictureInPicture
+import androidx.compose.material.icons.filled.Download
 import androidx.mediarouter.app.MediaRouteChooserDialog
 import android.app.PendingIntent
 import android.app.PictureInPictureParams
@@ -5081,6 +5082,37 @@ private fun PlayerScreenContent(args: PlayerScreenArgs, viewModel: PlayerViewMod
                                     onLeftKey = { if (args.mediaType == MediaType.TV) nextEpisodeButtonFocusRequester.requestFocus() else aspectButtonFocusRequester.requestFocus() },
                                     onRightKey = { subtitleButtonFocusRequester.requestFocus() },
                                     onDownKey = { trackbarFocusRequester.requestFocus() }
+                                )
+                            }
+
+                            // fIPTV: Download-Knopf (Handy) – Film/Folge für unterwegs speichern
+                            val fiptvDownloadUrl = uiState.selectedStreamUrl
+                            if (isTouchDevice && !args.isLiveStream && fiptvDownloadUrl != null &&
+                                (fiptvDownloadUrl.startsWith("http://") || fiptvDownloadUrl.startsWith("https://")) &&
+                                !fiptvDownloadUrl.substringBefore('?').endsWith(".m3u8", ignoreCase = true)
+                            ) {
+                                Spacer(modifier = Modifier.width(gap))
+                                PlayerIconButton(
+                                    icon = Icons.Default.Download,
+                                    contentDescription = "Herunterladen",
+                                    focusRequester = remember { FocusRequester() },
+                                    size = smallBtn, iconSize = smallIcon,
+                                    onFocusChanged = {},
+                                    onClick = {
+                                        val episode = if (args.mediaType == MediaType.TV && args.seasonNumber != null && args.episodeNumber != null)
+                                            " S%02dE%02d".format(args.seasonNumber, args.episodeNumber) else ""
+                                        val title = (uiState.title.ifBlank { "fIPTV" }) + episode
+                                        val headers = uiState.selectedStream?.behaviorHints?.proxyHeaders?.request.orEmpty()
+                                        val ok = com.arflix.tv.fiptv.rec.FiptvLibrary.startDownload(context, title, fiptvDownloadUrl, headers)
+                                        android.widget.Toast.makeText(
+                                            context,
+                                            if (ok) "Download gestartet: $title – zu finden unter Einstellungen → Wiedergabe → Aufnahmen und Downloads" else "Download nicht möglich",
+                                            android.widget.Toast.LENGTH_LONG,
+                                        ).show()
+                                    },
+                                    onLeftKey = {},
+                                    onRightKey = {},
+                                    onDownKey = {},
                                 )
                             }
                         }

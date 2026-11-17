@@ -254,3 +254,47 @@ internal fun FiptvGroupPicker(
         }
     }
 }
+
+/** Aufnahme starten: Dauer wählen. [onStart] bekommt das Ende als Zeitstempel. */
+@Composable
+internal fun FiptvRecordPicker(
+    channel: EnrichedChannel,
+    nowNext: IptvNowNext?,
+    onStart: (endsAt: Long, title: String) -> Unit,
+    onOpenLibrary: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val first = remember { FocusRequester() }
+    LaunchedEffect(Unit) { runCatching { first.requestFocus() } }
+    val name = FiptvChannelCleanup.displayName(channel.name)
+    val now = System.currentTimeMillis()
+    val current = nowNext?.now?.takeIf { it.endUtcMillis > now }
+    val fmt = remember { java.text.SimpleDateFormat("HH:mm", java.util.Locale.GERMANY) }
+    PickerFrame(
+        title = "„$name“ aufnehmen",
+        hint = "Die Aufnahme läuft auch im Hintergrund weiter und belegt solange eine Verbindung deines Abos.",
+        onDismiss = onDismiss,
+    ) {
+        LazyColumn(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            if (current != null) {
+                item {
+                    PickerRow(
+                        "Bis Sendungsende (" + fmt.format(java.util.Date(current.endUtcMillis + 5 * 60_000L)) + ")",
+                        current.title + " · mit 5 Min. Puffer",
+                        focusRequester = first,
+                    ) { onStart(current.endUtcMillis + 5 * 60_000L, "$name – ${current.title}") }
+                }
+            }
+            val options = listOf(30, 60, 120, 180)
+            items(options) { min ->
+                PickerRow(
+                    if (min < 60) "$min Minuten" else "${min / 60} Stunde" + (if (min >= 120) "n" else ""),
+                    "bis " + fmt.format(java.util.Date(now + min * 60_000L)),
+                    focusRequester = if (current == null && min == options.first()) first else null,
+                ) { onStart(now + min * 60_000L, name + (current?.let { " – ${it.title}" } ?: "")) }
+            }
+            item { PickerRow("Aufnahmen und Downloads ansehen") { onOpenLibrary() } }
+            item { PickerRow("Abbrechen") { onDismiss() } }
+        }
+    }
+}

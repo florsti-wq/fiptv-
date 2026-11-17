@@ -83,6 +83,10 @@ object FiptvEffects {
         )
     }
 
+    fun openLibrary() {
+        appContext?.let { com.arflix.tv.fiptv.rec.FiptvLibraryActivity.open(it) }
+    }
+
     fun toggleAnimations() { appContext?.let { setAnimations(it, !animations) } }
     fun toggleSounds() { appContext?.let { setSounds(it, !sounds) } }
 
