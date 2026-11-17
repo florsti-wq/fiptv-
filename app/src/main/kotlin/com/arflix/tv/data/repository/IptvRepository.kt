@@ -1425,6 +1425,19 @@ class IptvRepository @Inject constructor(
      * The panel's live slot count for an account, never persisted; Auto remembers it in memory for
      * a minute. Null means unknown, including when the guard defers it.
      */
+    /** fIPTV: belegte und erlaubte Verbindungen je Xtream-Liste (Playlist-ID → aktiv/max). */
+    suspend fun fiptvConnectionUsage(): Map<String, Pair<Int, Int>> {
+        val config = observeConfig().first()
+        val out = LinkedHashMap<String, Pair<Int, Int>>()
+        for (pl in config.playlists.filter { it.enabled }) {
+            val account = iptvM3uAccount(pl) ?: continue
+            if (account.kind != IptvProviderAccount.Kind.XTREAM) continue
+            val usage = runCatching { fetchAccountUsage(account) }.getOrNull() ?: continue
+            out[pl.id] = usage.active to usage.max
+        }
+        return out
+    }
+
     internal suspend fun fetchAccountUsage(account: IptvProviderAccount): IptvAccountUsage? {
         val latest = IptvAccountAvailability.latestUsage
         // Forgotten first, so a check cut short by its timeout also leaves no answer behind.

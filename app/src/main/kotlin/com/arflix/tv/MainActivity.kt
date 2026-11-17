@@ -271,6 +271,11 @@ class MainActivity : ComponentActivity() {
         com.arflix.tv.fiptv.FiptvSleepTimer.attach(this)
         com.arflix.tv.fiptv.FiptvEffects.init(this)
         com.arflix.tv.fiptv.FiptvSpace.init(this)
+        com.arflix.tv.fiptv.FiptvStartLive.init(this)
+        com.arflix.tv.fiptv.FiptvNightMode.init(this)
+        com.arflix.tv.fiptv.FiptvPip.init(this)
+        com.arflix.tv.fiptv.live.FiptvEpgMap.init(this)
+        com.arflix.tv.fiptv.live.FiptvCustomGroups.init(this)
         if (savedInstanceState == null) com.arflix.tv.fiptv.FiptvIntro.start()
         // fIPTV: erster Start nach einem Update → Hinweis, kurz zu warten (Fire OS beendet die App danach einmal;
         // läuft dabei ein Video, kann der Decoder des Fire TV bis zum Neustart hängen bleiben)
@@ -536,6 +541,12 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    // fIPTV: Bild-in-Bild auf dem Handy beim Verlassen der App
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        com.arflix.tv.fiptv.FiptvPip.onUserLeaveHint(this)
     }
 
     override fun dispatchKeyEvent(event: android.view.KeyEvent): Boolean {

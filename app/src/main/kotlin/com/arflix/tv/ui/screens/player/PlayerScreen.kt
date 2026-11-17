@@ -1878,6 +1878,15 @@ private fun PlayerScreenContent(args: PlayerScreenArgs, viewModel: PlayerViewMod
                 })
             }
     }
+    // fIPTV: Nachtmodus (Ton) und Bild-in-Bild
+    DisposableEffect(exoPlayer, com.arflix.tv.fiptv.FiptvNightMode.enabled) {
+        val night = com.arflix.tv.fiptv.FiptvNightMode.attach(exoPlayer)
+        com.arflix.tv.fiptv.FiptvPip.activePlayer = exoPlayer
+        onDispose {
+            night.release()
+            if (com.arflix.tv.fiptv.FiptvPip.activePlayer === exoPlayer) com.arflix.tv.fiptv.FiptvPip.activePlayer = null
+        }
+    }
 
     // Disabled for TV and mobile until seek previews are consistently reliable.
     val seekThumbnailsEnabled = false

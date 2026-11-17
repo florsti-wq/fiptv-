@@ -665,6 +665,11 @@ class SettingsViewModel @Inject constructor(
     }
 
     init {
+        // fIPTV: Verbindungsanzeige für die Anbieter-Liste
+        viewModelScope.launch { com.arflix.tv.fiptv.FiptvConnections.refresh(iptvRepository, 0L) }
+    }
+
+    init {
         // Live TV AI subtitles settings are written by their own rows (LiveAiSubsSettingsRows);
         // push them to the cloud like every other setting, once they settle.
         viewModelScope.launch {

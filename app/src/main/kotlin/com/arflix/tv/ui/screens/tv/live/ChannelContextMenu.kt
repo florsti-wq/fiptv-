@@ -41,6 +41,8 @@ internal data class ChannelMenuAction(
     val labelRes: Int,
     val icon: ImageVector,
     val onClick: () -> Unit,
+    /** fIPTV: fester Text statt Ressource */
+    val label: String? = null,
 )
 
 /** Which channel the menu is open for, and where the selector sits inside it. */
@@ -158,7 +160,7 @@ private fun ChannelMenuItem(
             modifier = Modifier.size(16.dp),
         )
         Text(
-            text = stringResource(action.labelRes),
+            text = action.label ?: stringResource(action.labelRes),
             style = LiveType.CatLabel.copy(
                 color = if (focused) Color.Black else LiveColors.Fg,
                 fontSize = 12.sp,

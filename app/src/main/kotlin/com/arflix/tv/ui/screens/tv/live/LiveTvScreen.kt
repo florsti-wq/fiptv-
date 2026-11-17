@@ -1,6 +1,11 @@
 @file:Suppress("UnsafeOptInUsageError")
 
 package com.arflix.tv.ui.screens.tv.live
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.DateRange
 
 import com.arflix.tv.network.iptvProviderCooldownMs
 import com.arflix.tv.network.IptvProviderRequestGuard
@@ -583,7 +588,14 @@ fun LiveTvScreen(
     // Lifecycle-aware collection so the screen stops draining state updates
     // the instant the user backs out — matters on a long-running IPTV flow
     // where the ViewModel pushes EPG refreshes every few seconds.
-    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val fiptvRawState by viewModel.uiState.collectAsStateWithLifecycle()
+    // fIPTV: selbst zugeordnete Programmdaten einblenden
+    val fiptvEpgMapVersion = com.arflix.tv.fiptv.live.FiptvEpgMap.version
+    val state = remember(fiptvRawState, fiptvEpgMapVersion) {
+        if (com.arflix.tv.fiptv.live.FiptvEpgMap.isEmpty()) fiptvRawState
+        else fiptvRawState.copy(snapshot = fiptvRawState.snapshot.copy(
+            nowNext = com.arflix.tv.fiptv.live.FiptvEpgMap.apply(fiptvRawState.snapshot.nowNext)))
+    }
     val installedSportsAddons by viewModel.sportsAddons.installedAddons.collectAsStateWithLifecycle(initialValue = emptyList())
     val sportsAddonInstallations = remember(installedSportsAddons) {
         installedSportsAddons.filter { com.arflix.tv.data.model.sportsEventCatalogs(it).isNotEmpty() }
@@ -1038,13 +1050,16 @@ fun LiveTvScreen(
         val tree = visibleEnrichedState.value.tree
         if (selectedCategoryId == "fav" && favSet.isEmpty()) {
             selectedCategoryId = "all"
+        } else if (selectedCategoryId.startsWith(com.arflix.tv.fiptv.live.FiptvCustomGroups.PREFIX)) {
+            // fIPTV: eigene Gruppe – nur zurück, wenn sie gelöscht wurde
+            if (com.arflix.tv.fiptv.live.FiptvCustomGroups.byCategoryId(selectedCategoryId) == null) selectedCategoryId = "all"
         } else if (tree.top.isNotEmpty() && selectedCategoryId != "all" &&
             (tree.byId(selectedCategoryId) == null || tree.hidden.categories.any { it.id == selectedCategoryId })
         ) {
             selectedCategoryId = "all"
         }
     }
-    val mobileGroupList = remember(
+    val mobileGroupListBase = remember(
         visibleEnrichedState.value.tree,
         playlistCategorySections,
         hiddenGroupSet,
@@ -1108,6 +1123,12 @@ fun LiveTvScreen(
             )
         }
     }
+    // fIPTV: eigene Sendergruppen auch in der Gruppenliste auf dem Handy
+    val mobileGroupList = remember(mobileGroupListBase, com.arflix.tv.fiptv.live.FiptvCustomGroups.version) {
+        com.arflix.tv.fiptv.live.FiptvCustomGroups.all().map {
+            LiveCategory(com.arflix.tv.fiptv.live.FiptvCustomGroups.PREFIX + it.id, it.name, it.channelIds.size, CategoryIcon.Grid)
+        } + mobileGroupListBase
+    }
     // Selected category (persist across nav). Defaults to "all".
     val hasProfile = currentProfile != null
     val maxTopBarIndex = topBarMaxIndex(hasProfile)
@@ -1152,6 +1173,7 @@ fun LiveTvScreen(
         lastKnownPagedTotal,
         lastKnownPlaylistGroupCounts,
         manualChannelOrder,
+        com.arflix.tv.fiptv.live.FiptvCustomGroups.version,
     ) {
         val tree = visibleEnrichedState.value.tree
         val categoryCount = when (selectedCategoryId) {
@@ -1164,6 +1186,20 @@ fun LiveTvScreen(
                     ?: 0
             }
             else -> tree.countForCategory(selectedCategoryId) ?: 0
+        }
+        // fIPTV: eigene Sendergruppe – Sender in der festgelegten Reihenfolge
+        com.arflix.tv.fiptv.live.FiptvCustomGroups.byCategoryId(selectedCategoryId)?.let { group ->
+            val index = visibleEnrichedState.value.index
+            val missing = group.channelIds.filter { index.byId[it] == null }
+            val loaded = if (missing.isEmpty()) emptyMap() else withContext(Dispatchers.IO) {
+                viewModel.iptvRepository.pagedChannelsByIds(missing).associateBy { it.id }
+            }
+            filteredChannelsCategoryKey = selectedCategoryId
+            filteredChannelsScopeKey = categoryScope
+            filteredChannelsState.value = group.channelIds.mapIndexedNotNull { i, id ->
+                index.byId[id] ?: loaded[id]?.enrichForFastStartup(i + 1)
+            }
+            return@LaunchedEffect
         }
         if (selectedCategoryId == "fav" || selectedCategoryId == "recent") {
             filteredChannelsCategoryKey = selectedCategoryId
@@ -2069,11 +2105,22 @@ fun LiveTvScreen(
     val sportsProviderNames = remember(state.config.playlists, state.config.stalkerPortals) {
         state.config.playlists.associate { it.id to it.name } + state.config.stalkerPortals.associate { it.id to it.name }
     }
-    val sportsSidebarTree = remember(visibleEnrichedState.value.tree, quickGuideRows) {
+    val fiptvGroupsVersion = com.arflix.tv.fiptv.live.FiptvCustomGroups.version
+    val sportsSidebarTree = remember(visibleEnrichedState.value.tree, quickGuideRows, fiptvGroupsVersion) {
         val tree = visibleEnrichedState.value.tree.withSportsDestination()
-        tree.copy(top = tree.top.map { category ->
+        val top = tree.top.map { category ->
             quickGuideRows[category.id]?.let { category.copy(count = it.size) } ?: category
-        })
+        }
+        // fIPTV: eigene Sendergruppen direkt nach den Favoriten
+        val custom = com.arflix.tv.fiptv.live.FiptvCustomGroups.all().map {
+            LiveCategory(com.arflix.tv.fiptv.live.FiptvCustomGroups.PREFIX + it.id, it.name, it.channelIds.size, CategoryIcon.Grid)
+        }
+        if (custom.isEmpty()) tree.copy(top = top)
+        else {
+            val favAt = top.indexOfFirst { it.id == "fav" }
+            val at = if (favAt >= 0) favAt + 1 else 0
+            tree.copy(top = top.take(at) + custom + top.drop(at))
+        }
     }
     val sportsGuideCoverageBucket = state.snapshot.nowNext.size / 64
     LaunchedEffect(currentProfile?.id, selectedProviderId, hiddenGroupSet,
@@ -2401,6 +2448,25 @@ fun LiveTvScreen(
     var isHudVisible by remember { mutableStateOf(false) }
     // fIPTV: Senderwechsel-Effekte (Schieben + Infoleiste)
     var fiptvSwallowSelectUp by remember { mutableStateOf(false) }
+    var fiptvEpgPickerFor by remember { mutableStateOf<EnrichedChannel?>(null) }
+    var fiptvGroupPickerFor by remember { mutableStateOf<EnrichedChannel?>(null) }
+    // fIPTV: Programmdaten der Quell-Sender selbst zugeordneter Sender laden
+    LaunchedEffect(fiptvEpgMapVersion, state.snapshot.channels.size) {
+        if (state.snapshot.channels.isEmpty()) return@LaunchedEffect
+        com.arflix.tv.fiptv.live.FiptvEpgMap.sourceIds().take(30).forEach { src ->
+            if (state.snapshot.nowNext[src] == null) {
+                viewModel.refreshCurrentChannelEpg(src)
+                kotlinx.coroutines.delay(300)
+            }
+        }
+    }
+    LaunchedEffect(playingChannelId, playingCatchupProgram) {
+        val id = playingChannelId
+        if (id != null && playingCatchupProgram == null) com.arflix.tv.fiptv.FiptvStartLive.rememberChannel(id)
+    }
+    // fIPTV: automatischer Quellenwechsel – bereits probierte Varianten der aktuellen Sendergruppe
+    var fiptvFailoverGroup by remember { mutableStateOf<String?>(null) }
+    val fiptvFailoverTried = remember { mutableSetOf<String>() }
     var fiptvZapSignal by remember { mutableStateOf(0) }
     var fiptvZapDirection by remember { mutableStateOf(1) }
     var fiptvFirstFrame by remember { mutableStateOf(0) }
@@ -2570,6 +2636,7 @@ fun LiveTvScreen(
     // Tune straight to a channel without leaving fullscreen. Shared by zapping
     // and by the previous-channel jump so both leave the same state behind.
     fun tuneToDisplayChannel(channel: EnrichedChannel) {
+        fiptvFailoverGroup = null
         noteGuideUserNavigation()
         playingChannelId = channel.id
         focusedChannelId = channel.id
@@ -2834,6 +2901,31 @@ fun LiveTvScreen(
             isFavorite = channel.id in favSet,
             hasVariants = variantCountFor(channel, variantGroups) > 1,
         )
+    }
+
+    /** fIPTV: Stream ist endgültig ausgefallen → nächste Variante desselben Senders probieren. */
+    fun fiptvTryFailover(): Boolean {
+        val ch = playingChannel ?: return false
+        if (playingCatchupProgram != null) return false
+        val key = variantGroupKey(ch)
+        val group = variantGroups[key].orEmpty()
+        if (group.size < 2) return false
+        if (fiptvFailoverGroup != key) {
+            fiptvFailoverGroup = key
+            fiptvFailoverTried.clear()
+        }
+        fiptvFailoverTried += ch.id
+        val next = group.firstOrNull { it.id !in fiptvFailoverTried } ?: return false
+        fiptvFailoverTried += next.id
+        android.widget.Toast.makeText(
+            context,
+            "Quelle ausgefallen – wechsle zu „" + next.name + "“",
+            android.widget.Toast.LENGTH_SHORT,
+        ).show()
+        val keepGroup = fiptvFailoverGroup
+        playVariant(next)
+        fiptvFailoverGroup = keepGroup
+        return true
     }
 
     fun playVariant(channel: EnrichedChannel) {
@@ -3260,6 +3352,15 @@ fun LiveTvScreen(
         onDispose { exoPlayer.removeListener(listener) }
     }
     SideEffect { com.arflix.tv.fiptv.FiptvEffects.playbackActive = isFullScreen }
+    // fIPTV: Nachtmodus (Ton) und Bild-in-Bild
+    DisposableEffect(exoPlayer, com.arflix.tv.fiptv.FiptvNightMode.enabled) {
+        val night = com.arflix.tv.fiptv.FiptvNightMode.attach(exoPlayer)
+        onDispose { night.release() }
+    }
+    DisposableEffect(exoPlayer, isFullScreen) {
+        com.arflix.tv.fiptv.FiptvPip.activePlayer = if (isFullScreen) exoPlayer else null
+        onDispose { if (com.arflix.tv.fiptv.FiptvPip.activePlayer === exoPlayer) com.arflix.tv.fiptv.FiptvPip.activePlayer = null }
+    }
     DisposableEffect(Unit) { onDispose { com.arflix.tv.fiptv.FiptvEffects.playbackActive = false } }
     var streamStats by remember(exoPlayer) { mutableStateOf(LiveStreamTechInfo()) }
     DisposableEffect(exoPlayer) {
@@ -3494,8 +3595,12 @@ fun LiveTvScreen(
         val obs = LifecycleEventObserver { _, ev ->
             when (ev) {
                 Lifecycle.Event.ON_PAUSE, Lifecycle.Event.ON_STOP -> {
-                    playbackForeground = false
-                    playbackSession.suspend()
+                    // fIPTV: im Bild-in-Bild-Fenster weiterlaufen lassen (erst beim Schließen stoppen)
+                    val inPip = (context as? android.app.Activity)?.isInPictureInPictureMode == true
+                    if (!(inPip && ev == Lifecycle.Event.ON_PAUSE)) {
+                        playbackForeground = false
+                        playbackSession.suspend()
+                    }
                 }
                 Lifecycle.Event.ON_RESUME -> {
                     playbackForeground = true
@@ -4004,6 +4109,8 @@ fun LiveTvScreen(
                     isIptvProviderRequestPaused(error) ||
                     iptvProviderCooldownMs(httpCode ?: 0, null, 0L) > 0L ||
                     (cleanEof && !liveEofRestartAllowed(liveEofRestarts))) {
+                    // fIPTV: vor der Fehlermeldung eine andere Variante desselben Senders versuchen
+                    if (fiptvTryFailover()) return
                     playbackDiagnostic = PlaybackDiagnostic(
                         title = context.getString(R.string.live_diag_playback_failed),
                         detail = "${error.errorCodeName}: ${classifyPlaybackError(error)}",
@@ -4125,6 +4232,8 @@ fun LiveTvScreen(
     }
 
     BackHandler(enabled = searchOpen) { searchOpen = false }
+    fun fiptvChannelById(id: String): EnrichedChannel? =
+        visibleEnrichedState.value.index.byId[id] ?: filteredChannelsState.value.firstOrNull { it.id == id }
     val channelMenuActions = channelMenu?.let { menu ->
         buildChannelMenuActions(
             isFavorite = menu.isFavorite,
@@ -4145,7 +4254,31 @@ fun LiveTvScreen(
                 channelMenu = null
                 visibleEnrichedState.value.index.byId[menu.channelId]?.let { openVariantPicker(it) }
             },
-        )
+        ) + buildList {
+            // fIPTV: Programmdaten zuordnen und eigene Gruppen
+            add(ChannelMenuAction(0, androidx.compose.material.icons.Icons.Filled.DateRange, {
+                channelMenu = null
+                fiptvEpgPickerFor = fiptvChannelById(menu.channelId)
+            }, label = "Programmdaten zuordnen"))
+            add(ChannelMenuAction(0, androidx.compose.material.icons.Icons.Filled.Add, {
+                channelMenu = null
+                fiptvGroupPickerFor = fiptvChannelById(menu.channelId)
+            }, label = "Eigene Gruppen …"))
+            com.arflix.tv.fiptv.live.FiptvCustomGroups.byCategoryId(selectedCategoryId)?.let { g ->
+                add(ChannelMenuAction(0, androidx.compose.material.icons.Icons.Filled.KeyboardArrowUp, {
+                    channelMenu = null
+                    com.arflix.tv.fiptv.live.FiptvCustomGroups.move(g.id, menu.channelId, -1)
+                }, label = "In „" + g.name + "“ nach oben"))
+                add(ChannelMenuAction(0, androidx.compose.material.icons.Icons.Filled.KeyboardArrowDown, {
+                    channelMenu = null
+                    com.arflix.tv.fiptv.live.FiptvCustomGroups.move(g.id, menu.channelId, 1)
+                }, label = "In „" + g.name + "“ nach unten"))
+                add(ChannelMenuAction(0, androidx.compose.material.icons.Icons.Filled.Delete, {
+                    channelMenu = null
+                    com.arflix.tv.fiptv.live.FiptvCustomGroups.toggle(g.id, menu.channelId)
+                }, label = "Aus „" + g.name + "“ entfernen"))
+            }
+        }
     }.orEmpty()
 
     BackHandler(enabled = channelMenu != null) { channelMenu = null }
@@ -5050,6 +5183,22 @@ fun LiveTvScreen(
                     },
                     modifier = Modifier.fillMaxSize(),
                 )
+                // fIPTV: Verbindungsanzeige oben rechts, solange die Bedienleiste offen ist
+                if (isFullScreen && isHudVisible) {
+                    LaunchedEffect(Unit) { com.arflix.tv.fiptv.FiptvConnections.refresh(viewModel.iptvRepository) }
+                    com.arflix.tv.fiptv.FiptvConnections.summary()?.let { text ->
+                        Box(Modifier.fillMaxSize().padding(top = 24.dp, end = 32.dp), contentAlignment = Alignment.TopEnd) {
+                            androidx.tv.material3.Text(
+                                text = text,
+                                color = Color.White,
+                                fontSize = 14.sp,
+                                modifier = Modifier
+                                    .background(Color(0xB3141416), RoundedCornerShape(8.dp))
+                                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                            )
+                        }
+                    }
+                }
                 if (isFullScreen && !fullscreenGuideOpen && !quickZapOpen) {
                     FiptvZapOverlay(
                         zapSignal = fiptvZapSignal,
@@ -5460,6 +5609,17 @@ fun LiveTvScreen(
             )
         }
 
+        fiptvEpgPickerFor?.let { ch ->
+            FiptvEpgPicker(
+                target = ch,
+                candidates = visibleEnrichedState.value.index.byId.values,
+                nowNext = state.snapshot.nowNext,
+                onDismiss = { fiptvEpgPickerFor = null },
+            )
+        }
+        fiptvGroupPickerFor?.let { ch ->
+            FiptvGroupPicker(channel = ch, onDismiss = { fiptvGroupPickerFor = null })
+        }
         channelMenu?.let { menu ->
             if (channelMenuActions.isNotEmpty()) {
                 ChannelContextMenu(

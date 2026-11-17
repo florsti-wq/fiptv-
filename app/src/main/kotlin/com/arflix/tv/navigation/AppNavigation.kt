@@ -661,6 +661,10 @@ fun AppNavigation(
                     navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.ProfileSelection.route) { inclusive = true }
                     }
+                    // fIPTV: Start direkt mit dem zuletzt gesehenen Sender (Einstellung)
+                    com.arflix.tv.fiptv.FiptvStartLive.channelForStartup()?.let { last ->
+                        navController.navigate(Screen.Tv.createRoute(last)) { launchSingleTop = true }
+                    }
                 },
                 onShowAddProfile = { /* Handled internally by ProfileSelectionScreen */ },
                 isCloudConnected = isCloudConnected
