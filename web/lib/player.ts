@@ -485,9 +485,12 @@ export function attachPlayback(video: HTMLVideoElement, url: string, options: Pl
       if (!active()) return;
       if (!mpegts.isSupported()) { if (video.canPlayType("video/mp2t")) native(); else unsupported(); return; }
       prepareMse();
+      // fIPTV: Live-Pause der Windows-App – der lokale Puffer darf nie zur Live-Kante springen
+      const timeshift = url.startsWith("http://127.0.0.1:38918/timeshift/");
+      const chase = live && !timeshift;
       const instance = mpegts.createPlayer({ type: "mpegts", isLive: live, url }, {
         // Keep a rolling live buffer even when paused; VOD must never chase the live edge.
-        enableWorker: true, headers, liveBufferLatencyChasing: live, liveBufferLatencyChasingOnPaused: live,
+        enableWorker: true, headers, liveBufferLatencyChasing: chase, liveBufferLatencyChasingOnPaused: chase,
         liveBufferLatencyMaxLatency: 5, liveBufferLatencyMinRemain: 1,
         enableStashBuffer: !live, stashInitialSize: 128 * 1024,
         lazyLoad: !live, lazyLoadMaxDuration: lowMemory ? 20 : 40, lazyLoadRecoverDuration: 5,

@@ -1,6 +1,8 @@
 "use client";
 import { channelCleanupEnabled, cleanChannelName, tidyChannels } from "@/lib/fiptvChannelCleanup";
 import { animationsEnabled, takeStartLive } from "@/lib/fiptvEffects";
+import { applyEpgMap, CUSTOM_GROUP_PREFIX, customGroupById, customGroups, epgMap, moveInCustomGroup, toggleInCustomGroup } from "@/lib/fiptvLiveCustom";
+import { CustomGroupsDialog, EpgMapDialog } from "@/components/livetv/FiptvLiveDialogs";
 
 /** fIPTV: Aufnahme-Funktionen der Windows-App (nur in Electron vorhanden). */
 type DesktopRecorder = { recordStart: (input: { url: string; isHls: boolean; headers: Record<string, string>; title: string; endsAt: number }) => Promise<{ id: string; path: string }> };
@@ -172,6 +174,15 @@ export function LiveTvScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [playlistSignature, refreshIptv, playlists.length]);
 
+  // fIPTV: eigene Gruppen + Programm-Zuordnung (lokal gespeichert)
+  const [customVersion, setCustomVersion] = useState(0);
+  useEffect(() => {
+    const on = () => setCustomVersion((v) => v + 1);
+    window.addEventListener("fiptv-live-custom", on);
+    return () => window.removeEventListener("fiptv-live-custom", on);
+  }, []);
+  const [liveDialog, setLiveDialog] = useState<{ kind: "epg" | "groups"; channel: IptvChannel } | null>(null);
+  const myGroups = useMemo(() => customGroups(), [customVersion]); // eslint-disable-line react-hooks/exhaustive-deps
   const categories = useMemo(() => {
     const orderMap = new Map(settings.groupOrder.map((id, index) => [id, index]));
     const groupRank = (group: string, items: IptvChannel[]) => {
@@ -200,14 +211,17 @@ export function LiveTvScreen() {
       });
     return [
       { id: "favorites", label: "Favorites", custom: false, count: favoriteChannels.length, favorite: true, hidden: false },
+      ...myGroups.map((g) => ({ id: CUSTOM_GROUP_PREFIX + g.id, label: g.name, custom: true, count: g.channelIds.length, favorite: false, hidden: false })),
       { id: "recent", label: "Recently Watched", custom: false, count: recentChannels.length, favorite: false, hidden: false },
       { id: "all", label: "All Channels", custom: false, count: channels.length, favorite: false, hidden: false },
       { id: "sports", label: "Sports", custom: false, count: 0, favorite: false, hidden: false },
       ...groupRows
     ];
-  }, [channels.length, favoriteChannels.length, recentChannels.length, favoriteGroups, groups, hiddenGroups, settings.groupOrder, settings.iptvSortOrder, groupNames]);
+  }, [channels.length, favoriteChannels.length, recentChannels.length, favoriteGroups, groups, hiddenGroups, settings.groupOrder, settings.iptvSortOrder, groupNames, myGroups]);
 
   const categoryChannels = useMemo(() => {
+    const mine = myGroups.find((g) => CUSTOM_GROUP_PREFIX + g.id === activeCategory);
+    if (mine) return mine.channelIds.map((id) => channelById.get(id)).filter((c): c is IptvChannel => Boolean(c));
     const base = activeCategory === "favorites"
       ? favoriteChannels
       : activeCategory === "recent" ? recentChannels
@@ -228,9 +242,9 @@ export function LiveTvScreen() {
     // A manual channel order set in Settings overrides the sort for that category only (as on Android).
     if (activeCategory.startsWith("group:")) return applyChannelOrder(sorted, settings.iptvChannelOrder?.[activeCategory.slice(6)]);
     return sorted;
-  }, [activeCategory, channels, favoriteChannels, recentChannels, groups, settings.iptvSortOrder, settings.iptvChannelOrder]);
+  }, [activeCategory, channels, favoriteChannels, recentChannels, groups, settings.iptvSortOrder, settings.iptvChannelOrder, myGroups, channelById]);
   // Search also matches the titles of programmes whose guide is loaded.
-  const nowNext = iptvSnapshot.nowNext;
+  const nowNext = useMemo(() => applyEpgMap(iptvSnapshot.nowNext, epgMap()), [iptvSnapshot.nowNext, customVersion]); // eslint-disable-line react-hooks/exhaustive-deps
   const needle = query.trim().toLowerCase();
   const visibleChannels = useMemo(() => needle
     ? categoryChannels.filter((channel) => channelMatchesQuery(channel, needle, nowNext[channel.id], hasGroupNames ? groupNames?.[groupKey(channel)] : undefined))
@@ -246,7 +260,7 @@ export function LiveTvScreen() {
     window.addEventListener("fiptv-channel-cleanup", on);
     return () => window.removeEventListener("fiptv-channel-cleanup", on);
   }, []);
-  const renderedChannels = useMemo(() => (tidyOn && activeCategory !== "favorites" && activeCategory !== "recent" ? tidyChannels(visibleChannels).list : visibleChannels),
+  const renderedChannels = useMemo(() => (tidyOn && activeCategory !== "favorites" && activeCategory !== "recent" && !activeCategory.startsWith(CUSTOM_GROUP_PREFIX) ? tidyChannels(visibleChannels).list : visibleChannels),
     [tidyOn, visibleChannels, activeCategory]);
   const selectedChannel = channelById.get(selectedChannelId ?? "") ?? renderedChannels[0] ?? null;
   // While a channel plays in the docked mini-player the hero describes what is
@@ -399,13 +413,35 @@ export function LiveTvScreen() {
     zapState.current.info = channel;
     if (channel) infoTimer.current = window.setTimeout(() => { setZapInfo(null); zapState.current.info = null; }, ms);
   }, []);
+  // fIPTV: automatischer Quellenwechsel – bereits probierte Varianten der aktuellen Sendergruppe
+  const failoverTried = useRef<{ key: string; ids: Set<string> }>({ key: "", ids: new Set() });
   const tune = useCallback((channel: IptvChannel) => {
+    failoverTried.current = { key: "", ids: new Set() };
     keepLivePlayerExpanded();
     setSelectedChannelId(channel.id);
     saveStored(lastChannelKey, channel.id);
     void playChannel(channel);
     showInfo(channel, 3500);
   }, [lastChannelKey, playChannel, showInfo]);
+  useEffect(() => {
+    const onFail = () => {
+      const ch = activeChannel ? channelById.get(activeChannel.id) : undefined;
+      if (!ch) return;
+      const variants = tidyChannels(groups[groupKey(ch)] ?? []).variants.get(ch.id);
+      if (!variants || variants.length < 2) return;
+      const key = variants.map(v => v.id).join("|");
+      if (failoverTried.current.key !== key) failoverTried.current = { key, ids: new Set() };
+      failoverTried.current.ids.add(ch.id);
+      const next = variants.find(v => !failoverTried.current.ids.has(v.id));
+      if (!next) return;
+      failoverTried.current.ids.add(next.id);
+      setToast(`Quelle ausgefallen – wechsle zu „${next.name}“`);
+      setSelectedChannelId(next.id);
+      void playChannel(next);
+    };
+    window.addEventListener("fiptv-live-failed", onFail);
+    return () => window.removeEventListener("fiptv-live-failed", onFail);
+  }, [activeChannel, channelById, groups, playChannel, setToast]);
   // fIPTV: beim App-Start direkt den zuletzt gesehenen Sender abspielen (Einstellung)
   const startLiveDone = useRef(false);
   useEffect(() => {
@@ -758,6 +794,15 @@ export function LiveTvScreen() {
         onHideGroup={() => hideChannelGroup(menu.channel)}
         onClose={() => setMenu(null)}
         programmeEnd={nowNext[menu.channel.id]?.now?.endUtcMillis}
+        onEpgMap={() => setLiveDialog({ kind: "epg", channel: menu.channel })}
+        onGroups={() => setLiveDialog({ kind: "groups", channel: menu.channel })}
+        customMove={(() => {
+          const g = customGroupById(activeCategory);
+          if (!g || !g.channelIds.includes(menu.channel.id)) return undefined;
+          const i = g.channelIds.indexOf(menu.channel.id);
+          return { name: g.name, canUp: i > 0, canDown: i < g.channelIds.length - 1,
+            onMove: (d: -1 | 1) => moveInCustomGroup(g.id, menu.channel.id, d), onRemove: () => toggleInCustomGroup(g.id, menu.channel.id) };
+        })()}
         onRecord={desktopRecorder() ? (minutes) => {
           const ch = menu.channel;
           const now = nowNext[ch.id]?.now;
@@ -769,6 +814,8 @@ export function LiveTvScreen() {
             .catch((err: unknown) => setRecordToast(`Aufnahme nicht möglich: ${err instanceof Error ? err.message : String(err)}`));
         } : undefined}
       />}
+      {liveDialog?.kind === "epg" && <EpgMapDialog channel={liveDialog.channel} channels={channels} nowNext={iptvSnapshot.nowNext} onClose={() => setLiveDialog(null)} />}
+      {liveDialog?.kind === "groups" && <CustomGroupsDialog channel={liveDialog.channel} onClose={() => setLiveDialog(null)} />}
       {recordToast && <div className="fiptv-record-toast" role="status" onAnimationEnd={() => setRecordToast(null)}>{recordToast}</div>}
       <LiveZapOverlay curtain={zapCurtain} digits={zapDigits} digitMatch={zapDigitMatch} info={zapInfo} guide={zapInfo ? nowNext[zapInfo.id] : undefined} clockFormat={settings.clockFormat} />
     </div>

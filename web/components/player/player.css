@@ -1184,3 +1184,7 @@
 [dir="rtl"] .player-controls :is(.lucide-arrow-left, .lucide-arrow-right, .lucide-chevron-left, .lucide-chevron-right) {
   scale: none;
 }
+
+/* fIPTV: Live-Pause (Windows) – Hinweis und Sprung zurück zum Live-Bild */
+.fiptv-timeshift-chip { position: absolute; top: 18px; left: 50%; transform: translateX(-50%); z-index: 40; padding: 9px 16px; border: 1px solid #ffffff33; border-radius: 999px; background: #0b0d10cc; color: #ffd56b; font: 600 14px/1.2 inherit; cursor: pointer; backdrop-filter: blur(6px); }
+.fiptv-timeshift-chip:hover, .fiptv-timeshift-chip:focus-visible { background: #1d2127ee; outline: 2px solid #ffd56b; }

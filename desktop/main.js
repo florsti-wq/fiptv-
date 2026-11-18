@@ -401,7 +401,111 @@ ipcMain.handle("fiptv:record-stop", (_e, id) => { recordings.get(id)?.stop(); re
 ipcMain.handle("fiptv:record-list", () => [...recordings.values()].map(({ stop, ...r }) => r));
 ipcMain.handle("fiptv:record-open-folder", () => shell.openPath(recordingsDir()));
 
+// ---------- fIPTV: Live-Pause (Zeitversetzt) ----------
+// Beim Pausieren wird der Sender in eine temporäre Datei geschrieben; der Player spielt
+// diese Datei über einen kleinen lokalen Server ab der Pausenstelle. Beim Zurück zu Live,
+// beim Senderwechsel oder beim Beenden wird die Datei gelöscht.
+const TS_PORT = 38918;
+let timeshift = null; // { id, file, rec, timer }
+let tsServer = null;
+
+function timeshiftDir() {
+  const dir = path.join(app.getPath("temp"), "fiptv-timeshift");
+  fs.mkdirSync(dir, { recursive: true });
+  return dir;
+}
+function timeshiftCleanupAll() {
+  try { for (const f of fs.readdirSync(timeshiftDir())) fs.rmSync(path.join(timeshiftDir(), f), { force: true }); } catch { /* egal */ }
+}
+function timeshiftLimitBytes() {
+  try {
+    const st = fs.statfsSync(timeshiftDir());
+    const free = Number(st.bavail) * Number(st.bsize);
+    if (free < 200 * 1024 * 1024) return 0;
+    return Math.min(free * 0.6, 8 * 1024 * 1024 * 1024);
+  } catch { return 4 * 1024 * 1024 * 1024; }
+}
+function timeshiftStop() {
+  const ts = timeshift;
+  timeshift = null;
+  if (!ts) return;
+  try { ts.rec.stop(); } catch { /* egal */ }
+  clearInterval(ts.timer);
+  // Kurz warten, bis der Schreibvorgang zu ist, dann löschen
+  setTimeout(() => { try { fs.rmSync(ts.file, { force: true }); } catch { /* egal */ } }, 1500);
+}
+function serveTail(req, res, ts) {
+  res.writeHead(200, { "Content-Type": "video/mp2t", "Access-Control-Allow-Origin": "*", "Cache-Control": "no-store" });
+  let fd = null, pos = 0, closed = false;
+  const buf = Buffer.alloc(1024 * 1024);
+  req.on("close", () => { closed = true; if (fd !== null) { try { fs.closeSync(fd); } catch { /* egal */ } fd = null; } });
+  const pump = () => {
+    if (closed) return;
+    try {
+      if (fd === null) fd = fs.openSync(ts.file, "r");
+      const n = fs.readSync(fd, buf, 0, buf.length, pos);
+      if (n > 0) {
+        pos += n;
+        if (res.write(Buffer.from(buf.subarray(0, n)))) setImmediate(pump); else res.once("drain", pump);
+        return;
+      }
+    } catch { /* Datei noch nicht da */ }
+    if (timeshift !== ts || !ts.rec.running) { res.end(); return; }
+    setTimeout(pump, 300);
+  };
+  pump();
+}
+function ensureTimeshiftServer() {
+  if (tsServer) return;
+  tsServer = http.createServer((req, res) => {
+    if (req.method === "OPTIONS") {
+      res.writeHead(204, { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "*", "Access-Control-Allow-Methods": "GET, OPTIONS" });
+      res.end(); return;
+    }
+    const m = /^\/timeshift\/([\w-]+)\.ts/.exec(req.url || "");
+    const ts = timeshift;
+    if (!m || !ts || ts.id !== m[1]) { res.writeHead(404, { "Access-Control-Allow-Origin": "*" }); res.end(); return; }
+    serveTail(req, res, ts);
+  });
+  tsServer.on("error", () => { tsServer = null; });
+  tsServer.listen(TS_PORT, "127.0.0.1");
+}
+
+ipcMain.handle("fiptv:timeshift-start", async (_e, input) => {
+  const { url, headers } = input || {};
+  if (!url || !/^https?:/i.test(url)) throw new Error("Für diesen Sender ist Live-Pause nicht möglich");
+  timeshiftStop();
+  const limit = timeshiftLimitBytes();
+  if (!limit) throw new Error("Zu wenig freier Speicher für Live-Pause");
+  ensureTimeshiftServer();
+  const id = "ts" + Date.now().toString(36);
+  const file = path.join(timeshiftDir(), `${id}.ts`);
+  const controller = new AbortController();
+  const rec = { id, title: "Live-Pause", path: file, endsAt: Date.now() + 6 * 3600_000, bytes: 0, running: true, error: null,
+    stop: () => { rec.running = false; controller.abort(); } };
+  const out = fs.createWriteStream(file);
+  const hls = /\.m3u8(\?|$)/i.test(url);
+  const ts = { id, file, rec, timer: setInterval(() => { if (rec.bytes > limit) rec.stop(); }, 2000) };
+  timeshift = ts;
+  (async () => {
+    try {
+      if (hls) await recordHls(rec, url, headers, out, controller.signal);
+      else await recordProgressive(rec, url, headers, out, controller.signal);
+    } catch (err) {
+      if (rec.running) rec.error = String((err && err.message) || err);
+    } finally {
+      rec.running = false;
+      out.end();
+    }
+  })();
+  return { id, url: `http://127.0.0.1:${TS_PORT}/timeshift/${id}.ts` };
+});
+ipcMain.handle("fiptv:timeshift-stop", () => { timeshiftStop(); return true; });
+ipcMain.handle("fiptv:timeshift-status", () => timeshift
+  ? { id: timeshift.id, bytes: timeshift.rec.bytes, running: timeshift.rec.running, error: timeshift.rec.error } : null);
+
 app.whenReady().then(() => {
+  timeshiftCleanupAll();
   allowProviderCors();
   buildMenu();
   createWindow();
@@ -411,5 +515,8 @@ app.whenReady().then(() => {
   setInterval(() => checkUpdates(false), 6 * 60 * 60 * 1000);
 });
 
-app.on("window-all-closed", () => { quitting = true; stopServer(); app.quit(); });
-app.on("before-quit", () => { quitting = true; stopServer(); });
+app.on("window-all-closed", () => { quitting = true; timeshiftStop(); stopServer(); app.quit(); });
+app.on("before-quit", () => {
+  quitting = true; stopServer();
+  if (timeshift) { try { timeshift.rec.stop(); fs.rmSync(timeshift.file, { force: true }); } catch { /* egal */ } timeshift = null; }
+});

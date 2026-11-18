@@ -187,6 +187,35 @@ export function VideoPlayer({
   const [errorDetail, setErrorDetail] = useState("");
   // Live TV: why the channel failed, in plain words (lib/liveTvPlayback.ts).
   const [liveFailure, setLiveFailure] = useState<LiveFailure | null>(null);
+  // fIPTV: endgültiger Fehler bei Live TV → Live-TV-Seite versucht eine andere Variante des Senders
+  // fIPTV (Windows): Live-Pause – beim Pausieren puffert die Desktop-App den Sender in eine
+  // temporäre Datei; Fortsetzen spielt ab der Pausenstelle, „Zurück zu Live“ löscht den Puffer.
+  const timeshiftRef = useRef<{ live: StreamSource; local: string } | null>(null);
+  const [timeshifted, setTimeshifted] = useState(false);
+  const stopTimeshift = useCallback(() => {
+    if (!timeshiftRef.current) return;
+    timeshiftRef.current = null;
+    setTimeshifted(false);
+    void desktopTimeshift()?.timeshiftStop().catch(() => undefined);
+  }, []);
+  const backToLive = useCallback(() => {
+    const ts = timeshiftRef.current;
+    if (!ts) return;
+    stopTimeshift();
+    selectStream(ts.live);
+  }, [selectStream, stopTimeshift]);
+  useEffect(() => {
+    const ts = timeshiftRef.current;
+    // Anderer Sender gewählt → Puffer verwerfen
+    if (ts && stream.url !== ts.local && stream.url !== ts.live.url) stopTimeshift();
+  }, [stream.url, stopTimeshift]);
+  useEffect(() => () => { if (timeshiftRef.current) void desktopTimeshift()?.timeshiftStop().catch(() => undefined); }, []);
+  useEffect(() => {
+    if (!liveTv || !error) return;
+    // Zwischenspeicher kaputt → einfach zurück zu Live statt Senderwechsel
+    if (timeshiftRef.current && stream.url === timeshiftRef.current.local) { backToLive(); return; }
+    window.dispatchEvent(new CustomEvent("fiptv-live-failed"));
+  }, [liveTv, error, stream.url, backToLive]);
   const notify = useCallback((message: string, values?: Record<string, string | number>) => {
     onToast(translateUi(message, values && Object.fromEntries(Object.entries(values).map(([key, value]) => [key, typeof value === "string" ? translateUi(value) : value]))));
   }, [onToast, translateUi]);
@@ -705,6 +734,24 @@ export function VideoPlayer({
   const togglePlay = useCallback(() => {
     const video = videoRef.current;
     if (!video) return;
+    const desk = liveTv && livePauseEnabled() ? desktopTimeshift() : undefined;
+    if (desk) {
+      const ts = timeshiftRef.current;
+      if (!video.paused && !ts && stream.url && /^https?:/i.test(stream.url)) {
+        video.pause();
+        flashControls();
+        const live = stream;
+        desk.timeshiftStart({ url: stream.url, headers: stream.behaviorHints?.proxyHeaders?.request ?? {} })
+          .then((r) => { timeshiftRef.current = { live, local: r.url }; onToast("Live-Pause: Sendung wird zwischengespeichert"); })
+          .catch((err: unknown) => onToast(`Live-Pause nicht möglich: ${err instanceof Error ? err.message.replace(/^Error invoking remote method '[^']+': (Error: )?/, "") : String(err)}`));
+        return;
+      }
+      if (video.paused && ts && stream.url !== ts.local) {
+        setTimeshifted(true);
+        selectStream({ ...stream, url: ts.local, behaviorHints: { ...stream.behaviorHints, proxyHeaders: null } });
+        return;
+      }
+    }
     if (video.paused) {
       setError(false);
       setBuffering(true);
@@ -728,7 +775,7 @@ export function VideoPlayer({
     }
     else video.pause();
     flashControls();
-  }, [flashControls]);
+  }, [flashControls, liveTv, stream, onToast, selectStream]);
 
   const seekBy = useCallback((delta: number) => {
     const video = videoRef.current;
@@ -978,6 +1025,7 @@ export function VideoPlayer({
     >
       <style>{cueCss}</style>
       <video ref={videoRef} autoPlay playsInline preload="auto" onPointerUp={onSurfacePointerUp} poster={item?.backdrop ?? undefined} />
+      {timeshifted && <button type="button" className="fiptv-timeshift-chip" onClick={backToLive} title="Puffer verwerfen und zum Live-Bild springen">⏪ Zeitversetzt · Zurück zu Live</button>}
       <LiveDockControls buffering={buffering} dock={dock} error={error} onClose={onClose} playing={playing} togglePlay={togglePlay} />
 
       <PlayerStatusLayers booted={booted} bootLogo={bootLogo} bootStatus={bootStatus} bufferAheadSec={bufferAheadSec} buffering={buffering} error={error} errorDetail={errorDetail} externalOptions={externalOptions} item={item} liveFailure={liveTv ? liveFailure : null} liveTv={liveTv} onClose={onClose} onSelectStream={onSelectStream} openExternalOption={openExternalOption} openPanel={openPanel} playBlocked={playBlocked} playing={playing} retryPlayback={retryPlayback} showEndScreen={showEndScreen} skipOverlay={skipOverlay} stream={stream} subtitleLabel={subtitleLabel} title={title} togglePlay={togglePlay} />
@@ -991,4 +1039,18 @@ export function VideoPlayer({
       <PlayerControlsBar activePanel={activePanel} appleMobile={appleMobile} badges={badges} bufPct={bufPct} canAdvance={canAdvance} duration={duration} error={error} fullscreen={fullscreen} hoverPct={hoverPct} hoverTime={hoverTime} liveTv={liveTv} muted={muted} openPanel={openPanel} pct={pct} playing={playing} playNextNow={playNextNow} scrubDisplayTime={scrubDisplayTime} seekBy={seekBy} setHoverPct={setHoverPct} setHoverTime={setHoverTime} setScrubTo={setScrubTo} toggleFullscreen={toggleFullscreen} togglePlay={togglePlay} transportRef={transportRef} videoRef={videoRef} volume={volume} />
     </section>
   );
+}
+
+type DesktopTimeshift = {
+  timeshiftStart: (input: { url: string; headers: Record<string, string> }) => Promise<{ id: string; url: string }>;
+  timeshiftStop: () => Promise<unknown>;
+};
+/** Nur in der Windows-App vorhanden. */
+function desktopTimeshift(): DesktopTimeshift | undefined {
+  if (typeof window === "undefined") return undefined;
+  const d = (window as unknown as { fiptvDesktop?: Partial<DesktopTimeshift> }).fiptvDesktop;
+  return d?.timeshiftStart && d.timeshiftStop ? d as DesktopTimeshift : undefined;
+}
+function livePauseEnabled() {
+  try { return localStorage.getItem("fiptv.livePause") !== "0"; } catch { return true; }
 }

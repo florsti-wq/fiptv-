@@ -6,5 +6,9 @@ contextBridge.exposeInMainWorld("fiptvDesktop", {
   recordStart: (input) => ipcRenderer.invoke("fiptv:record-start", input),
   recordStop: (id) => ipcRenderer.invoke("fiptv:record-stop", id),
   recordList: () => ipcRenderer.invoke("fiptv:record-list"),
-  openRecordingsFolder: () => ipcRenderer.invoke("fiptv:record-open-folder")
+  openRecordingsFolder: () => ipcRenderer.invoke("fiptv:record-open-folder"),
+  // fIPTV: Live-Pause
+  timeshiftStart: (input) => ipcRenderer.invoke("fiptv:timeshift-start", input),
+  timeshiftStop: () => ipcRenderer.invoke("fiptv:timeshift-stop"),
+  timeshiftStatus: () => ipcRenderer.invoke("fiptv:timeshift-status")
 });
