@@ -1,3 +1,4 @@
+import { liveLatency } from "@/lib/fiptvEffects";
 import { mediaSourceConstructor } from "./capabilities";
 import { classifyMediaError } from "./playerRecovery";
 import { mediaInfoFromMime } from "./liveTvPlayback";
@@ -274,8 +275,12 @@ export function attachPlayback(video: HTMLVideoElement, url: string, options: Pl
         if (!active()) return;
         if (!Hls.isSupported()) { if (nativeHls && !hasHeaders) native(); else unsupported(); return; }
         prepareMse();
+        // fIPTV: Live-Verzögerung (Einstellungen → Wiedergabe)
+        const latency = live ? liveLatency() : 0;
         const instance = new Hls({
           enableWorker: true, preferManagedMediaSource: true, lowLatencyMode: live,
+          ...(latency === 1 ? { liveSyncDurationCount: 2, liveMaxLatencyDurationCount: 5, maxLiveSyncPlaybackRate: 1.05 } : {}),
+          ...(latency === 2 ? { liveSyncDurationCount: 1, liveMaxLatencyDurationCount: 3, maxLiveSyncPlaybackRate: 1.1 } : {}),
           backBufferLength: lowMemory ? 15 : 30,
           maxBufferLength: lowMemory ? 20 : 30, maxMaxBufferLength: lowMemory ? 30 : 60,
           maxBufferSize: (lowMemory ? 20 : 40) * 1024 * 1024,
@@ -491,7 +496,7 @@ export function attachPlayback(video: HTMLVideoElement, url: string, options: Pl
       const instance = mpegts.createPlayer({ type: "mpegts", isLive: live, url }, {
         // Keep a rolling live buffer even when paused; VOD must never chase the live edge.
         enableWorker: true, headers, liveBufferLatencyChasing: chase, liveBufferLatencyChasingOnPaused: chase,
-        liveBufferLatencyMaxLatency: 5, liveBufferLatencyMinRemain: 1,
+        liveBufferLatencyMaxLatency: [5, 3, 1.8][live ? liveLatency() : 0], liveBufferLatencyMinRemain: [1, 0.8, 0.5][live ? liveLatency() : 0],
         enableStashBuffer: !live, stashInitialSize: 128 * 1024,
         lazyLoad: !live, lazyLoadMaxDuration: lowMemory ? 20 : 40, lazyLoadRecoverDuration: 5,
         autoCleanupSourceBuffer: true, autoCleanupMaxBackwardDuration: lowMemory ? 20 : 40,

@@ -273,6 +273,7 @@ class MainActivity : ComponentActivity() {
         com.arflix.tv.fiptv.FiptvSpace.init(this)
         com.arflix.tv.fiptv.FiptvStartLive.init(this)
         com.arflix.tv.fiptv.FiptvNightMode.init(this)
+        com.arflix.tv.fiptv.player.FiptvLiveLatency.init(this)
         com.arflix.tv.fiptv.FiptvPip.init(this)
         com.arflix.tv.fiptv.live.FiptvEpgMap.init(this)
         com.arflix.tv.fiptv.live.FiptvCustomGroups.init(this)

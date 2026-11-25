@@ -60,7 +60,11 @@ class FiptvLocalPlayerActivity : ComponentActivity() {
         val recId = intent.getStringExtra(EXTRA_REC_ID)
         val file = File(path)
         val growing = { recId != null && FiptvRecordService.isRunning(recId) }
-        val exo = ExoPlayer.Builder(this).build()
+        // fIPTV: FFmpeg-Ton (DTS, TrueHD …), falls das Gerät ihn nicht selbst abspielen kann
+        val exo = ExoPlayer.Builder(this)
+            .setRenderersFactory(androidx.media3.exoplayer.DefaultRenderersFactory(this).setEnableDecoderFallback(true)
+                .setExtensionRendererMode(androidx.media3.exoplayer.DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON))
+            .build()
         player = exo
         val item = MediaItem.fromUri(Uri.fromFile(file))
         if (growing()) {

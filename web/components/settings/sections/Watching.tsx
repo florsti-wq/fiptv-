@@ -6,7 +6,7 @@ import { CONTENT_LANGUAGE_OPTIONS } from "@/lib/i18n/languageOptions";
 import { languageCode, TRACK_LANGUAGES, trackLanguageName } from "@/lib/languages";
 import { useApp, useAppPick } from "@/lib/store";
 import type { AppSettings, QualityFilterConfig } from "@/lib/types";
-import { startLiveEnabled, setStartLive, nightModeEnabled, setNightMode, animationsEnabled, setAnimations, setSounds, setSpaceMode, setSpacePalette, soundsEnabled, SPACE_PALETTES, spaceMode, spacePalette } from "@/lib/fiptvEffects";
+import { LIVE_LATENCY_LABELS, liveLatency, setLiveLatency, livePauseEnabled, setLivePause, startLiveEnabled, setStartLive, nightModeEnabled, setNightMode, animationsEnabled, setAnimations, setSounds, setSpaceMode, setSpacePalette, soundsEnabled, SPACE_PALETTES, spaceMode, spacePalette } from "@/lib/fiptvEffects";
 import { Group, Row, SecretInput, Segmented, Select, SectionHeader, Slider, Status, Swatches, Toggle, safeArray } from "../ui";
 
 type Set = (patch: Partial<AppSettings>) => void;
@@ -75,6 +75,14 @@ export function PlaybackSection() {
         <Row id="fiptv-night" label="Nachtmodus (Ton)" hint="Gleicht laute und leise Stellen an – Werbung leiser, Dialoge verständlicher." scope="all">
           <NightToggle />
         </Row>
+        <Row id="fiptv-live-latency" label="Live-Verzögerung" hint="Wie nah Live TV am echten Geschehen ist. Niedriger = schneller beim Sport, bei schwacher Leitung aber eher Ruckler. Gilt ab dem nächsten Senderwechsel." scope="all">
+          <LatencySelect />
+        </Row>
+        {typeof window !== "undefined" && "fiptvDesktop" in window && (
+          <Row id="fiptv-live-pause" label="Live-Pause" hint="Beim Pausieren eines Senders wird zwischengespeichert, danach geht es zeitversetzt weiter (nur Windows-App)." scope="all">
+            <LivePauseToggle />
+          </Row>
+        )}
         <Row id="fiptv-sounds" label="Töne" hint="Startklang, leises Klicken beim Navigieren, Ton bei OK und beim Merken von Favoriten." scope="all">
           <EffectToggle kind="sound" />
         </Row>
@@ -399,6 +407,17 @@ function SpaceSelect({ kind }: { kind: "mode" | "palette" }) {
     : SPACE_PALETTES.map((name, i) => [String(i), name]);
   return <Select label={kind === "mode" ? "Hintergrund" : "Farbstimmung"} value={value} options={options}
     onChange={(v) => { if (kind === "mode") setSpaceMode(Number(v)); else setSpacePalette(Number(v)); setValue(v); }} />;
+}
+
+function LatencySelect() {
+  const [value, setValue] = useState(() => String(liveLatency()));
+  return <Select label="Live-Verzögerung" value={value} options={LIVE_LATENCY_LABELS.map((name, i) => [String(i), name] as [string, string])}
+    onChange={(v) => { setLiveLatency(Number(v)); setValue(v); }} />;
+}
+
+function LivePauseToggle() {
+  const [on, setOn] = useState(() => livePauseEnabled());
+  return <Toggle label="Live-Pause" value={on} onChange={(v) => { setLivePause(v); setOn(v); }} />;
 }
 
 function NightToggle() {

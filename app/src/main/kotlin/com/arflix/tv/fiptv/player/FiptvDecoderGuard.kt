@@ -50,6 +50,8 @@ object FiptvDecoderGuard {
     /** Decoder-Auswahl: im Software-Modus Software-Decoder (und FFmpeg-Erweiterung) zuerst. */
     fun apply(factory: DefaultRenderersFactory, context: Context): DefaultRenderersFactory {
         factory.setEnableDecoderFallback(true)
+        // fIPTV: FFmpeg-Ton (DTS, TrueHD, AC-3/E-AC-3 …), wenn das Gerät den Ton selbst nicht kann
+        factory.setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON)
         if (softwareDecoding(context)) {
             factory.setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
             factory.setMediaCodecSelector(SOFTWARE_FIRST)

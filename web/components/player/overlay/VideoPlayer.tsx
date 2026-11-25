@@ -1,4 +1,5 @@
 // Part of the player overlay (see components/player/PlayerOverlay.tsx).
+import { livePauseEnabled } from "@/lib/fiptvEffects";
 import type { MediaItem, StreamSource, AppSettings, InstalledAddon } from "@/lib/types";
 import { useTranslation } from "@/lib/i18n";
 import { useRef, useMemo, useCallback, useState, useEffect } from "react";
@@ -1050,7 +1051,4 @@ function desktopTimeshift(): DesktopTimeshift | undefined {
   if (typeof window === "undefined") return undefined;
   const d = (window as unknown as { fiptvDesktop?: Partial<DesktopTimeshift> }).fiptvDesktop;
   return d?.timeshiftStart && d.timeshiftStop ? d as DesktopTimeshift : undefined;
-}
-function livePauseEnabled() {
-  try { return localStorage.getItem("fiptv.livePause") !== "0"; } catch { return true; }
 }

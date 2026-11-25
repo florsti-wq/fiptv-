@@ -3241,12 +3241,16 @@ fun LiveTvScreen(
             .setDataSourceFactory(iptvDataSourceFactory)
             .setLoadErrorHandlingPolicy(IptvLoadErrorHandlingPolicy())
     }
-    val livePlaybackBufferProfile = remember(context) {
+    // fIPTV: Live-Verzögerung (Einstellungen → Wiedergabe) bestimmt die Puffergrößen
+    val fiptvLatencyMode = com.arflix.tv.fiptv.player.FiptvLiveLatency.mode
+    val livePlaybackBufferProfile = remember(context, fiptvLatencyMode) {
         val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager
-        buildLiveTvBufferProfile(
+        val base = buildLiveTvBufferProfile(
             memoryClassMb = activityManager?.memoryClass ?: 384,
             isLowRamDevice = activityManager?.isLowRamDevice == true
         )
+        val b = com.arflix.tv.fiptv.player.FiptvLiveLatency.buffers(base.minBufferMs, base.maxBufferMs, base.bufferForPlaybackMs, base.bufferForPlaybackAfterRebufferMs)
+        base.copy(minBufferMs = b[0], maxBufferMs = b[1], bufferForPlaybackMs = b[2], bufferForPlaybackAfterRebufferMs = b[3])
     }
     val liveLoadControl = remember(livePlaybackBufferProfile) {
         val loadControl = DefaultLoadControl.Builder()
@@ -3680,7 +3684,7 @@ fun LiveTvScreen(
                     setMimeType(MimeTypes.VIDEO_MP2T)
                 }
                 if (playingCatchupProgram == null) {
-                    setLiveConfiguration(buildLiveTvConfiguration())
+                    setLiveConfiguration(com.arflix.tv.fiptv.player.FiptvLiveLatency.liveConfiguration())
                 }
                 // DRM configuration from #KODIPROP directives
                 drmInfo?.let { drm ->
@@ -3757,6 +3761,10 @@ fun LiveTvScreen(
         )
     }
 
+    // fIPTV: Live-Verzögerung klein halten (TS-Streams)
+    LaunchedEffect(exoPlayer) {
+        com.arflix.tv.fiptv.player.FiptvLiveLatency.watch(exoPlayer) { playingCatchupProgram == null }
+    }
     // fIPTV: eingefrorenes Bild erkennen und den Stream neu aufbauen; neuer Player (Software-Decoder) → Stream neu starten
     LaunchedEffect(exoPlayer) {
         if (fiptvDecoderGeneration > 0) {

@@ -341,7 +341,7 @@ internal fun tvGeneralRowsForSection(section: String): List<Int> {
             (if (BuildConfig.AUDIO_SYNC_AVAILABLE) listOf(48) else emptyList()) +
             listOf(39, 9, 45)
         "ai_subtitles" -> listOf(28, 29, 30, 31, 32, 33) + LIVE_AI_SUBS_ROWS
-        "playback" -> listOf(73, 74, 64, 70, 71, 72, 10, 11, 12, 43, 44, 13, 14, 34, 37, 16, 15, 40, 27, 53, 54)
+        "playback" -> listOf(73, 74, 75, 64, 70, 71, 72, 10, 11, 12, 43, 44, 13, 14, 34, 37, 16, 15, 40, 27, 53, 54)
         "appearance" -> listOf(62, 63, 65, 67, 68, 66, 17, 49, 50, 18, 20, 60, 21, 24, 23, 22, 41, 46, 36, 47, 69)
         "profiles" -> listOf(19, 61)
         "network" -> listOf(25, 26, 35)
@@ -1480,6 +1480,7 @@ fun SettingsScreen(
                                                 72 -> com.arflix.tv.fiptv.FiptvPip.toggle()
                                                 73 -> com.arflix.tv.fiptv.FiptvEffects.openLibrary()
                                                 74 -> com.arflix.tv.fiptv.rec.FiptvTimeshift.toggle()
+                                                75 -> com.arflix.tv.fiptv.player.FiptvLiveLatency.cycle()
                                                 64 -> com.arflix.tv.fiptv.FiptvSleepTimer.cycle()
                                                 20 -> viewModel.setOledBlackBackground(!uiState.oledBlackBackground)
                                                 21 -> viewModel.cycleClockFormat()
@@ -6990,6 +6991,7 @@ private fun TvGeneralSettingsRows(
                 67 -> SettingsRow(Icons.Default.Star, "Hintergrund", "Animierter Weltraum hinter Profilauswahl, Startseite und Einstellungen", com.arflix.tv.fiptv.FiptvSpace.mode.let { com.arflix.tv.fiptv.FiptvSpace.modeLabel() }, focusedIndex == localIndex, { com.arflix.tv.fiptv.FiptvSpace.cycleMode() }, Modifier.settingsFocusSlot(localIndex))
                 68 -> SettingsRow(Icons.Default.Star, "Farbstimmung", "Farben der Nebel im Weltraum-Hintergrund", com.arflix.tv.fiptv.FiptvSpace.palette.let { com.arflix.tv.fiptv.FiptvSpace.paletteLabel() }, focusedIndex == localIndex, { com.arflix.tv.fiptv.FiptvSpace.cyclePalette() }, Modifier.settingsFocusSlot(localIndex))
                 73 -> SettingsRow(Icons.Default.Info, "Aufnahmen und Downloads", "Gespeicherte Aufnahmen und heruntergeladene Filme ansehen oder löschen", "Öffnen", focusedIndex == localIndex, { com.arflix.tv.fiptv.FiptvEffects.openLibrary() }, Modifier.settingsFocusSlot(localIndex))
+                75 -> SettingsRow(Icons.Default.Schedule, "Live-Verzögerung", "Wie nah Live TV am echten Geschehen ist. Niedriger = schneller beim Sport, aber bei schwacher Leitung eher Ruckler", com.arflix.tv.fiptv.player.FiptvLiveLatency.mode.let { com.arflix.tv.fiptv.player.FiptvLiveLatency.label() }, focusedIndex == localIndex, { com.arflix.tv.fiptv.player.FiptvLiveLatency.cycle() }, Modifier.settingsFocusSlot(localIndex))
                 74 -> SettingsToggleRow("Live-Pause", "Beim Pausieren eines Senders wird zwischengespeichert, danach geht es zeitversetzt weiter", com.arflix.tv.fiptv.rec.FiptvTimeshift.enabled, focusedIndex == localIndex, { com.arflix.tv.fiptv.rec.FiptvTimeshift.toggle() }, Modifier.settingsFocusSlot(localIndex))
                 70 -> SettingsToggleRow("Mit letztem Sender starten", "Nach der Profilauswahl direkt den zuletzt gesehenen Sender im Vollbild öffnen", com.arflix.tv.fiptv.FiptvStartLive.enabled, focusedIndex == localIndex, { com.arflix.tv.fiptv.FiptvStartLive.toggle() }, Modifier.settingsFocusSlot(localIndex))
                 71 -> SettingsToggleRow("Nachtmodus (Ton)", "Gleicht laute und leise Stellen an – Werbung wird leiser, Dialoge verständlicher", com.arflix.tv.fiptv.FiptvNightMode.enabled, focusedIndex == localIndex, { com.arflix.tv.fiptv.FiptvNightMode.toggle() }, Modifier.settingsFocusSlot(localIndex))

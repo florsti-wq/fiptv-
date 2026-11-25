@@ -220,3 +220,13 @@ export function requestStartLive(): boolean {
 export function takeStartLive(): boolean {
   const p = startLivePending; startLivePending = false; return p;
 }
+
+// fIPTV: Live-Verzögerung – 0 Normal (stabil), 1 Niedrig, 2 Sehr niedrig (Sport)
+export const LIVE_LATENCY_LABELS = ["Normal (stabil)", "Niedrig", "Sehr niedrig (Sport)"];
+export function liveLatency(): number {
+  try { const v = Number(localStorage.getItem("fiptv.liveLatency")); return v === 1 || v === 2 ? v : 0; } catch { return 0; }
+}
+export function setLiveLatency(v: number) { try { localStorage.setItem("fiptv.liveLatency", String(v)); } catch { /* egal */ } }
+// fIPTV: Live-Pause (nur Windows-App)
+export function livePauseEnabled(): boolean { try { return localStorage.getItem("fiptv.livePause") !== "0"; } catch { return true; } }
+export function setLivePause(on: boolean) { try { localStorage.setItem("fiptv.livePause", on ? "1" : "0"); } catch { /* egal */ } }
