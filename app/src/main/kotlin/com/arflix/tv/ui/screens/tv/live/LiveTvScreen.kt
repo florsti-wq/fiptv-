@@ -1,6 +1,9 @@
 @file:Suppress("UnsafeOptInUsageError")
 
 package com.arflix.tv.ui.screens.tv.live
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.FiberManualRecord
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowDown

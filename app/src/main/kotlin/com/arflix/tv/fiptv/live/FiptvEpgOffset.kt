@@ -86,3 +86,4 @@ object FiptvEpgOffset {
         // gleiche Aufteilung in vorbei/jetzt/als Nächstes wie im übrigen Live TV
         return IptvNowNext(recent = shifted).atTime(now)
     }
+}

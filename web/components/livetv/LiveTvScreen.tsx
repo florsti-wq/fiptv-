@@ -392,8 +392,6 @@ export function LiveTvScreen() {
     catchupCtx.current = { channel, program };
     playCatchup(channel, program, startAtSeconds);
   }, [playCatchup]);
-  const nowNextRef = useRef(nowNext);
-  nowNextRef.current = nowNext;
   useEffect(() => {
     const onEnded = () => {
       const ctx = catchupCtx.current;
