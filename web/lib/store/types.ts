@@ -75,7 +75,7 @@ export interface AppStore {
   playTrailer: (item: MediaItem) => Promise<void>;
   playChannel: (channel: IptvChannel) => void;
   recordChannelPlayback: (channel: IptvChannel) => void;
-  playCatchup: (channel: IptvChannel, program: IptvProgram) => void;
+  playCatchup: (channel: IptvChannel, program: IptvProgram, startAtSeconds?: number) => void;
   closePlayer: () => void;
   installAddon: (source: string | InstalledAddon, options?: { mode?: AddonInstallMode }) => Promise<InstalledAddon>;
   removeAddon: (addon: InstalledAddon) => Promise<void>;

@@ -1,8 +1,9 @@
 "use client";
 import { channelCleanupEnabled, cleanChannelName, tidyChannels } from "@/lib/fiptvChannelCleanup";
 import { animationsEnabled, takeStartLive } from "@/lib/fiptvEffects";
-import { applyEpgMap, CUSTOM_GROUP_PREFIX, customGroupById, customGroups, epgMap, moveInCustomGroup, toggleInCustomGroup } from "@/lib/fiptvLiveCustom";
-import { CustomGroupsDialog, EpgMapDialog } from "@/components/livetv/FiptvLiveDialogs";
+import { buildStreamReport, saveStreamReport } from "@/lib/fiptvStreamReport";
+import { applyEpgMap, applyEpgOffsets, epgOffsetLabel, epgOffsets, CUSTOM_GROUP_PREFIX, customGroupById, customGroups, epgMap, moveInCustomGroup, toggleInCustomGroup } from "@/lib/fiptvLiveCustom";
+import { CustomGroupsDialog, EpgMapDialog, EpgOffsetDialog, JumpDialog } from "@/components/livetv/FiptvLiveDialogs";
 
 /** fIPTV: Aufnahme-Funktionen der Windows-App (nur in Electron vorhanden). */
 type DesktopRecorder = { recordStart: (input: { url: string; isHls: boolean; headers: Record<string, string>; title: string; endsAt: number }) => Promise<{ id: string; path: string }> };
@@ -40,7 +41,7 @@ import { playerIsOpen } from "@/lib/tvNav";
 import { loadStored, saveStored } from "@/lib/storage";
 import { authClient, useAppPick } from "@/lib/store";
 import { trackPremiumEvent } from "@/lib/premiumAnalytics";
-import type { IptvChannel } from "@/lib/types";
+import type { IptvChannel, IptvProgram } from "@/lib/types";
 
 const LAST_CHANNEL_KEY = "arvio.web.livetv.lastChannel";
 const GUIDE_BATCH_DELAY_MS = 500;
@@ -181,7 +182,7 @@ export function LiveTvScreen() {
     window.addEventListener("fiptv-live-custom", on);
     return () => window.removeEventListener("fiptv-live-custom", on);
   }, []);
-  const [liveDialog, setLiveDialog] = useState<{ kind: "epg" | "groups"; channel: IptvChannel } | null>(null);
+  const [liveDialog, setLiveDialog] = useState<{ kind: "epg" | "groups" | "offset" | "jump"; channel: IptvChannel } | null>(null);
   const myGroups = useMemo(() => customGroups(), [customVersion]); // eslint-disable-line react-hooks/exhaustive-deps
   const categories = useMemo(() => {
     const orderMap = new Map(settings.groupOrder.map((id, index) => [id, index]));
@@ -244,7 +245,7 @@ export function LiveTvScreen() {
     return sorted;
   }, [activeCategory, channels, favoriteChannels, recentChannels, groups, settings.iptvSortOrder, settings.iptvChannelOrder, myGroups, channelById]);
   // Search also matches the titles of programmes whose guide is loaded.
-  const nowNext = useMemo(() => applyEpgMap(iptvSnapshot.nowNext, epgMap()), [iptvSnapshot.nowNext, customVersion]); // eslint-disable-line react-hooks/exhaustive-deps
+  const nowNext = useMemo(() => applyEpgOffsets(applyEpgMap(iptvSnapshot.nowNext, epgMap()), epgOffsets()), [iptvSnapshot.nowNext, customVersion]); // eslint-disable-line react-hooks/exhaustive-deps
   const needle = query.trim().toLowerCase();
   const visibleChannels = useMemo(() => needle
     ? categoryChannels.filter((channel) => channelMatchesQuery(channel, needle, nowNext[channel.id], hasGroupNames ? groupNames?.[groupKey(channel)] : undefined))
@@ -385,8 +386,38 @@ export function LiveTvScreen() {
   // is selected (most of an Arrow Down's cost with large playlists).
   const watchRef = useRef(watchChannel);
   watchRef.current = watchChannel;
-  const playCatchupRef = useRef(playCatchup);
-  playCatchupRef.current = playCatchup;
+  // fIPTV: Sendung verpasst läuft in die nächste Sendung weiter, bis die Gegenwart erreicht ist
+  const catchupCtx = useRef<{ channel: IptvChannel; program: IptvProgram } | null>(null);
+  const fiptvCatchup = useCallback((channel: IptvChannel, program: IptvProgram, startAtSeconds?: number) => {
+    catchupCtx.current = { channel, program };
+    playCatchup(channel, program, startAtSeconds);
+  }, [playCatchup]);
+  const nowNextRef = useRef(nowNext);
+  nowNextRef.current = nowNext;
+  useEffect(() => {
+    const onEnded = () => {
+      const ctx = catchupCtx.current;
+      if (!ctx) return;
+      const now = Date.now();
+      const { channel, program } = ctx;
+      const g = nowNextRef.current[channel.id];
+      const next = g && [...(g.recent ?? []), g.now, g.next, g.later, ...(g.upcoming ?? [])]
+        .filter((p): p is IptvProgram => Boolean(p) && p!.startUtcMillis >= program.endUtcMillis - 60_000 && p!.startUtcMillis > program.startUtcMillis)
+        .sort((a, b) => a.startUtcMillis - b.startUtcMillis)[0];
+      if (program.endUtcMillis > now - 30_000 || !next || next.startUtcMillis >= now || next.catchupAvailable === false) {
+        catchupCtx.current = null;
+        setToast("Live erreicht");
+        void playChannel(channel);
+        return;
+      }
+      setToast(`Weiter mit: ${next.title}`);
+      fiptvCatchup(channel, next);
+    };
+    window.addEventListener("fiptv-catchup-ended", onEnded);
+    return () => window.removeEventListener("fiptv-catchup-ended", onEnded);
+  }, [fiptvCatchup, playChannel, setToast]);
+  const playCatchupRef = useRef(fiptvCatchup);
+  playCatchupRef.current = fiptvCatchup;
   const guideCallbacks: GuideCallbacks = useMemo(() => ({
     onFocusChannel: (channel) => setSelectedChannelId((current) => current === channel.id ? current : channel.id),
     onVisible: requestGuide,
@@ -751,7 +782,7 @@ export function LiveTvScreen() {
                     {catchup.loading && <p className="livetv-detail-empty">{translateUi("Loading archive…")}</p>}
                     {!catchup.loading && !catchup.programs.length && <p className="livetv-detail-empty">{translateUi("No archive available.")}</p>}
                     {catchup.programs.map((program) => (
-                      <button type="button" key={`${program.startUtcMillis}`} className="livetv-catchup-row" onClick={() => playCatchup(selectedChannel, program)}>
+                      <button type="button" key={`${program.startUtcMillis}`} className="livetv-catchup-row" onClick={() => fiptvCatchup(selectedChannel, program)}>
                         <CalendarClock size={14} />
                         <span>
                           <strong>{program.title}</strong>
@@ -796,6 +827,16 @@ export function LiveTvScreen() {
         programmeEnd={nowNext[menu.channel.id]?.now?.endUtcMillis}
         onEpgMap={() => setLiveDialog({ kind: "epg", channel: menu.channel })}
         onGroups={() => setLiveDialog({ kind: "groups", channel: menu.channel })}
+        onEpgOffset={() => setLiveDialog({ kind: "offset", channel: menu.channel })}
+        onReport={() => {
+          const ch = menu.channel;
+          const text = buildStreamReport((channelCleanupEnabled() ? cleanChannelName(ch.name) : ch.name) + (activeChannel?.id === ch.id ? "" : " (lief gerade nicht)"), {
+            Gruppe: ch.group ?? "",
+            "Programmzeit-Versatz": epgOffsetLabel(epgOffsets().channels[ch.id] ?? epgOffsets().global),
+          });
+          void saveStreamReport(text).then((msg) => setRecordToast(msg));
+        }}
+        onJump={(menu.channel.catchupDays ?? 0) > 0 ? () => setLiveDialog({ kind: "jump", channel: menu.channel }) : undefined}
         customMove={(() => {
           const g = customGroupById(activeCategory);
           if (!g || !g.channelIds.includes(menu.channel.id)) return undefined;
@@ -815,6 +856,16 @@ export function LiveTvScreen() {
         } : undefined}
       />}
       {liveDialog?.kind === "epg" && <EpgMapDialog channel={liveDialog.channel} channels={channels} nowNext={iptvSnapshot.nowNext} onClose={() => setLiveDialog(null)} />}
+      {liveDialog?.kind === "jump" && <JumpDialog channel={liveDialog.channel} onClose={() => setLiveDialog(null)} onPick={(t) => {
+        const ch = liveDialog.channel;
+        const g = nowNext[ch.id];
+        const all = g ? [...(g.recent ?? []), g.now, g.next, g.later, ...(g.upcoming ?? [])].filter((p): p is IptvProgram => Boolean(p)) : [];
+        const program = all.find((p) => t >= p.startUtcMillis && t < p.endUtcMillis)
+          ?? { title: `Ab ${new Date(t).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}`, startUtcMillis: t, endUtcMillis: Math.min(t + 3 * 3600_000, Date.now()) };
+        setLiveDialog(null);
+        fiptvCatchup(ch, program, (t - program.startUtcMillis) / 1000);
+      }} />}
+      {liveDialog?.kind === "offset" && <EpgOffsetDialog channel={liveDialog.channel} onClose={() => setLiveDialog(null)} />}
       {liveDialog?.kind === "groups" && <CustomGroupsDialog channel={liveDialog.channel} onClose={() => setLiveDialog(null)} />}
       {recordToast && <div className="fiptv-record-toast" role="status" onAnimationEnd={() => setRecordToast(null)}>{recordToast}</div>}
       <LiveZapOverlay curtain={zapCurtain} digits={zapDigits} digitMatch={zapDigitMatch} info={zapInfo} guide={zapInfo ? nowNext[zapInfo.id] : undefined} clockFormat={settings.clockFormat} />

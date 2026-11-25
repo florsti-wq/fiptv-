@@ -3,4 +3,8 @@
     <cache-path
         name="updates"
         path="updates/" />
+    <!-- fIPTV: Stream-Bericht zum Teilen -->
+    <cache-path
+        name="reports"
+        path="reports/" />
 </paths>

@@ -70,3 +70,51 @@ export function applyEpgMap(nowNext: Record<string, IptvNowNext>, map: Record<st
   }
   return out ?? nowNext;
 }
+
+// ---------- Zeitversatz der Programmdaten ----------
+const OFFSET_KEY = "fiptv.epgOffset";
+type OffsetStore = { global: number; channels: Record<string, number> };
+export const EPG_OFFSET_CHOICES = [-180, -120, -90, -60, -30, 0, 30, 60, 90, 120, 180];
+export function epgOffsets(): OffsetStore {
+  const v = read<OffsetStore>(OFFSET_KEY, { global: 0, channels: {} });
+  return { global: Number(v.global) || 0, channels: v.channels ?? {} };
+}
+export function setGlobalEpgOffset(minutes: number) { write(OFFSET_KEY, { ...epgOffsets(), global: minutes }); }
+/** null = wie alle Sender */
+export function setChannelEpgOffset(channelId: string, minutes: number | null) {
+  const o = epgOffsets();
+  const channels = { ...o.channels };
+  if (minutes === null) delete channels[channelId]; else channels[channelId] = minutes;
+  write(OFFSET_KEY, { ...o, channels });
+}
+export function epgOffsetLabel(minutes: number): string {
+  if (!minutes) return "Kein Versatz";
+  const sign = minutes > 0 ? "+" : "−";
+  const abs = Math.abs(minutes);
+  return abs % 60 === 0 ? `${sign}${abs / 60} Std.` : `${sign}${abs} Min.`;
+}
+/** Alle Sendungszeiten verschieben und „jetzt / als Nächstes“ neu bestimmen. */
+export function applyEpgOffsets(nowNext: Record<string, IptvNowNext>, o: OffsetStore, now = Date.now()): Record<string, IptvNowNext> {
+  if (!o.global && !Object.keys(o.channels).length) return nowNext;
+  const out: Record<string, IptvNowNext> = {};
+  for (const [id, g] of Object.entries(nowNext)) {
+    const minutes = o.channels[id] ?? o.global;
+    if (!minutes) { out[id] = g; continue; }
+    const delta = minutes * 60_000;
+    const seen = new Set<string>();
+    const all = [...(g.recent ?? []), g.now, g.next, g.later, ...(g.upcoming ?? [])]
+      .filter((p): p is NonNullable<typeof p> => Boolean(p))
+      .filter((p) => { const k = `${p.startUtcMillis}|${p.endUtcMillis}|${p.title}`; if (seen.has(k)) return false; seen.add(k); return true; })
+      .map((p) => ({ ...p, startUtcMillis: p.startUtcMillis + delta, endUtcMillis: p.endUtcMillis + delta }))
+      .sort((a, b) => a.startUtcMillis - b.startUtcMillis);
+    const future = all.filter((p) => p.startUtcMillis > now);
+    out[id] = {
+      now: all.filter((p) => p.startUtcMillis <= now && now < p.endUtcMillis).pop(),
+      next: future[0],
+      later: future[1],
+      upcoming: future,
+      recent: all.filter((p) => p.endUtcMillis <= now),
+    };
+  }
+  return out;
+}

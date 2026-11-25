@@ -1,5 +1,6 @@
 // Part of the player overlay (see components/player/PlayerOverlay.tsx).
 import { livePauseEnabled } from "@/lib/fiptvEffects";
+import { reportEvent, reportStream, watchVideo } from "@/lib/fiptvStreamReport";
 import type { MediaItem, StreamSource, AppSettings, InstalledAddon } from "@/lib/types";
 import { useTranslation } from "@/lib/i18n";
 import { useRef, useMemo, useCallback, useState, useEffect } from "react";
@@ -210,6 +211,18 @@ export function VideoPlayer({
     // Anderer Sender gewählt → Puffer verwerfen
     if (ts && stream.url !== ts.local && stream.url !== ts.live.url) stopTimeshift();
   }, [stream.url, stopTimeshift]);
+  // fIPTV: Ereignisse für „Stream-Problem melden“
+  useEffect(() => { reportStream(stream.url, title); }, [stream.url, title]);
+  useEffect(() => { const v = videoRef.current; return v ? watchVideo(v) : undefined; }, [stream.url]);
+  useEffect(() => { if (error) reportEvent(`Wiedergabe fehlgeschlagen${errorDetail ? `: ${String(errorDetail)}` : ""}`); }, [error, errorDetail]);
+  // fIPTV: Ende einer Sendung-verpasst-Wiedergabe melden → Live-TV-Seite spielt die nächste Sendung
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || stream.addonName !== "Catch-up") return undefined;
+    const onEnded = () => window.dispatchEvent(new CustomEvent("fiptv-catchup-ended"));
+    video.addEventListener("ended", onEnded);
+    return () => video.removeEventListener("ended", onEnded);
+  }, [stream.addonName, stream.url]);
   useEffect(() => () => { if (timeshiftRef.current) void desktopTimeshift()?.timeshiftStop().catch(() => undefined); }, []);
   useEffect(() => {
     if (!liveTv || !error) return;

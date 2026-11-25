@@ -592,10 +592,13 @@ fun LiveTvScreen(
     val fiptvRawState by viewModel.uiState.collectAsStateWithLifecycle()
     // fIPTV: selbst zugeordnete Programmdaten einblenden
     val fiptvEpgMapVersion = com.arflix.tv.fiptv.live.FiptvEpgMap.version
-    val state = remember(fiptvRawState, fiptvEpgMapVersion) {
-        if (com.arflix.tv.fiptv.live.FiptvEpgMap.isEmpty()) fiptvRawState
+    // fIPTV: Zeitversatz der Programmdaten (global oder pro Sender)
+    val fiptvEpgOffsetVersion = com.arflix.tv.fiptv.live.FiptvEpgOffset.version
+    val state = remember(fiptvRawState, fiptvEpgMapVersion, fiptvEpgOffsetVersion) {
+        if (com.arflix.tv.fiptv.live.FiptvEpgMap.isEmpty() && com.arflix.tv.fiptv.live.FiptvEpgOffset.isEmpty()) fiptvRawState
         else fiptvRawState.copy(snapshot = fiptvRawState.snapshot.copy(
-            nowNext = com.arflix.tv.fiptv.live.FiptvEpgMap.apply(fiptvRawState.snapshot.nowNext)))
+            nowNext = com.arflix.tv.fiptv.live.FiptvEpgOffset.apply(
+                com.arflix.tv.fiptv.live.FiptvEpgMap.apply(fiptvRawState.snapshot.nowNext))))
     }
     val installedSportsAddons by viewModel.sportsAddons.installedAddons.collectAsStateWithLifecycle(initialValue = emptyList())
     val sportsAddonInstallations = remember(installedSportsAddons) {
@@ -1698,7 +1701,9 @@ fun LiveTvScreen(
         )
     }
     val indexedGuideLoadedIds = indexedGuideState.value.first
-    val indexedGuideNowNext = indexedGuideState.value.second
+    val indexedGuideNowNext = remember(indexedGuideState.value.second, fiptvEpgOffsetVersion) {
+        com.arflix.tv.fiptv.live.FiptvEpgOffset.apply(indexedGuideState.value.second)
+    }
     val effectiveGuideNowNext = remember(state.snapshot.nowNext, indexedGuideNowNext, guideQueryIds, guideClockMillis) {
         HashMap(indexedGuideNowNext).apply {
             guideQueryIds.forEach { id ->
@@ -2455,6 +2460,8 @@ fun LiveTvScreen(
     LaunchedEffect(playingChannelId) { fiptvTimeshift.stop() }
     var fiptvEpgPickerFor by remember { mutableStateOf<EnrichedChannel?>(null) }
     var fiptvGroupPickerFor by remember { mutableStateOf<EnrichedChannel?>(null) }
+    var fiptvOffsetPickerFor by remember { mutableStateOf<EnrichedChannel?>(null) }
+    var fiptvJumpPickerFor by remember { mutableStateOf<EnrichedChannel?>(null) }
     var fiptvRecordPickerFor by remember { mutableStateOf<EnrichedChannel?>(null) }
     // fIPTV: Programmdaten der Quell-Sender selbst zugeordneter Sender laden
     LaunchedEffect(fiptvEpgMapVersion, state.snapshot.channels.size) {
@@ -3761,6 +3768,8 @@ fun LiveTvScreen(
         )
     }
 
+    // fIPTV: Ereignisse für „Stream-Problem melden“ mitschreiben
+    LaunchedEffect(exoPlayer) { com.arflix.tv.fiptv.player.FiptvStreamReport.attach(exoPlayer) }
     // fIPTV: Live-Verzögerung klein halten (TS-Streams)
     LaunchedEffect(exoPlayer) {
         com.arflix.tv.fiptv.player.FiptvLiveLatency.watch(exoPlayer) { playingCatchupProgram == null }
@@ -3896,6 +3905,68 @@ fun LiveTvScreen(
         playerIsBuffering = true
         exoPlayer.play()
         hudPokeSignal++
+    }
+
+    // fIPTV: Sendung verpasst läuft in die nächste Sendung weiter; ist die Gegenwart erreicht → Live
+    // (Idee aus OwnTV, eigene Umsetzung)
+    LaunchedEffect(exoPlayer, playingCatchupProgram) {
+        val program = playingCatchupProgram ?: return@LaunchedEffect
+        // kurz warten, bis der neue Stream läuft (sonst zählt die alte Position)
+        kotlinx.coroutines.delay(4_000)
+        while (playingCatchupProgram === program) {
+            kotlinx.coroutines.delay(1_000)
+            val now = System.currentTimeMillis()
+            val duration = catchupAvailableDuration(program, now)
+            val position = catchupUrlAnchorOffsetMs + exoPlayer.currentPosition.coerceAtLeast(0L)
+            val ended = exoPlayer.playbackState == Player.STATE_ENDED
+            if (!ended && (duration <= 0L || position < duration - 1_500L)) continue
+            if (program.endUtcMillis > now - 30_000L) {
+                // Sendung läuft noch: wir haben die Gegenwart eingeholt
+                android.widget.Toast.makeText(context, "Live erreicht", android.widget.Toast.LENGTH_SHORT).show()
+                returnCatchupToLive()
+                break
+            }
+            val guide = actionGuideNowNext[playingChannelId] ?: state.snapshot.nowNext[playingChannelId]
+            val next = guide?.let { g -> (g.recent + listOfNotNull(g.now, g.next, g.later) + g.upcoming) }
+                ?.filter { it.startUtcMillis >= program.endUtcMillis - 60_000L && it.startUtcMillis > program.startUtcMillis }
+                ?.minByOrNull { it.startUtcMillis }
+            if (next == null || next.startUtcMillis >= now || next.catchupAvailable == false) {
+                android.widget.Toast.makeText(context, "Live erreicht", android.widget.Toast.LENGTH_SHORT).show()
+                returnCatchupToLive()
+                break
+            }
+            System.err.println("[IPTV-Catchup] fIPTV continue next=${next.title}")
+            android.widget.Toast.makeText(context, "Weiter mit: ${next.title}", android.widget.Toast.LENGTH_SHORT).show()
+            playingCatchupProgram = next
+            catchupPlaybackOffsetMs = 0L
+            lastPreparedStreamUrl = null
+            playerIsBuffering = true
+            hudPokeSignal++
+            break
+        }
+    }
+
+    // fIPTV: zu einer Uhrzeit zurückspringen (Sendung verpasst ab dieser Zeit)
+    fun fiptvJumpToTime(channel: EnrichedChannel, timeMs: Long) {
+        val now = System.currentTimeMillis()
+        val guide = actionGuideNowNext[channel.id] ?: state.snapshot.nowNext[channel.id]
+        val programs = guide?.let { g -> g.recent + listOfNotNull(g.now, g.next, g.later) + g.upcoming }.orEmpty()
+        val program = programs.firstOrNull { timeMs >= it.startUtcMillis && timeMs < it.endUtcMillis }
+            // ohne Programmdaten: Abschnitt ab der gewünschten Zeit
+            ?: IptvProgram(
+                title = "Ab " + java.text.SimpleDateFormat("HH:mm", java.util.Locale.GERMANY).format(java.util.Date(timeMs)),
+                startUtcMillis = timeMs,
+                endUtcMillis = minOf(timeMs + 3 * 3_600_000L, now),
+                catchupAvailable = true,
+            )
+        if (program.catchupAvailable == false) {
+            android.widget.Toast.makeText(context, "Für diese Zeit bietet der Anbieter keine Aufzeichnung an", android.widget.Toast.LENGTH_LONG).show()
+            return
+        }
+        playProgramInFullscreen(program, channel)
+        catchupPlaybackOffsetMs = (timeMs - program.startUtcMillis).coerceAtLeast(0L)
+        lastPreparedStreamUrl = null
+        playerIsBuffering = true
     }
 
     // When the selected channel changes, swap media item.
@@ -4277,6 +4348,16 @@ fun LiveTvScreen(
                 channelMenu = null
                 fiptvEpgPickerFor = fiptvChannelById(menu.channelId)
             }, label = "Programmdaten zuordnen"))
+            add(ChannelMenuAction(0, androidx.compose.material.icons.Icons.Filled.Schedule, {
+                channelMenu = null
+                fiptvOffsetPickerFor = fiptvChannelById(menu.channelId)
+            }, label = "Programmzeit verschieben …"))
+            fiptvChannelById(menu.channelId)?.takeIf { IptvGuideHistory.days(it.source) > 0 }?.let { ch ->
+                add(ChannelMenuAction(0, androidx.compose.material.icons.Icons.Filled.History, {
+                    channelMenu = null
+                    fiptvJumpPickerFor = ch
+                }, label = "Zu Uhrzeit zurückspringen …"))
+            }
             add(ChannelMenuAction(0, androidx.compose.material.icons.Icons.Filled.Add, {
                 channelMenu = null
                 fiptvGroupPickerFor = fiptvChannelById(menu.channelId)
@@ -4285,6 +4366,29 @@ fun LiveTvScreen(
                 channelMenu = null
                 fiptvRecordPickerFor = fiptvChannelById(menu.channelId)
             }, label = "Aufnehmen …"))
+            add(ChannelMenuAction(0, androidx.compose.material.icons.Icons.Filled.BugReport, {
+                channelMenu = null
+                val ch = fiptvChannelById(menu.channelId)
+                val playingThis = menu.channelId == playingChannelId
+                val file = com.arflix.tv.fiptv.player.FiptvStreamReport.create(
+                    context, exoPlayer,
+                    channelName = (ch?.name ?: menu.channelId) + if (playingThis) "" else " (lief gerade nicht)",
+                    streamUrl = if (playingThis) lastPreparedStreamUrl ?: ch?.streamUrl else ch?.streamUrl,
+                    extra = buildMap {
+                        put("Gruppe", ch?.source?.group.orEmpty())
+                        put("Sendung verpasst", if (playingCatchupProgram != null) "ja – " + playingCatchupProgram?.title else "nein")
+                        put("Programmzeit-Versatz", com.arflix.tv.fiptv.live.FiptvEpgOffset.label(
+                            com.arflix.tv.fiptv.live.FiptvEpgOffset.forChannel(menu.channelId) ?: com.arflix.tv.fiptv.live.FiptvEpgOffset.globalMinutes))
+                    },
+                )
+                if (isTouchDevice) {
+                    if (!com.arflix.tv.fiptv.player.FiptvStreamReport.share(context, file))
+                        android.widget.Toast.makeText(context, "Bericht gespeichert", android.widget.Toast.LENGTH_SHORT).show()
+                } else {
+                    // Fernseher: Bericht per QR-Code am Handy/PC öffnen
+                    com.arflix.tv.fiptv.FiptvLan.start(context, null)
+                }
+            }, label = "Stream-Problem melden"))
             com.arflix.tv.fiptv.live.FiptvCustomGroups.byCategoryId(selectedCategoryId)?.let { g ->
                 add(ChannelMenuAction(0, androidx.compose.material.icons.Icons.Filled.KeyboardArrowUp, {
                     channelMenu = null
@@ -5674,6 +5778,18 @@ fun LiveTvScreen(
                 nowNext = state.snapshot.nowNext,
                 onDismiss = { fiptvEpgPickerFor = null },
             )
+        }
+        com.arflix.tv.fiptv.FiptvLanOverlay()
+        fiptvJumpPickerFor?.let { ch ->
+            FiptvJumpPicker(
+                channel = ch,
+                days = IptvGuideHistory.days(ch.source),
+                onPick = { t -> fiptvJumpPickerFor = null; fiptvJumpToTime(ch, t) },
+                onDismiss = { fiptvJumpPickerFor = null },
+            )
+        }
+        fiptvOffsetPickerFor?.let { ch ->
+            FiptvEpgOffsetPicker(channel = ch, onDismiss = { fiptvOffsetPickerFor = null })
         }
         fiptvGroupPickerFor?.let { ch ->
             FiptvGroupPicker(channel = ch, onDismiss = { fiptvGroupPickerFor = null })

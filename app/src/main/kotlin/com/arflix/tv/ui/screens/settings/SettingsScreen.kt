@@ -341,10 +341,10 @@ internal fun tvGeneralRowsForSection(section: String): List<Int> {
             (if (BuildConfig.AUDIO_SYNC_AVAILABLE) listOf(48) else emptyList()) +
             listOf(39, 9, 45)
         "ai_subtitles" -> listOf(28, 29, 30, 31, 32, 33) + LIVE_AI_SUBS_ROWS
-        "playback" -> listOf(73, 74, 75, 64, 70, 71, 72, 10, 11, 12, 43, 44, 13, 14, 34, 37, 16, 15, 40, 27, 53, 54)
+        "playback" -> listOf(73, 74, 75, 76, 64, 70, 71, 72, 10, 11, 12, 43, 44, 13, 14, 34, 37, 16, 15, 40, 27, 53, 54)
         "appearance" -> listOf(62, 63, 65, 67, 68, 66, 17, 49, 50, 18, 20, 60, 21, 24, 23, 22, 41, 46, 36, 47, 69)
         "profiles" -> listOf(19, 61)
-        "network" -> listOf(25, 26, 35)
+        "network" -> listOf(77, 25, 26, 35)
         else -> emptyList()
     }
 }
@@ -1022,6 +1022,7 @@ fun SettingsScreen(
         showAiApiKeyDialog ||
         showCustomUserAgentDialog ||
         uiState.aiKeyServerState.isActive ||
+        com.arflix.tv.fiptv.FiptvLan.state != null ||
         uiState.showCloudPairDialog ||
         uiState.showCloudEmailPasswordDialog ||
         uiState.traktCode != null ||
@@ -1481,6 +1482,8 @@ fun SettingsScreen(
                                                 73 -> com.arflix.tv.fiptv.FiptvEffects.openLibrary()
                                                 74 -> com.arflix.tv.fiptv.rec.FiptvTimeshift.toggle()
                                                 75 -> com.arflix.tv.fiptv.player.FiptvLiveLatency.cycle()
+                                                76 -> com.arflix.tv.fiptv.live.FiptvEpgOffset.cycleGlobal()
+                                                77 -> { com.arflix.tv.fiptv.FiptvLan.setupRequested = true }
                                                 64 -> com.arflix.tv.fiptv.FiptvSleepTimer.cycle()
                                                 20 -> viewModel.setOledBlackBackground(!uiState.oledBlackBackground)
                                                 21 -> viewModel.cycleClockFormat()
@@ -3227,6 +3230,32 @@ fun SettingsScreen(
                 onDismiss = { showCustomUserAgentDialog = false }
             )
         }
+
+        // fIPTV: Quelle per Handy/PC (QR-Code)
+        val fiptvLanContext = LocalContext.current
+        LaunchedEffect(com.arflix.tv.fiptv.FiptvLan.setupRequested) {
+            if (!com.arflix.tv.fiptv.FiptvLan.setupRequested) return@LaunchedEffect
+            com.arflix.tv.fiptv.FiptvLan.setupRequested = false
+            com.arflix.tv.fiptv.FiptvLan.start(fiptvLanContext) { src ->
+                if (src.type == "stalker") {
+                    viewModel.onAddStalkerPortal(src.server.trimEnd('/'), src.mac, src.name.ifBlank { "Stalker" })
+                } else {
+                    val m3u = if (src.type == "xtream") "${src.server.trimEnd('/')} ${src.user} ${src.pass}" else src.server
+                    val epg = if (src.type == "xtream") m3u else src.epg
+                    val epgList = epg.split(Regex("[,\\s]+")).filter { it.isNotBlank() }.let { if (src.type == "xtream") listOf(m3u) else it }
+                    val entry = com.arflix.tv.data.repository.IptvPlaylistEntry(
+                        id = "list_${java.util.UUID.randomUUID()}",
+                        name = src.name.ifBlank { if (src.type == "xtream") "Xtream" else "M3U" },
+                        m3uUrl = m3u,
+                        epgUrl = epgList.firstOrNull().orEmpty(),
+                        epgUrls = epgList,
+                    )
+                    viewModel.saveIptvPlaylists(viewModel.uiState.value.iptvPlaylists + entry)
+                }
+            }
+        }
+        DisposableEffect(Unit) { onDispose { if (com.arflix.tv.fiptv.FiptvLan.state?.allowSource == true) com.arflix.tv.fiptv.FiptvLan.stop() } }
+        com.arflix.tv.fiptv.FiptvLanOverlay()
 
         if (isTouchDevice && uiState.aiKeyServerState.isActive) {
             AiKeyQrOverlay(
@@ -6991,6 +7020,8 @@ private fun TvGeneralSettingsRows(
                 67 -> SettingsRow(Icons.Default.Star, "Hintergrund", "Animierter Weltraum hinter Profilauswahl, Startseite und Einstellungen", com.arflix.tv.fiptv.FiptvSpace.mode.let { com.arflix.tv.fiptv.FiptvSpace.modeLabel() }, focusedIndex == localIndex, { com.arflix.tv.fiptv.FiptvSpace.cycleMode() }, Modifier.settingsFocusSlot(localIndex))
                 68 -> SettingsRow(Icons.Default.Star, "Farbstimmung", "Farben der Nebel im Weltraum-Hintergrund", com.arflix.tv.fiptv.FiptvSpace.palette.let { com.arflix.tv.fiptv.FiptvSpace.paletteLabel() }, focusedIndex == localIndex, { com.arflix.tv.fiptv.FiptvSpace.cyclePalette() }, Modifier.settingsFocusSlot(localIndex))
                 73 -> SettingsRow(Icons.Default.Info, "Aufnahmen und Downloads", "Gespeicherte Aufnahmen und heruntergeladene Filme ansehen oder löschen", "Öffnen", focusedIndex == localIndex, { com.arflix.tv.fiptv.FiptvEffects.openLibrary() }, Modifier.settingsFocusSlot(localIndex))
+                77 -> SettingsRow(Icons.Default.QrCode, "Quelle per Handy oder PC hinzufügen", "QR-Code scannen und Xtream-, M3U- oder Stalker-Zugang bequem am Handy eintippen", "Öffnen", focusedIndex == localIndex, { com.arflix.tv.fiptv.FiptvLan.setupRequested = true }, Modifier.settingsFocusSlot(localIndex))
+                76 -> SettingsRow(Icons.Default.Schedule, "Zeitversatz Programm", "Liegt das Programm deines Anbieters immer daneben? Hier für alle Sender verschieben – einzelne Sender im Sendermenü", com.arflix.tv.fiptv.live.FiptvEpgOffset.globalMinutes.let { com.arflix.tv.fiptv.live.FiptvEpgOffset.label(it) }, focusedIndex == localIndex, { com.arflix.tv.fiptv.live.FiptvEpgOffset.cycleGlobal() }, Modifier.settingsFocusSlot(localIndex))
                 75 -> SettingsRow(Icons.Default.Schedule, "Live-Verzögerung", "Wie nah Live TV am echten Geschehen ist. Niedriger = schneller beim Sport, aber bei schwacher Leitung eher Ruckler", com.arflix.tv.fiptv.player.FiptvLiveLatency.mode.let { com.arflix.tv.fiptv.player.FiptvLiveLatency.label() }, focusedIndex == localIndex, { com.arflix.tv.fiptv.player.FiptvLiveLatency.cycle() }, Modifier.settingsFocusSlot(localIndex))
                 74 -> SettingsToggleRow("Live-Pause", "Beim Pausieren eines Senders wird zwischengespeichert, danach geht es zeitversetzt weiter", com.arflix.tv.fiptv.rec.FiptvTimeshift.enabled, focusedIndex == localIndex, { com.arflix.tv.fiptv.rec.FiptvTimeshift.toggle() }, Modifier.settingsFocusSlot(localIndex))
                 70 -> SettingsToggleRow("Mit letztem Sender starten", "Nach der Profilauswahl direkt den zuletzt gesehenen Sender im Vollbild öffnen", com.arflix.tv.fiptv.FiptvStartLive.enabled, focusedIndex == localIndex, { com.arflix.tv.fiptv.FiptvStartLive.toggle() }, Modifier.settingsFocusSlot(localIndex))

@@ -305,9 +305,9 @@ export function usePlaybackActions(store: StoreCore & Pick<ReturnType<typeof use
   // Catch-up plays a finished programme from the panel's archive. It is a
   // seekable VOD stream (no activeChannel → scrubber works), but the player
   // still gives it the IPTV proxy ladder via the "Catch-up" addonName marker.
-  const playCatchup = useCallback((channel: IptvChannel, program: IptvProgram) => {
+  const playCatchup = useCallback((channel: IptvChannel, program: IptvProgram, startAtSeconds?: number) => {
     if (kidsLevelOf(activeProfileRef.current)) { setToast("Not available on this kids profile"); return; }
-    if (!premiumAllows("live", () => playCatchup(channel, program))) return;
+    if (!premiumAllows("live", () => playCatchup(channel, program, startAtSeconds))) return;
     playbackPreparation.current?.abort();
     stopOwnedPlayback();
     playbackGeneration.current++;
@@ -324,7 +324,9 @@ export function usePlaybackActions(store: StoreCore & Pick<ReturnType<typeof use
       size: "",
       url,
       description: channel.group,
-      behaviorHints: { proxyHeaders: { request: channel.requestHeaders } }
+      behaviorHints: { proxyHeaders: { request: channel.requestHeaders } },
+      // fIPTV: „Zu Uhrzeit zurückspringen“ startet mitten in der Sendung
+      ...(startAtSeconds && startAtSeconds > 5 ? { resumePositionSeconds: Math.floor(startAtSeconds) } : {})
     };
 
     setActiveChannel(null);

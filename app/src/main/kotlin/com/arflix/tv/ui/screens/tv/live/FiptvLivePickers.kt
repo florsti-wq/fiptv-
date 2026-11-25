@@ -298,3 +298,89 @@ internal fun FiptvRecordPicker(
         }
     }
 }
+
+/** fIPTV: Zeitversatz der Programmdaten für einen Sender. */
+@Composable
+internal fun FiptvEpgOffsetPicker(channel: EnrichedChannel, onDismiss: () -> Unit) {
+    val first = remember { FocusRequester() }
+    LaunchedEffect(Unit) { runCatching { first.requestFocus() } }
+    val name = FiptvChannelCleanup.displayName(channel.name)
+    val current = com.arflix.tv.fiptv.live.FiptvEpgOffset.forChannel(channel.id)
+    val global = com.arflix.tv.fiptv.live.FiptvEpgOffset.globalMinutes
+    val choices = listOf(-180, -120, -90, -60, -30, 30, 60, 90, 120, 180)
+    PickerFrame(
+        title = "Programmzeit für „$name“",
+        hint = "Laufen Sendungen früher oder später als im Programm angegeben? Dann hier verschieben. " +
+            "Positiv = Sendungen beginnen später.",
+        onDismiss = onDismiss,
+    ) {
+        LazyColumn(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            item {
+                PickerRow(
+                    "Wie alle Sender (" + com.arflix.tv.fiptv.live.FiptvEpgOffset.label(global) + ")",
+                    "Einstellung unter Wiedergabe → Zeitversatz Programm",
+                    checked = current == null,
+                    focusRequester = first,
+                ) { com.arflix.tv.fiptv.live.FiptvEpgOffset.setChannel(channel.id, null); onDismiss() }
+            }
+            item {
+                PickerRow("Kein Versatz", checked = current == 0) {
+                    com.arflix.tv.fiptv.live.FiptvEpgOffset.setChannel(channel.id, 0); onDismiss()
+                }
+            }
+            items(choices) { min ->
+                PickerRow(com.arflix.tv.fiptv.live.FiptvEpgOffset.label(min), checked = current == min) {
+                    com.arflix.tv.fiptv.live.FiptvEpgOffset.setChannel(channel.id, min); onDismiss()
+                }
+            }
+        }
+    }
+}
+
+/** fIPTV: Uhrzeit wählen, ab der zeitversetzt (Sendung verpasst) gespielt wird. */
+@Composable
+internal fun FiptvJumpPicker(channel: EnrichedChannel, days: Int, onPick: (Long) -> Unit, onDismiss: () -> Unit) {
+    val first = remember { FocusRequester() }
+    LaunchedEffect(Unit) { runCatching { first.requestFocus() } }
+    val name = FiptvChannelCleanup.displayName(channel.name)
+    val times = remember(days) {
+        val now = System.currentTimeMillis()
+        val quarter = 15 * 60_000L
+        val hour = 60 * 60_000L
+        val base = now - now % quarter
+        val out = ArrayList<Long>()
+        // die letzten 3 Stunden in Viertelstunden, danach stündlich bis max. 2 Tage zurück
+        for (i in 1..12) out += base - i * quarter
+        val maxBack = minOf(days.coerceAtLeast(1) * 24L, 48L) * hour
+        var t = base - base % hour - 3 * hour
+        while (now - t <= maxBack) { out += t; t -= hour }
+        out.distinct().filter { now - it <= maxBack }
+    }
+    val fmt = remember { java.text.SimpleDateFormat("HH:mm", java.util.Locale.GERMANY) }
+    val dayFmt = remember { java.text.SimpleDateFormat("EEEE", java.util.Locale.GERMANY) }
+    fun dayLabel(t: Long): String {
+        val cal = java.util.Calendar.getInstance()
+        val today = cal.get(java.util.Calendar.DAY_OF_YEAR) to cal.get(java.util.Calendar.YEAR)
+        cal.timeInMillis = t
+        val d = cal.get(java.util.Calendar.DAY_OF_YEAR) to cal.get(java.util.Calendar.YEAR)
+        cal.timeInMillis = System.currentTimeMillis() - 86_400_000L
+        val y = cal.get(java.util.Calendar.DAY_OF_YEAR) to cal.get(java.util.Calendar.YEAR)
+        return when (d) { today -> "Heute"; y -> "Gestern"; else -> dayFmt.format(java.util.Date(t)) }
+    }
+    PickerFrame(
+        title = "„$name“ – zurückspringen",
+        hint = "Ab dieser Uhrzeit zeitversetzt weiterschauen. Am Ende jeder Sendung geht es automatisch mit der nächsten weiter, bis du wieder live bist.",
+        onDismiss = onDismiss,
+    ) {
+        LazyColumn(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            items(times.size) { i ->
+                val t = times[i]
+                val ago = (System.currentTimeMillis() - t) / 60_000L
+                val agoText = if (ago < 60) "vor $ago Min." else "vor " + (ago / 60) + " Std." + (if (ago % 60 >= 15) " " + (ago % 60) + " Min." else "")
+                PickerRow(dayLabel(t) + ", " + fmt.format(java.util.Date(t)) + " Uhr", agoText,
+                    focusRequester = if (i == 0) first else null) { onPick(t) }
+            }
+            item { PickerRow("Abbrechen") { onDismiss() } }
+        }
+    }
+}

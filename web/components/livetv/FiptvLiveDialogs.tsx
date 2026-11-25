@@ -4,7 +4,8 @@ import { Check, Plus, Trash2, X } from "lucide-react";
 import type { IptvChannel, IptvNowNext } from "@/lib/types";
 import { cleanChannelName } from "@/lib/fiptvChannelCleanup";
 import {
-  createCustomGroup, customGroups, deleteCustomGroup, epgMap, PRESET_GROUP_NAMES, setEpgSource, toggleInCustomGroup,
+  createCustomGroup, customGroups, deleteCustomGroup, EPG_OFFSET_CHOICES, epgMap, epgOffsetLabel, epgOffsets, PRESET_GROUP_NAMES,
+  setChannelEpgOffset, setEpgSource, toggleInCustomGroup,
 } from "@/lib/fiptvLiveCustom";
 
 /** Gemeinsamer Rahmen – nutzt das Aussehen des Sendermenüs. */
@@ -113,6 +114,59 @@ export function CustomGroupsDialog({ channel, onClose }: { channel: IptvChannel;
       <button type="button" role="menuitem" onClick={() => setMode("new")}><Plus size={17} />Neue Gruppe anlegen</button>
       {groups.length > 0 && <button type="button" role="menuitem" onClick={() => setMode("delete")}><Trash2 size={17} />Gruppe löschen …</button>}
       <button type="button" role="menuitem" onClick={onClose}>Fertig</button>
+    </Frame>
+  );
+}
+
+/** Zeitversatz der Programmdaten für einen Sender. */
+export function EpgOffsetDialog({ channel, onClose }: { channel: IptvChannel; onClose: () => void }) {
+  const o = epgOffsets();
+  const current = o.channels[channel.id];
+  const pick = (m: number | null) => { setChannelEpgOffset(channel.id, m); onClose(); };
+  return (
+    <Frame title={`Programmzeit für „${cleanChannelName(channel.name)}“`} hint="Laufen Sendungen früher oder später als im Programm angegeben? Dann hier verschieben. Plus = Sendungen beginnen später." onClose={onClose}>
+      <button type="button" role="menuitem" onClick={() => pick(null)}>
+        {current === undefined ? <Check size={17} /> : <span style={{ width: 17 }} />}
+        <span className="fiptv-live-dialog-text"><span>Wie alle Sender ({epgOffsetLabel(o.global)})</span><small>Einstellung unter Wiedergabe → Zeitversatz Programm</small></span>
+      </button>
+      {EPG_OFFSET_CHOICES.map((m) => (
+        <button key={m} type="button" role="menuitem" onClick={() => pick(m)}>
+          {current === m ? <Check size={17} /> : <span style={{ width: 17 }} />}{epgOffsetLabel(m)}
+        </button>
+      ))}
+    </Frame>
+  );
+}
+
+/** Uhrzeit wählen, ab der zeitversetzt (Sendung verpasst) gespielt wird. */
+export function JumpDialog({ channel, onPick, onClose }: { channel: IptvChannel; onPick: (t: number) => void; onClose: () => void }) {
+  const times = useMemo(() => {
+    const now = Date.now();
+    const quarter = 15 * 60_000, hour = 3600_000;
+    const base = now - (now % quarter);
+    const maxBack = Math.min(Math.max(channel.catchupDays ?? 1, 1) * 24, 48) * hour;
+    const out: number[] = [];
+    for (let i = 1; i <= 12; i++) out.push(base - i * quarter);
+    for (let t = base - (base % hour) - 3 * hour; now - t <= maxBack; t -= hour) out.push(t);
+    return [...new Set(out)].filter((t) => now - t <= maxBack);
+  }, [channel.catchupDays]);
+  const day = (t: number) => {
+    const d = new Date(t), today = new Date(), y = new Date(Date.now() - 86_400_000);
+    if (d.toDateString() === today.toDateString()) return "Heute";
+    if (d.toDateString() === y.toDateString()) return "Gestern";
+    return d.toLocaleDateString("de-DE", { weekday: "long" });
+  };
+  return (
+    <Frame title={`„${cleanChannelName(channel.name)}“ – zurückspringen`} hint="Ab dieser Uhrzeit zeitversetzt weiterschauen. Am Ende jeder Sendung geht es automatisch mit der nächsten weiter, bis du wieder live bist." onClose={onClose}>
+      {times.map((t) => {
+        const ago = Math.round((Date.now() - t) / 60_000);
+        const agoText = ago < 60 ? `vor ${ago} Min.` : `vor ${Math.floor(ago / 60)} Std.${ago % 60 >= 15 ? ` ${ago % 60} Min.` : ""}`;
+        return (
+          <button key={t} type="button" role="menuitem" onClick={() => onPick(t)}>
+            <span className="fiptv-live-dialog-text"><span>{day(t)}, {new Date(t).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })} Uhr</span><small>{agoText}</small></span>
+          </button>
+        );
+      })}
     </Frame>
   );
 }

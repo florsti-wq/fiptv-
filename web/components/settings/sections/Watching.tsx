@@ -7,6 +7,7 @@ import { languageCode, TRACK_LANGUAGES, trackLanguageName } from "@/lib/language
 import { useApp, useAppPick } from "@/lib/store";
 import type { AppSettings, QualityFilterConfig } from "@/lib/types";
 import { LIVE_LATENCY_LABELS, liveLatency, setLiveLatency, livePauseEnabled, setLivePause, startLiveEnabled, setStartLive, nightModeEnabled, setNightMode, animationsEnabled, setAnimations, setSounds, setSpaceMode, setSpacePalette, soundsEnabled, SPACE_PALETTES, spaceMode, spacePalette } from "@/lib/fiptvEffects";
+import { EPG_OFFSET_CHOICES, epgOffsetLabel, epgOffsets, setGlobalEpgOffset } from "@/lib/fiptvLiveCustom";
 import { Group, Row, SecretInput, Segmented, Select, SectionHeader, Slider, Status, Swatches, Toggle, safeArray } from "../ui";
 
 type Set = (patch: Partial<AppSettings>) => void;
@@ -74,6 +75,9 @@ export function PlaybackSection() {
         </Row>
         <Row id="fiptv-night" label="Nachtmodus (Ton)" hint="Gleicht laute und leise Stellen an – Werbung leiser, Dialoge verständlicher." scope="all">
           <NightToggle />
+        </Row>
+        <Row id="fiptv-epg-offset" label="Zeitversatz Programm" hint="Liegt das Programm deines Anbieters immer daneben? Hier für alle Sender verschieben – einzelne Sender per Rechtsklick im Live TV." scope="all">
+          <EpgOffsetSelect />
         </Row>
         <Row id="fiptv-live-latency" label="Live-Verzögerung" hint="Wie nah Live TV am echten Geschehen ist. Niedriger = schneller beim Sport, bei schwacher Leitung aber eher Ruckler. Gilt ab dem nächsten Senderwechsel." scope="all">
           <LatencySelect />
@@ -407,6 +411,12 @@ function SpaceSelect({ kind }: { kind: "mode" | "palette" }) {
     : SPACE_PALETTES.map((name, i) => [String(i), name]);
   return <Select label={kind === "mode" ? "Hintergrund" : "Farbstimmung"} value={value} options={options}
     onChange={(v) => { if (kind === "mode") setSpaceMode(Number(v)); else setSpacePalette(Number(v)); setValue(v); }} />;
+}
+
+function EpgOffsetSelect() {
+  const [value, setValue] = useState(() => String(epgOffsets().global));
+  return <Select label="Zeitversatz Programm" value={value} options={EPG_OFFSET_CHOICES.map((m) => [String(m), epgOffsetLabel(m)] as [string, string])}
+    onChange={(v) => { setGlobalEpgOffset(Number(v)); setValue(v); }} />;
 }
 
 function LatencySelect() {
