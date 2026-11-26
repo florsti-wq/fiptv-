@@ -56,6 +56,18 @@ object FiptvIntro {
 }
 
 private val IntroAccent = Color(0xFF5CE1E6)
+// fIPTV: Neon-Schriftzug (Umriss mit Glühen)
+private val NeonLine = Color(0xFF7EF2FF)
+private val NeonGlow = Color(0xFF4FE3F0)
+@OptIn(androidx.compose.ui.text.ExperimentalTextApi::class)
+private val NeonFont = androidx.compose.ui.text.font.FontFamily(
+    androidx.compose.ui.text.font.Font(
+        com.arflix.tv.R.font.lexend_variable,
+        weight = FontWeight.SemiBold,
+        variationSettings = androidx.compose.ui.text.font.FontVariation.Settings(
+            androidx.compose.ui.text.font.FontVariation.weight(600)),
+    ),
+)
 
 @Composable
 fun FiptvIntroOverlay() {
@@ -63,6 +75,8 @@ fun FiptvIntroOverlay() {
     val letters = "fIPTV"
     val anims = remember { List(letters.length) { Animatable(0f) } }
     val bar = remember { Animatable(0f) }
+    // Neon „zündet“: kurzes Flackern, dann volles Leuchten
+    val glow = remember { Animatable(0f) }
     val alpha = remember { Animatable(1f) }
     var started by remember { mutableStateOf(false) }
 
@@ -83,6 +97,11 @@ fun FiptvIntroOverlay() {
             }
         }
         launch { delay(450); bar.animateTo(1f, tween(650)) }
+        launch {
+            delay(380)
+            for (v in listOf(0.9f, 0.2f, 1f, 0.45f)) { glow.snapTo(v); delay(70) }
+            glow.animateTo(1f, tween(260))
+        }
         delay(1_450)
         alpha.animateTo(0f, tween(320))
         FiptvIntro.finish()
@@ -110,9 +129,17 @@ fun FiptvIntroOverlay() {
                     val v = anims[i].value
                     Text(
                         text = c.toString(),
-                        color = if (i == 0) IntroAccent else Color.White,
-                        fontSize = 64.sp,
-                        fontWeight = FontWeight.Bold,
+                        color = NeonLine,
+                        fontSize = 68.sp,
+                        style = androidx.compose.ui.text.TextStyle(
+                            fontFamily = NeonFont,
+                            fontWeight = FontWeight.SemiBold,
+                            drawStyle = androidx.compose.ui.graphics.drawscope.Stroke(width = 5f),
+                            shadow = androidx.compose.ui.graphics.Shadow(
+                                color = NeonGlow.copy(alpha = 0.85f * glow.value),
+                                blurRadius = 26f * glow.value + 1f,
+                            ),
+                        ),
                         modifier = Modifier.graphicsLayer {
                             this.alpha = v.coerceIn(0f, 1f)
                             translationY = (1f - v) * 40f
@@ -128,7 +155,7 @@ fun FiptvIntroOverlay() {
                     .width((180 * bar.value).dp)
                     .height(3.dp)
                     .clip(RoundedCornerShape(2.dp))
-                    .background(IntroAccent)
+                    .background(androidx.compose.ui.graphics.Brush.horizontalGradient(listOf(Color(0xFF4FE3F0), Color(0xFFB46CFF))))
             )
         }
     }

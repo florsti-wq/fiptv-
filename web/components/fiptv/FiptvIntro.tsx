@@ -44,7 +44,7 @@ export function FiptvIntro() {
       onClick={() => { setPhase("out"); window.setTimeout(() => setPhase("off"), 180); }}>
       <div className="fiptv-intro-logo">
         {"fIPTV".split("").map((c, i) => (
-          <span key={i} style={{ animationDelay: `${60 + i * 90}ms` }} className={i === 0 ? "is-accent" : undefined}>{c}</span>
+          <span key={i} style={{ animationDelay: `${60 + i * 90}ms` }}>{c}</span>
         ))}
       </div>
       <div className="fiptv-intro-bar" />

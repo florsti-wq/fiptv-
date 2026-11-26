@@ -1,16 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- fIPTV: Bildschirm mit Play-Zeichen -->
+<!-- fIPTV: Sucherecken mit Abspiel-Dreieck (einfarbig für Android-Designs) -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
-    android:viewportWidth="108"
-    android:viewportHeight="108">
-    <group android:translateX="28.800" android:translateY="29.850" android:scaleX="1.05" android:scaleY="1.05">
-        <path android:strokeColor="#000000" android:strokeWidth="5" android:fillColor="#00000000"
-            android:pathData="M 9.5 12.5 L 38.5 12.5 Q 45.5 12.5 45.5 19.5 L 45.5 36.5 Q 45.5 43.5 38.5 43.5 L 9.5 43.5 Q 2.5 43.5 2.5 36.5 L 2.5 19.5 Q 2.5 12.5 9.5 12.5 Z" />
-        <path android:fillColor="#000000" android:strokeColor="#000000" android:strokeWidth="2" android:strokeLineJoin="round"
-            android:pathData="M 19.5 20.5 L 19.5 35.5 L 32 28 Z" />
-        <path android:strokeColor="#000000" android:strokeWidth="4" android:strokeLineCap="round"
-            android:pathData="M 24 11 L 16 3 M 24 11 L 32 3" />
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+    <group android:pivotX="256" android:pivotY="256" android:scaleX="0.74" android:scaleY="0.74">
+        <path android:strokeColor="#000000" android:strokeWidth="30" android:strokeLineCap="round" android:fillColor="#00000000"
+            android:pathData="M112,186 L112,142 Q112,112 142,112 L186,112 M326,112 L370,112 Q400,112 400,142 L400,186 M400,326 L400,370 Q400,400 370,400 L326,400 M186,400 L142,400 Q112,400 112,370 L112,326" />
+        <path android:fillColor="#000000" android:strokeColor="#000000" android:strokeWidth="18" android:strokeLineJoin="round"
+            android:pathData="M222,196 L318,256 L222,316 Z" />
+        <path android:fillColor="#000000" android:pathData="M160,145 a15,15 0 1,0 0.1,0 Z" />
     </group>
 </vector>
