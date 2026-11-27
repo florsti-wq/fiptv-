@@ -181,21 +181,11 @@ fun LoginScreen(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.Center
             ) {
-                Text(
-                    text = "fIPTV",
-                    fontSize = 64.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 8.sp,
-                    style = TextStyle(
-                        brush = Brush.linearGradient(
-                            colors = listOf(
-                                Color(0xFF8B5CF6),
-                                Color(0xFFa78bfa),
-                                Color(0xFFEC4899)
-                            )
-                        )
-                    ),
-                    modifier = Modifier.alpha(logoAlpha)
+                // fIPTV: Neon-Schriftzug
+                androidx.compose.foundation.Image(
+                    painter = androidx.compose.ui.res.painterResource(R.drawable.ic_arvio_wordmark),
+                    contentDescription = "fIPTV",
+                    modifier = Modifier.height(116.dp).alpha(logoAlpha)
                 )
 
                 Spacer(modifier = Modifier.height(18.dp))

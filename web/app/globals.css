@@ -3476,3 +3476,12 @@ html:has(.st-shell), body:has(.st-shell), .app-shell:has(.st-shell), .content:ha
 [dir="rtl"] .lucide-panel-left {
   scale: -1 1;
 }
+
+/* fIPTV: Neon-Schriftzug – das Bild enthält Platz für das Glühen, daher größer anzeigen
+   und den Leuchtrand per negativem Rand ausgleichen */
+.app-boot-wordmark { height: 34px !important; margin-block: -8px; filter: none; }
+@media (max-width: 900px) { .mobile-wordmark { height: 26px !important; margin-block: -6px; } }
+.profile-wordmark { height: clamp(52px, 5.8vw, 76px) !important; margin-block: -12px; }
+.login-wordmark { height: clamp(58px, 7.6vw, 116px) !important; margin-block: -14px; }
+.partner-wordmark img.partner-logo-wordmark { height: 32px; margin-block: -7px; }
+.login-brand-lockup img.login-wordmark { height: 50px !important; }

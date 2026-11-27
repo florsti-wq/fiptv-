@@ -338,8 +338,9 @@ internal fun ProfileSelectionContent(
                     painter = painterResource(id = R.drawable.ic_arvio_wordmark),
                     contentDescription = "fIPTV",
                     contentScale = ContentScale.Fit,
+                    // fIPTV: Neon-Schriftzug (Bild enthält Rand für das Glühen)
                     modifier = Modifier
-                        .height(if (isTouchDevice) 22.dp else 30.dp)
+                        .height(if (isTouchDevice) 44.dp else 58.dp)
                 )
 
                 Spacer(modifier = Modifier.height(if (isTouchDevice) 24.dp else 16.dp))
