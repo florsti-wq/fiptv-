@@ -20,6 +20,28 @@ def short(m):
 
 data = open(src, encoding="utf-8").read()
 before = len(data)
+
+# Sky hat Sender umbenannt („Sky Bundesliga 1“ → „Sky Sport Bundesliga 1“). Viele Anbieter nutzen
+# noch die alten Namen; damit die Apps die Sender trotzdem zuordnen, kommen die alten Namen als
+# zusätzliche <display-name> dazu.
+ALIASES = [
+    (re.compile(r"^Sky Sport Bundesliga(\s+\d+)?$"), lambda m: ["Sky Bundesliga" + (m.group(1) or "")]),
+    (re.compile(r"^Sky Sport Austria(\s+\d+)?$"), lambda m: ["Sky Austria" + (m.group(1) or "")]),
+]
+CHANNEL = re.compile(r'(<channel id="[^"]*">\s*<display-name[^>]*>)([^<]+)(</display-name>)')
+
+
+def add_aliases(m):
+    name = m.group(2).strip()
+    extra = []
+    for rx, make in ALIASES:
+        hit = rx.match(name)
+        if hit:
+            extra += make(hit)
+    return m.group(0) + "".join(f"<display-name>{e}</display-name>" for e in extra)
+
+
+data, alias_count = CHANNEL.subn(add_aliases, data)
 data = DROP.sub("", data)
 data = DESC.sub(short, data)
 data = re.sub(r"\n\s*\n", "\n", data)
