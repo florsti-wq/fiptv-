@@ -139,6 +139,7 @@ import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.VpnKey
 import androidx.compose.material.icons.filled.QrCode
+import androidx.compose.material.icons.filled.Devices
 import androidx.compose.material.icons.filled.Unarchive
 import androidx.compose.material.icons.filled.Archive
 import androidx.compose.ui.draw.alpha
@@ -344,7 +345,7 @@ internal fun tvGeneralRowsForSection(section: String): List<Int> {
         "playback" -> listOf(73, 74, 75, 76, 64, 70, 71, 72, 10, 11, 12, 43, 44, 13, 14, 34, 37, 16, 15, 40, 27, 53, 54)
         "appearance" -> listOf(62, 63, 65, 67, 68, 66, 17, 49, 50, 18, 20, 60, 21, 24, 23, 22, 41, 46, 36, 47, 69)
         "profiles" -> listOf(19, 61)
-        "network" -> listOf(77, 25, 26, 35)
+        "network" -> listOf(77, 78, 79, 25, 26, 35)
         else -> emptyList()
     }
 }
@@ -1023,6 +1024,8 @@ fun SettingsScreen(
         showCustomUserAgentDialog ||
         uiState.aiKeyServerState.isActive ||
         com.arflix.tv.fiptv.FiptvLan.state != null ||
+        com.arflix.tv.fiptv.FiptvTransfer.send != null ||
+        com.arflix.tv.fiptv.FiptvTransfer.receiveOpen ||
         uiState.showCloudPairDialog ||
         uiState.showCloudEmailPasswordDialog ||
         uiState.traktCode != null ||
@@ -1484,6 +1487,8 @@ fun SettingsScreen(
                                                 75 -> com.arflix.tv.fiptv.player.FiptvLiveLatency.cycle()
                                                 76 -> com.arflix.tv.fiptv.live.FiptvEpgOffset.cycleGlobal()
                                                 77 -> { com.arflix.tv.fiptv.FiptvLan.setupRequested = true }
+                                                78 -> { com.arflix.tv.fiptv.FiptvTransfer.sendRequested = true }
+                                                79 -> { com.arflix.tv.fiptv.FiptvTransfer.receiveRequested = true }
                                                 64 -> com.arflix.tv.fiptv.FiptvSleepTimer.cycle()
                                                 20 -> viewModel.setOledBlackBackground(!uiState.oledBlackBackground)
                                                 21 -> viewModel.cycleClockFormat()
@@ -3256,6 +3261,19 @@ fun SettingsScreen(
         }
         DisposableEffect(Unit) { onDispose { if (com.arflix.tv.fiptv.FiptvLan.state?.allowSource == true) com.arflix.tv.fiptv.FiptvLan.stop() } }
         com.arflix.tv.fiptv.FiptvLanOverlay()
+        // fIPTV: Übertragen per Heimnetz
+        LaunchedEffect(com.arflix.tv.fiptv.FiptvTransfer.sendRequested) {
+            if (!com.arflix.tv.fiptv.FiptvTransfer.sendRequested) return@LaunchedEffect
+            com.arflix.tv.fiptv.FiptvTransfer.sendRequested = false
+            com.arflix.tv.fiptv.FiptvTransfer.startSend(fiptvLanContext) { viewModel.fiptvTransferSnapshot() }
+        }
+        LaunchedEffect(com.arflix.tv.fiptv.FiptvTransfer.receiveRequested) {
+            if (!com.arflix.tv.fiptv.FiptvTransfer.receiveRequested) return@LaunchedEffect
+            com.arflix.tv.fiptv.FiptvTransfer.receiveRequested = false
+            com.arflix.tv.fiptv.FiptvTransfer.openReceive(fiptvLanContext)
+        }
+        DisposableEffect(Unit) { onDispose { com.arflix.tv.fiptv.FiptvTransfer.stopSend(); com.arflix.tv.fiptv.FiptvTransfer.closeReceive() } }
+        com.arflix.tv.fiptv.FiptvTransferOverlay { snapshot -> viewModel.fiptvApplyTransfer(snapshot) }
 
         if (isTouchDevice && uiState.aiKeyServerState.isActive) {
             AiKeyQrOverlay(
@@ -7020,6 +7038,8 @@ private fun TvGeneralSettingsRows(
                 67 -> SettingsRow(Icons.Default.Star, "Hintergrund", "Animierter Weltraum hinter Profilauswahl, Startseite und Einstellungen", com.arflix.tv.fiptv.FiptvSpace.mode.let { com.arflix.tv.fiptv.FiptvSpace.modeLabel() }, focusedIndex == localIndex, { com.arflix.tv.fiptv.FiptvSpace.cycleMode() }, Modifier.settingsFocusSlot(localIndex))
                 68 -> SettingsRow(Icons.Default.Star, "Farbstimmung", "Farben der Nebel im Weltraum-Hintergrund", com.arflix.tv.fiptv.FiptvSpace.palette.let { com.arflix.tv.fiptv.FiptvSpace.paletteLabel() }, focusedIndex == localIndex, { com.arflix.tv.fiptv.FiptvSpace.cyclePalette() }, Modifier.settingsFocusSlot(localIndex))
                 73 -> SettingsRow(Icons.Default.Info, "Aufnahmen und Downloads", "Gespeicherte Aufnahmen und heruntergeladene Filme ansehen oder löschen", "Öffnen", focusedIndex == localIndex, { com.arflix.tv.fiptv.FiptvEffects.openLibrary() }, Modifier.settingsFocusSlot(localIndex))
+                78 -> SettingsRow(Icons.Default.Devices, "Auf anderes Gerät übertragen", "Quellen, Profile, Favoriten und Einstellungen per WLAN auf einen anderen Fernseher oder ein Handy kopieren", "Senden", focusedIndex == localIndex, { com.arflix.tv.fiptv.FiptvTransfer.sendRequested = true }, Modifier.settingsFocusSlot(localIndex))
+                79 -> SettingsRow(Icons.Default.Devices, "Von anderem Gerät übernehmen", "Alles von einem eingerichteten fIPTV-Gerät im WLAN holen – ersetzt die Einrichtung hier", "Übernehmen", focusedIndex == localIndex, { com.arflix.tv.fiptv.FiptvTransfer.receiveRequested = true }, Modifier.settingsFocusSlot(localIndex))
                 77 -> SettingsRow(Icons.Default.QrCode, "Quelle per Handy oder PC hinzufügen", "QR-Code scannen und Xtream-, M3U- oder Stalker-Zugang bequem am Handy eintippen", "Öffnen", focusedIndex == localIndex, { com.arflix.tv.fiptv.FiptvLan.setupRequested = true }, Modifier.settingsFocusSlot(localIndex))
                 76 -> SettingsRow(Icons.Default.Schedule, "Zeitversatz Programm", "Liegt das Programm deines Anbieters immer daneben? Hier für alle Sender verschieben – einzelne Sender im Sendermenü", com.arflix.tv.fiptv.live.FiptvEpgOffset.globalMinutes.let { com.arflix.tv.fiptv.live.FiptvEpgOffset.label(it) }, focusedIndex == localIndex, { com.arflix.tv.fiptv.live.FiptvEpgOffset.cycleGlobal() }, Modifier.settingsFocusSlot(localIndex))
                 75 -> SettingsRow(Icons.Default.Schedule, "Live-Verzögerung", "Wie nah Live TV am echten Geschehen ist. Niedriger = schneller beim Sport, aber bei schwacher Leitung eher Ruckler", com.arflix.tv.fiptv.player.FiptvLiveLatency.mode.let { com.arflix.tv.fiptv.player.FiptvLiveLatency.label() }, focusedIndex == localIndex, { com.arflix.tv.fiptv.player.FiptvLiveLatency.cycle() }, Modifier.settingsFocusSlot(localIndex))

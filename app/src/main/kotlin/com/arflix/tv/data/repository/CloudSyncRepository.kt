@@ -696,6 +696,10 @@ class CloudSyncRepository @Inject constructor(
      * Builds the full cloud snapshot JSON for all profiles.
      * This replaces the SettingsViewModel version and does NOT reference any UI state.
      */
+    // fIPTV: Übertragen per Heimnetz – gleicher Inhalt wie die Cloud-Sicherung, nur direkt von Gerät zu Gerät
+    suspend fun buildTransferSnapshotJson(): String = cloudSyncMutex.withLock { buildCloudSnapshotJson() }
+    suspend fun applyTransferSnapshot(payload: String) = cloudSyncMutex.withLock { applyCloudPayload(payload) }
+
     suspend fun buildCloudSnapshotJson(): String {
         val prefs = context.settingsDataStore.data.first()
         val root = JSONObject()

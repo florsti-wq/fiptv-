@@ -483,6 +483,10 @@ class SettingsViewModel @Inject constructor(
     private val traktManualSync: com.arflix.tv.data.repository.TraktManualSync,
     private val partnerDelivery: dagger.Lazy<com.arflix.tv.data.repository.PartnerDeliveryRepository>? = null
 ) : ViewModel() {
+    // fIPTV: Übertragen per Heimnetz
+    suspend fun fiptvTransferSnapshot(): String = cloudSyncRepository.buildTransferSnapshotJson()
+    suspend fun fiptvApplyTransfer(snapshot: String) = cloudSyncRepository.applyTransferSnapshot(snapshot)
+
     private fun visibleCatalogs(catalogs: List<CatalogConfig>): List<CatalogConfig> {
         return catalogs.filter { config ->
             when (config.kind) {
